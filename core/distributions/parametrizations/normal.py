@@ -48,6 +48,12 @@ class ParametrizedNormal(ParametrizedDistribution):
             loc, scale_log = torch.tensor_split(x, 2, dim=-1)
             loc = loc.squeeze(-1)
             scale_log = scale_log.squeeze(-1)
+
+            # Corner case for 1d input
+            if x.shape[-1] == 2:
+                loc = loc.unsqueeze(-1)
+                scale_log = scale_log.unsqueeze(-1)
+
         elif self.loc is None:
             loc = x
             scale_log = self.scale_log
