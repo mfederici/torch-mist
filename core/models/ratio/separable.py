@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import Optional, List
 
 import torch
+from pyro.nn import DenseNN
 
 from torch import nn
 
@@ -35,3 +36,29 @@ class SeparableRatioEstimator(RatioEstimator):
         else:
             K = torch.einsum('ab, acb -> ac', self.f_x(x), self.f_y(y))
         return K
+
+
+class SeparableRatioEstimatorMLP(SeparableRatioEstimator):
+    def __init__(self, x_dim: int, y_dim: int, hidden_dims: List[int], transform_x: bool = True, transform_y: bool = False, out_dim: Optional[int] = None):
+
+        if not transform_y:
+            out_dim = y_dim
+        elif not transform_x:
+            out_dim = x_dim
+        else:
+            assert out_dim is not None, "out_dim must be specified if both transform_x and transform_y are True"
+
+        if transform_x:
+            f_x = DenseNN(x_dim, hidden_dims, param_dims=[out_dim])
+        else:
+            f_x = None
+
+        if transform_y:
+            f_y = DenseNN(y_dim, hidden_dims, param_dims=[out_dim])
+        else:
+            f_y = None
+
+        super(SeparableRatioEstimatorMLP, self).__init__(
+            f_x=f_x,
+            f_y=f_y,
+        )

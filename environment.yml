@@ -1,0 +1,33 @@
+name: dl-kit
+channels:
+  - pytorch
+  - defaults
+dependencies:
+  - cudatoolkit=10.2.89=hfd86e86_1
+  - python=3.8.1=h0371630_1
+  - pytorch=1.13.1=py3.8_cpu_0
+  - torchvision=0.2.2=py_3
+  - pip:
+    - envyaml==1.8.210417
+    - imageio==2.10.1
+    - jsonargparse==4.18.0
+    - matplotlib==3.1.3
+    - numpy==1.24.0
+    - nvidia-cublas-cu11==11.10.3.66
+    - nvidia-cuda-nvrtc-cu11==11.7.99
+    - omegaconf==2.1.1
+    - pandas==1.5.2
+    - plotly==4.8.1
+    - pyro-ppl==1.7.0
+    - pytorch-lightning==1.8.5.post0
+    - scikit-learn==0.22.1
+    - scipy==1.8.0
+    - seaborn==0.12.1
+    - sklearn==0.0
+    - tensorboard==2.11.0
+    - torch==1.9.1
+    - torchaudio==0.7.0
+    - torchmetrics==0.11.0
+    - torchtext==0.14.1
+    - tqdm==4.64.1
+    - wandb==0.12.11 # Optional

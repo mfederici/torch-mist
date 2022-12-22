@@ -1,0 +1,37 @@
+program: train.py
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - fit
+  - --data=config/components/data/normal_mixture.yaml
+  - --optimizer=config/components/optimizers/adam.yaml
+  - --trainer=config/components/trainers/default.yaml
+  - --trainer.logger=pytorch_lightning.loggers.WandbLogger
+  - --trainer.output_dir=/tmp
+  - --trainer.max_epochs=1 # Remove this later
+  - ${args_no_hyphens}
+method: grid
+parameters:
+  --model:
+    values:
+      - config/components/mi_estimators/NWJ.yaml
+      - config/components/mi_estimators/MINE.yaml
+      - config/components/mi_estimators/JS.yaml
+      - config/components/mi_estimators/InfoNCE.yaml
+      - config/components/mi_estimators/SMILE.yaml
+      - config/components/mi_estimators/TUBA.yaml
+  --model.proposal:
+    values:
+      - "null"
+      - config/components/models/proposals/transformed_normal.yaml
+  --model.predictor:
+    values:
+      - "null"
+      - config/components/models/predictors/conditional_categorical.yaml
+  --seed:
+    values:
+      - 7
+      - 42
+      - 123
+

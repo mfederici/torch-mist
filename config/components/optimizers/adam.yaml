@@ -1,0 +1,3 @@
+class_path: torch.optim.Adam
+init_args:
+  lr: 5e-4

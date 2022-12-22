@@ -1,0 +1,4 @@
+class_path: core.task.MutualInformationEstimator
+init_args:
+  ratio_estimator: ../models/ratio_estimators/joint.yaml
+  baseline: ../models/baselines/one.yaml

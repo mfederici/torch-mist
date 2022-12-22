@@ -1,0 +1,3 @@
+class_path: core.task.MutualInformationEstimator
+init_args:
+  proposal: ../models/proposals/transformed_normal.yaml

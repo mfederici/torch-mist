@@ -1,0 +1,6 @@
+class_path: core.task.MutualInformationEstimator
+init_args:
+  ratio_estimator: ../models/ratio_estimators/joint.yaml
+  baseline: ../models/baselines/batch_logmeanexp_2D.yaml
+  js_grad: true
+  tau: 5.0 # clipping the ratio between -tau and tau
