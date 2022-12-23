@@ -1,1 +1,1 @@
-from .multivariate_normal_mixture import MultivariateCorrelatedNormalMixture, AttributeResampledDistribution, SignResampledDistribution
+from .multivariate_normal_mixture import MultivariateCorrelatedNormalMixture, SignResampledDistribution #,AttributeResampledDistribution
