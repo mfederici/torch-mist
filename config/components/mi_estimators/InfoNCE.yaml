@@ -1,5 +1,0 @@
-class_path: core.task.MutualInformationEstimator
-init_args:
-  ratio_estimator: ../models/ratio_estimators/separable.yaml
-  baseline: ../models/baselines/batch_logmeanexp.yaml
-  n_samples: 0 # 0 means use all samples in the batch

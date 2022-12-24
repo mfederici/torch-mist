@@ -80,7 +80,7 @@ class MultivariateCorrelatedNormalMixture(JointDistribution):
         )
 
     def _compute_entropies(self):
-        xy = self.p_xy.sample([self.n_samples_estimation])
+        xy = self.sample(torch.Size([self.n_samples_estimation]))
         x, y = xy['x'], xy['y']
         samples = torch.cat([x.unsqueeze(-1), y.unsqueeze(-1)], -1)
 
@@ -204,6 +204,7 @@ class SignResampledDistribution(JointDistribution):
             return self.base_dist.entropy(["x", "y"])
         else:
             return None
+
     def compute_attributes(self, x: torch.Tensor) -> torch.Tensor:
         return (x > 0).long()
 

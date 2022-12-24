@@ -1,6 +1,6 @@
 from pytorch_lightning.cli import LightningCLI
 from pytorch_lightning import LightningDataModule
-from core.task import MutualInformationEstimator
+from core.task import InfoMax
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import WandbLogger
 from typing import Any
@@ -25,13 +25,6 @@ class MILightningCLI(LightningCLI):
 
 
     def instantiate_trainer(self, **kwargs: Any) -> Trainer:
-        # Set the entropy of a and y if the computation is specified in the dataloader
-        if hasattr(self.datamodule, "h_a"):
-            self.model.h_a = self.datamodule.h_a
-
-        if hasattr(self.datamodule, "h_y"):
-            self.model.h_y = self.datamodule.h_y
-
         trainer = super(MILightningCLI, self).instantiate_trainer(**kwargs)
         if isinstance(trainer.logger, WandbLogger):
             trainer.logger.log_hyperparams(dict(self.config))
@@ -42,7 +35,7 @@ class MILightningCLI(LightningCLI):
 
 def cli_main():
     cli = MILightningCLI(
-        MutualInformationEstimator,
+        InfoMax,
         LightningDataModule,
         subclass_mode_model=True,
         subclass_mode_data=True,
