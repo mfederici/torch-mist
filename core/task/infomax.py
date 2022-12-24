@@ -19,7 +19,7 @@ class InfoMax(pl.LightningModule):
 
         self.mi_estimator = mi_estimator
         self.encoder_x = encoder_x
-        assert same_encoder or encoder_y is not None, "If same_encoder is True, encoder_y must be None"
+        assert not same_encoder or encoder_y is not None, "If same_encoder is False, encoder_y must be None"
         if same_encoder:
             encoder_y = encoder_x
         self.encoder_y = encoder_y
