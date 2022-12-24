@@ -1,0 +1,5 @@
+class_path: core.models.baseline.TUBABaseline
+init_args:
+  alpha: 0.1
+  hidden_dims: [ 64, 64 ]
+  x_dim: 5

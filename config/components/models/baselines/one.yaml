@@ -1,0 +1,3 @@
+class_path: core.models.baseline.ConstantBaseline
+init_args:
+  value: 1.0
