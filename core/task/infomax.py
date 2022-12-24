@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 import torch
 from pytorch_lightning.utilities.types import STEP_OUTPUT
 from torch import nn
-from core.task.mi_estimation import MutualInformationEstimator
+from core.models.mi_estimator import MutualInformationEstimator
 
 
 class InfoMax(pl.LightningModule):
