@@ -186,10 +186,10 @@ class MultivariateCorrelatedNormalMixture(JointDistribution):
 class SignResampledDistribution(JointDistribution):
     labels = ["x", "y", "y_", "a"]
 
-    def __init__(self, base_dist: MultivariateCorrelatedNormalMixture, n_negatives: int = 1):
+    def __init__(self, base_dist: MultivariateCorrelatedNormalMixture, neg_samples: int = 1):
         super(SignResampledDistribution, self).__init__()
         self.base_dist = base_dist
-        self.n_negatives = n_negatives
+        self.neg_samples = neg_samples
 
     def entropy(self, labels: Union[str, List[str]]) -> Optional[float]:
         assert set(labels) <= set(self.labels), f"Labels {labels} not in {self.labels}"
@@ -212,7 +212,7 @@ class SignResampledDistribution(JointDistribution):
         d = self.base_dist.sample(sample_shape)
         a = self.compute_attributes(d['x'])
 
-        a = a.unsqueeze(1).repeat(1, self.n_negatives, 1)
+        a = a.unsqueeze(1).repeat(1, self.neg_samples, 1)
         d['a'] = a
 
         # Note here we are considering the same distributions on all the feature dimensions
@@ -222,7 +222,7 @@ class SignResampledDistribution(JointDistribution):
             n_samples = sample_shape[0]
             assert len(sample_shape) == 1, "Only 1D sample shapes supported"
 
-        neg_shape = torch.Size([n_samples, self.n_negatives])
+        neg_shape = torch.Size([n_samples, self.neg_samples])
 
         d2 = self.base_dist.sample(neg_shape)
         x_, y_ = d2['x'], d2['y']

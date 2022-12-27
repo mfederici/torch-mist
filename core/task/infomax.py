@@ -30,9 +30,15 @@ class InfoMax(pl.LightningModule):
         # Set the entropy of a and y if the computation is specified in the dataloader
         if hasattr(self.trainer.datamodule, "h_a"):
             self.mi_estimator.h_a = self.trainer.datamodule.h_a
-
         if hasattr(self.trainer.datamodule, "h_y"):
             self.mi_estimator.h_y = self.trainer.datamodule.h_y
+
+        # Set the number of negative samples consistently to the number specified on the datamodule
+        if hasattr(self.trainer.datamodule, "neg_samples"):
+            if self.mi_estimator.neg_samples != self.trainer.datamodule.neg_samples:
+                print(f"Warning: The number of negative samples specified in the datamodule ({self.trainer.datamodule.neg_samples}) does not match the number of negative samples specified in the estimator ({self.mi_estimator.neg_samples}).")
+                print(f"Setting the number of negative samples in the data_loader to {self.mi_estimator.neg_samples}")
+                self.trainer.datamodule.neg_samples = self.mi_estimator.neg_samples
 
     def forward(
             self,

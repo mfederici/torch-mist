@@ -21,15 +21,13 @@ def collate_fn(batch: List[Dict[str, torch.Tensor]]):
 
 
 class SampledDataModule(pl.LightningDataModule):
-    def __init__(self, dist: JointDistribution, batch_size: int = 128, num_workers: int = 1, n_negatives: int = 1,
-                 samples_per_epoch: int = 100000):
+    def __init__(self, dist: JointDistribution, batch_size: int = 128, num_workers: int = 1, samples_per_epoch: int = 100000):
         super().__init__()
 
         self.batch_size = batch_size
         assert batch_size % num_workers == 0, "Batch size must be divisible by number of workers"
         self.num_workers = num_workers
         samples_per_worker = batch_size // num_workers
-        self.n_negatives = n_negatives
         self.dataset = SampleDataset(dist, samples_per_epoch=samples_per_epoch, n_samples=samples_per_worker)
 
     def train_dataloader(self):
@@ -42,10 +40,10 @@ class SampledDataModule(pl.LightningDataModule):
 
 
 class SampledNormalMixture(SampledDataModule):
-    def __init__(self, batch_size: int = 128, num_workers: int = 1, samples_per_epoch: int = 100000):
+    def __init__(self, batch_size: int = 128, num_workers: int = 1, samples_per_epoch: int = 100000, neg_samples: int = 1):
         p_xy = MultivariateCorrelatedNormalMixture()
-
-        p_xya = SignResampledDistribution(p_xy)
+        self.batch_size = batch_size
+        p_xya = SignResampledDistribution(p_xy, neg_samples=neg_samples)
         self.p_xya = p_xya
 
         super().__init__(
@@ -63,4 +61,12 @@ class SampledNormalMixture(SampledDataModule):
     def h_a(self) -> float:
         return self.p_xya.entropy("a")
 
+    @property
+    def neg_samples(self) -> int:
+        return self.p_xya.neg_samples
 
+    @neg_samples.setter
+    def neg_samples(self, value: int):
+        if value <= 0:
+            value = self.batch_size - value
+        self.p_xya.neg_samples = value

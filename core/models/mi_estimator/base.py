@@ -27,7 +27,7 @@ class MutualInformationEstimator(nn.Module):
             p_a: Optional[Distribution] = None,
             h_y: Optional[float] = None,
             h_a: Optional[float] = None,
-            n_samples: int = 1,
+            neg_samples: int = 1,
             sample_gradient: bool = False,
             tau: Optional[float] = None,
             js_grad: bool = False,
@@ -43,7 +43,7 @@ class MutualInformationEstimator(nn.Module):
         self.p_a = p_a
         self.h_y = h_y
         self.h_a = h_a
-        self.n_samples = n_samples
+        self.neg_samples = neg_samples
         self.sample_gradient = sample_gradient
         self.tau = tau
         self.js_grad = js_grad
@@ -52,10 +52,10 @@ class MutualInformationEstimator(nn.Module):
         N = y.shape[0]
 
         # For negative or zero values we consider N-self.n_samples instead
-        if self.n_samples <= 0:
-            n_samples = N - self.n_samples
+        if self.neg_samples <= 0:
+            n_samples = N - self.neg_samples
         else:
-            n_samples = self.n_samples
+            n_samples = self.neg_samples
 
         # By default, we use the proposal is p(y)
         if self.proposal is None:
