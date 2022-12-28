@@ -2,4 +2,4 @@ class_path: core.models.MutualInformationEstimator
 init_args:
   ratio_estimator: ../ratio_estimators/separable.yaml
   baseline: ../baselines/interpolated.yaml
-  n_samples: 0 # 0 means use all samples in the batch
+  neg_samples: 0 # 0 means use all samples in the batch

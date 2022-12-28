@@ -116,4 +116,4 @@ class InfoMax(pl.LightningModule):
 
         mi_value, mi_grad = self(x, y, y_, a, step='train')
 
-        return {"loss": -mi_grad, "x": x, "y": y, "y_": y_, "a": a}
+        return {"loss": -mi_grad, "value": mi_value, "x": x, "y": y, "y_": y_, "a": a}

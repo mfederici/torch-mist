@@ -100,7 +100,7 @@ class InterpolatedBaseline(Baseline):
 
 class TUBABaseline(InterpolatedBaseline):
     def __init__(self, x_dim: int, hidden_dims: List[int], alpha: float):
-        baseline_1 = LearnableMLPBaseline(x_dim, hidden_dims)
-        baseline_2 = BatchLogMeanExp()
+        baseline_1 = BatchLogMeanExp()
+        baseline_2 = LearnableMLPBaseline(x_dim, hidden_dims)
         super(TUBABaseline, self).__init__(baseline_1=baseline_1, baseline_2=baseline_2, alpha=alpha)
 
