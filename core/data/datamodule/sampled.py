@@ -2,10 +2,9 @@ import pytorch_lightning as pl
 import torch
 
 from typing import List, Dict
-from torch.distributions import Distribution
 from torch.utils.data import DataLoader
 
-from core.data.dataset import SampleDataset
+from core.data.datasets import SampleDataset
 from core.distributions.test import MultivariateCorrelatedNormalMixture, SignResampledDistribution
 from core.distributions.test.multivariate_normal_mixture import JointDistribution
 
