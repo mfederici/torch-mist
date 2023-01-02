@@ -76,19 +76,19 @@ class AdaptedSimCLR(SimCLR):
     def training_step(self, batch, batch_idx):
         output = self.shared_step(batch)
 
-        self.log("loss/train", output["loss"], on_step=True, on_epoch=False)
-        self.log("loss/contrastive/train", output["contrastive_loss"], on_step=True, on_epoch=False)
+        self.log("loss/train", output["loss"], on_step=True, on_epoch=True)
+        self.log("loss/contrastive/train", output["contrastive_loss"], on_step=True, on_epoch=True)
         if "rec_loss" in output:
-            self.log("loss/rec/train", output["rec_loss"], on_step=True, on_epoch=False)
+            self.log("loss/rec/train", output["rec_loss"], on_step=True, on_epoch=True)
         return output
 
     def validation_step(self, batch, batch_idx):
         output = self.shared_step(batch)
 
         self.log("loss/val", output["loss"], on_step=False, on_epoch=True, sync_dist=True)
-        self.log("loss/contrastive/val", output["contrastive_loss"], on_step=True, on_epoch=False)
+        self.log("loss/contrastive/val", output["contrastive_loss"], on_step=False, on_epoch=True)
         if "rec_loss" in output:
-            self.log("loss/rec/val", output["rec_loss"], on_step=True, on_epoch=False)
+            self.log("loss/rec/val", output["rec_loss"], on_step=False, on_epoch=True)
         return output
 
     @staticmethod

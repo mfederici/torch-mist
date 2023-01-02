@@ -123,7 +123,7 @@ class SSLOnlineEvaluator(Callback):  # pragma: no cover
         mlp_loss.backward()
         self.optimizer.step()
 
-        pl_module.log("log q(t|z)/train", -mlp_loss, on_step=True, on_epoch=False)
+        pl_module.log("log q(t|z)/train", -mlp_loss, on_step=True, on_epoch=True)
 
     def on_validation_batch_end(
         self,
@@ -142,7 +142,7 @@ class SSLOnlineEvaluator(Callback):  # pragma: no cover
 
         mlp_loss = self.shared_step(z1, t)
 
-        pl_module.log("log q(t|z)/val", -mlp_loss, on_step=True, on_epoch=False)
+        pl_module.log("log q(t|z)/val", -mlp_loss, on_step=False, on_epoch=True)
 
     def state_dict(self) -> dict:
         return {"state_dict": self.online_evaluator.state_dict(), "optimizer_state": self.optimizer.state_dict()}
