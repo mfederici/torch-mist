@@ -30,3 +30,6 @@ class SameAttributesSampler(Sampler):
             batch_ids = np.concatenate([batch_ids, a_idx], 0)
             mask[batch_ids] = False
             yield list(batch_ids)
+
+    def __len__(self):
+        return self.attributes.shape[0] // self.batch_size

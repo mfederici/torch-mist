@@ -1,17 +1,48 @@
 from argparse import ArgumentParser
 
 import numpy as np
+# from torch import nn
+# import torch.nn.functional as F
 
 from typing import Optional
 from pyro.distributions import ConditionalDistribution
 from pytorch_lightning import Trainer
 from pl_bolts.models.self_supervised.simclr.simclr_module import SimCLR
 
+from core.callbacks.online_ssl import SSLOnlineEvaluator
+
+
+# TODO: shall we remove bn?
+# class Projection(nn.Module):
+#     def __init__(self, input_dim=2048, hidden_dim=2048, output_dim=128, use_batch_norm=True):
+#         super().__init__()
+#         self.output_dim = output_dim
+#         self.input_dim = input_dim
+#         self.hidden_dim = hidden_dim
+#
+#         if use_batch_norm:
+#             self.model = nn.Sequential(
+#                 nn.Linear(self.input_dim, self.hidden_dim),
+#                 nn.BatchNorm1d(self.hidden_dim),
+#                 nn.ReLU(),
+#                 nn.Linear(self.hidden_dim, self.output_dim, bias=False),
+#             )
+#         else:
+#             self.model = nn.Sequential(
+#                 nn.Linear(self.input_dim, self.hidden_dim),
+#                 nn.ReLU(),
+#                 nn.Linear(self.hidden_dim, self.output_dim, bias=False),
+#             )
+#
+#     def forward(self, x):
+#         x = self.model(x)
+#         return F.normalize(x, dim=1)
+
+
 class AdaptedSimCLR(SimCLR):
-    def __init__(self, *args, predictor: Optional[ConditionalDistribution] = None, h_a: Optional[float] = None, **kwargs):
+    def __init__(self, *args, predictor: Optional[ConditionalDistribution] = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.predictor = predictor
-        self.h_a = h_a
 
     def shared_step(self, batch):
         # Adapted to deal with dicts
@@ -28,27 +59,50 @@ class AdaptedSimCLR(SimCLR):
 
         loss = self.nt_xent_loss(z1, z2, self.temperature)
 
+        out = {"loss": loss, "z1": h1, "z2": h2}
+        out["contrastive_loss"] = out["loss"]+0
+
         # Add prediction Loss
         if self.predictor is not None:
             a = batch["a"]
             q_a_Y = self.predictor.condition(h2)
             log_q_A_Y = q_a_Y.log_prob(a)
-            loss += -log_q_A_Y.mean(0)
-            if self.h_a is not None:
-                loss += self.h_a
+            rec_loss = -log_q_A_Y.mean(0)
+            out["loss"] += rec_loss
+            out["rec_loss"] = rec_loss
 
-        return loss
+        return out
+
+    def training_step(self, batch, batch_idx):
+        output = self.shared_step(batch)
+
+        self.log("loss/train", output["loss"], on_step=True, on_epoch=False)
+        self.log("loss/contrastive/train", output["contrastive_loss"], on_step=True, on_epoch=False)
+        if "rec_loss" in output:
+            self.log("loss/rec/train", output["rec_loss"], on_step=True, on_epoch=False)
+        return output
+
+    def validation_step(self, batch, batch_idx):
+        output = self.shared_step(batch)
+
+        self.log("loss/val", output["loss"], on_step=False, on_epoch=True, sync_dist=True)
+        self.log("loss/contrastive/val", output["contrastive_loss"], on_step=True, on_epoch=False)
+        if "rec_loss" in output:
+            self.log("loss/rec/val", output["rec_loss"], on_step=True, on_epoch=False)
+        return output
 
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = SimCLR.add_model_specific_args(parent_parser)
         parser.add_argument('--use_predictor', action='store_true')
-        parser.add_argument('--h_a', type=float, default=None)
         parser.add_argument('--sample_same_attributes', action='store_true')
+        parser.add_argument('--default_root_dir', type=str, default='.')
 
         return parser
 def cli_main():
     from pl_bolts.models.self_supervised.simclr.transforms import SimCLRTrainDataTransform, SimCLREvalDataTransform
+    from pytorch_lightning.callbacks import LearningRateMonitor
+    from pytorch_lightning.callbacks import ModelCheckpoint
 
     parser = ArgumentParser()
 
@@ -66,7 +120,6 @@ def cli_main():
         args.hidden_mlp = 512
         train_attributes = np.arange(40)[1::4]
         # Entropy of the attribute distribution
-        args.h_a = 4.152420957448182
         args.num_samples = 162770
 
         dm = CelebADataModule(
@@ -79,6 +132,8 @@ def cli_main():
 
         args.input_height = 218
         args.jitter_strength = 0.5
+        ssl_t_dim = 30
+        ssl_num_classes = 2
         # TODO: add Normalization
         normalization = None
     else:
@@ -112,10 +167,11 @@ def cli_main():
     # Trainer #
     ###########
 
-    # lr_monitor = LearningRateMonitor(logging_interval="step")
-    # model_checkpoint = ModelCheckpoint(save_last=True, save_top_k=1, monitor="val_loss")
-    # callbacks = [model_checkpoint, online_evaluator] if args.online_ft else [model_checkpoint]
-    # callbacks.append(lr_monitor)
+    lr_monitor = LearningRateMonitor(logging_interval="step")
+    model_checkpoint = ModelCheckpoint(save_last=True, save_top_k=1, monitor="loss/val")
+    online_evaluator = SSLOnlineEvaluator(z_dim=args.hidden_mlp, num_classes=ssl_num_classes, t_dim=ssl_t_dim)
+    callbacks = [model_checkpoint, online_evaluator] if args.online_ft else [model_checkpoint]
+    callbacks.append(lr_monitor)
 
     trainer = Trainer(
         max_epochs=args.max_epochs,
@@ -125,8 +181,9 @@ def cli_main():
         accelerator="ddp" if args.gpus > 1 else None,
         sync_batchnorm=True if args.gpus > 1 else False,
         precision=32 if args.fp32 else 16,
-        # callbacks=callbacks,
-        fast_dev_run=args.fast_dev_run,
+        default_root_dir=args.default_root_dir,
+        callbacks=callbacks,
+        # fast_dev_run=args.fast_dev_run,
     )
 
     trainer.fit(model, datamodule=dm)
