@@ -187,8 +187,8 @@ def cli_main():
     # Model #
     #########
     if args.use_predictor:
-        from core.models.predictor import ConditionalCategoricalMLP
-        predictor = ConditionalCategoricalMLP(y_dim=args.hidden_mlp, n_classes=2, hidden_dims=[512, 128], a_dim=10)
+        from core.models.predictor import ConditionalLinearCategorical
+        predictor = ConditionalLinearCategorical(y_dim=args.hidden_mlp, n_classes=2, a_dim=10)
         args.predictor = predictor
 
     model = AdaptedSimCLR(**args.__dict__)

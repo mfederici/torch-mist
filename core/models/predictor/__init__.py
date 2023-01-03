@@ -1,1 +1,1 @@
-from .categorical import ConditionalCategoricalMLP
+from .categorical import ConditionalCategoricalMLP, ConditionalLinearCategorical
