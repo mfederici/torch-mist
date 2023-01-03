@@ -52,4 +52,3 @@ class VisionTransformer(tv_models.VisionTransformer):
             x = x.view(*batch_shapes, *x.shape[1:])
         return x
 
-

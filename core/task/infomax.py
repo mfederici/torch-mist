@@ -14,7 +14,7 @@ class InfoMax(pl.LightningModule):
             self,
             mi_estimator: MutualInformationEstimator,
             encoder_x: Optional[nn.Module] = None,
-            encoder_y: Optional[Union[nn.Module, EncoderKeywords]] = EncoderKeywords.same,
+            encoder_y: Optional[Union[EncoderKeywords]] = EncoderKeywords.same,
             tau: float = 0.99,
     ):
         """
@@ -116,7 +116,7 @@ class InfoMax(pl.LightningModule):
         s += "\n  (mi_estimator): " + self.mi_estimator.__repr__().replace('\n', '\n  ')
         if self.encoder_x:
             s += "\n  (encoder_x): " + self.encoder_x.__repr__().replace('\n', '\n  ')
-        if self.encoder_y_str == EncoderKeywords.same:
+        if self.encoder_y_str == EncoderKeywords.same and self.encoder_x is not None:
             s += f"\n  (encoder_y): same as encoder_x"
         elif isinstance(self.encoder_y, nn.Module):
             s += "\n  (encoder_y): " + self.encoder_y.__repr__().replace('\n', '\n  ')

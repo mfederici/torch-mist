@@ -1,1 +1,1 @@
-from .variance import VarianceCallback
+from .variance import VarianceLogCallback
