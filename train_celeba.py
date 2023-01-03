@@ -1,48 +1,75 @@
 from argparse import ArgumentParser
 
 import numpy as np
-# from torch import nn
-# import torch.nn.functional as F
+from torch import nn
+import torch.nn.functional as F
 
 from typing import Optional
 from pyro.distributions import ConditionalDistribution
 from pytorch_lightning import Trainer
 from pl_bolts.models.self_supervised.simclr.simclr_module import SimCLR
+from pl_bolts.models.self_supervised.resnets import resnet18, resnet50
 
 from core.callbacks.online_ssl import SSLOnlineEvaluator
 
 
-# TODO: shall we remove bn?
-# class Projection(nn.Module):
-#     def __init__(self, input_dim=2048, hidden_dim=2048, output_dim=128, use_batch_norm=True):
-#         super().__init__()
-#         self.output_dim = output_dim
-#         self.input_dim = input_dim
-#         self.hidden_dim = hidden_dim
-#
-#         if use_batch_norm:
-#             self.model = nn.Sequential(
-#                 nn.Linear(self.input_dim, self.hidden_dim),
-#                 nn.BatchNorm1d(self.hidden_dim),
-#                 nn.ReLU(),
-#                 nn.Linear(self.hidden_dim, self.output_dim, bias=False),
-#             )
-#         else:
-#             self.model = nn.Sequential(
-#                 nn.Linear(self.input_dim, self.hidden_dim),
-#                 nn.ReLU(),
-#                 nn.Linear(self.hidden_dim, self.output_dim, bias=False),
-#             )
-#
-#     def forward(self, x):
-#         x = self.model(x)
-#         return F.normalize(x, dim=1)
+class Projection(nn.Module):
+    def __init__(self, input_dim=2048, hidden_dim=2048, output_dim=128, no_batch_norm=False):
+        super().__init__()
+        self.output_dim = output_dim
+        self.input_dim = input_dim
+        self.hidden_dim = hidden_dim
+
+        if no_batch_norm:
+            self.model = nn.Sequential(
+                nn.Linear(self.input_dim, self.hidden_dim),
+                nn.ReLU(),
+                nn.Linear(self.hidden_dim, self.output_dim, bias=False),
+            )
+        else:
+            self.model = nn.Sequential(
+                nn.Linear(self.input_dim, self.hidden_dim),
+                nn.BatchNorm1d(self.hidden_dim),
+                nn.ReLU(),
+                nn.Linear(self.hidden_dim, self.output_dim, bias=False),
+            )
+
+    def forward(self, x):
+        x = self.model(x)
+        return F.normalize(x, dim=1)
 
 
 class AdaptedSimCLR(SimCLR):
-    def __init__(self, *args, predictor: Optional[ConditionalDistribution] = None, **kwargs):
+    def __init__(self, *args, predictor: Optional[ConditionalDistribution] = None, no_batch_norm: bool = False, **kwargs):
+        self.no_batch_norm = no_batch_norm
         super().__init__(*args, **kwargs)
         self.predictor = predictor
+        self.projection = Projection(
+            input_dim=self.hidden_mlp,
+            hidden_dim=self.hidden_mlp,
+            output_dim=self.feat_dim,
+            no_batch_norm=self.no_batch_norm
+        )
+
+    def init_model(self):
+        if self.arch == "resnet18":
+            backbone = resnet18
+        elif self.arch == "resnet50":
+            backbone = resnet50
+        else:
+            raise NotImplementedError(f"Architecture {self.arch} not supported")
+
+        if self.no_batch_norm:
+            norm_layer = nn.InstanceNorm2d
+        else:
+            norm_layer = nn.BatchNorm2d
+
+        return backbone(
+            first_conv=self.first_conv,
+            maxpool1=self.maxpool1,
+            return_all_feature_maps=False,
+            norm_layer=norm_layer
+        )
 
     def shared_step(self, batch):
         # Adapted to deal with dicts
@@ -96,6 +123,7 @@ class AdaptedSimCLR(SimCLR):
         parser = SimCLR.add_model_specific_args(parent_parser)
         parser.add_argument('--use_predictor', action='store_true')
         parser.add_argument('--sample_same_attributes', action='store_true')
+        parser.add_argument('--no_batch_norm', action='store_true')
         parser.add_argument('--default_root_dir', type=str, default='.')
 
         return parser
