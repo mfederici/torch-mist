@@ -2,7 +2,8 @@ model:
   class_path: core.task.InfoMax
   init_args:
     mi_estimator: ../../components/models/mi_estimators/NWJ.yaml
-    encoder_y: ../../components/models/encoders/mlp.yaml
+    encoder_x: ../../components/models/encoders/mlp.yaml
+    encoder_y: slow
 data: ../../components/data/normal_mixture.yaml
 optimizer: ../../components/optimizers/adam.yaml
 trainer: ../../components/trainers/default.yaml

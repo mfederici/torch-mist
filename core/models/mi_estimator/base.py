@@ -1,4 +1,4 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict
 
 import torch
 import torch.nn as nn
@@ -92,7 +92,7 @@ class MutualInformationEstimator(nn.Module):
         if self.proposal is None:
             if self.predictor is None or a is None:
                 # By default we consider r(y|x) = p(y), therefore E_{p(x,y)}[log r(y|x)/p(y)] = 0
-                ratio_value, ratio_grad = torch.zeros(1).to(x.device), torch.zeros(1).to(x.device)
+                ratio_value, ratio_grad = torch.zeros(1).to(x.device).sum(), torch.zeros(1).to(x.device).sum()
             else:
                 # Compute E_{p(x,y,a)}{log q(a|y)) + H(a)
                 q_a_Y = self.predictor.condition(y)
@@ -212,7 +212,7 @@ class MutualInformationEstimator(nn.Module):
             y: torch.Tensor,
             y_: Optional[torch.Tensor] = None,
             a: Optional[torch.Tensor] = None,
-    ) -> Tuple[Optional[torch.Tensor], torch.Tensor]:
+    ) -> Dict[str, torch.Tensor]:
         """
         Compute a lower bound for I(x,y).
         Args:
@@ -220,10 +220,17 @@ class MutualInformationEstimator(nn.Module):
             y: a tensor with shape [N, D] or [N, M, D] in which y[i,j] is sampled from p(y|x[i])
             y_: a tensor with shape [N, D] or [N, M', D] in which y[i,j] is sampled from r(y|x[i])
             a: a tensor with shape [N, D] representing the "attributes" corresponding to x
-            step: the step of the training (train, val, test)
         Returns:
-            mi_value, mi_grad: A tuple consisting of 1) the estimation for I(x,y) and 2) a quantity to differentiate to
-                maximize mutual information. Note that 1) and 2) can have different values.
+            estimation: A dictionary consisting of
+                        'mi/grad': a quantity to differentiate to maximize mutual information
+                            w.r.t proposal, encoder(s) and ratio estimator
+                        'mi/value': the estimation for I(x,y) (Optional)
+                        'mi/primal/grad': a quantity to differentiate to maximize E_p[log r(y|x)/p(y)]
+                            w.r.t proposal and encoder(s)
+                        'mi/primal/value': the estimation of the value of E_p[log r(y|x)/p(y)] (Optional)
+                        'mi/dual/grad': a quantity to differentiate to maximize E_p[f(x,y)] - log E_r[e^f(x,y)]
+                            w.r.t ratio estimator and encoder(s)
+                        'mi/dual/value': the estimation of the value of E_p[f(x,y)] - log E_r[e^f(x,y)]
         """
 
         if y.ndim == x.ndim:
@@ -241,16 +248,23 @@ class MutualInformationEstimator(nn.Module):
         # Compute the ratio using the primal bound
         primal_value, primal_grad = self.compute_primal_ratio(x, y, a)
 
+        # And the rest using the dual density ratio
         dual_value, dual_grad = self.compute_dual_ratio(x, y, y_)
 
         mi_grad = primal_grad + dual_grad
 
-        if primal_value is not None:
-            mi_value = primal_value + dual_value
-        else:
-            mi_value = None
+        estimates = {
+            "mi/primal/grad": primal_grad,
+            "mi/dual/grad": dual_grad,
+            "mi/dual/value": dual_value,
+            "mi/grad": mi_grad,
+        }
 
-        return mi_value, mi_grad
+        if primal_value is not None:
+            estimates["mi/primal/value"] = primal_value
+            estimates["mi/value"] = primal_value + dual_value
+
+        return estimates
 
 
 

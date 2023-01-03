@@ -1,0 +1,15 @@
+class_path: core.data.datamodule.ContrastiveCelebADataModule
+init_args:
+  batch_size: 64
+  num_workers: 12
+  neg_samples: 1
+  train_transforms:
+    class_path: pl_bolts.models.self_supervised.simclr.SimCLRTrainDataTransform
+    init_args:
+      jitter_strength: 0.5
+      input_height: 224
+  val_transforms:
+    class_path: pl_bolts.models.self_supervised.simclr.SimCLREvalDataTransform
+    init_args:
+      input_height: 224
+  train_attributes: [1, 5, 9, 13, 17, 21, 25, 29, 33, 37]

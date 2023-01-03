@@ -1,7 +1,8 @@
 from torchvision.datasets import CelebA
 import torch
 import numpy as np
-from typing import Optional, Callable, List, Tuple, Any
+from typing import Optional, Callable, List, Tuple, Any, Dict
+
 
 # from pl_bolts.models.self_supervised.simclr.transforms import SimCLRTrainDataTransform
 
@@ -40,7 +41,7 @@ class CelebADict(CelebA):
             self._compute_attribute_entropy()
         return self._h_a
 
-    def __getitem__(self, item):
+    def __getitem__(self, item) -> Dict[str, torch.Tensor]:
         pos_imgs, a = super().__getitem__(item)
 
         x = pos_imgs[0 if self.augment_x else 2]
@@ -55,16 +56,35 @@ class CelebADict(CelebA):
 
 
 class ContrastiveCelebA(CelebADict):
+    def __init__(
+        self,
+        root: str,
+        transform: Callable[[Any], Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
+        select_attributes: Optional[List[int]] = None,
+        download: bool = False,
+        split: str = "train",
+        augment_x: bool = True,
+        neg_samples: int = 1
+    ):
+        super().__init__(root, transform, select_attributes, download, split, augment_x)
+        self.neg_samples = neg_samples
+
     def _find_same_attributes(self, a: torch.LongTensor):
-        mask = (self.attr[:,self.select_attributes] == a).sum(1) == len(a)
+        mask = (self.attr[:, self.select_attributes] == a).sum(1) == len(a)
         ids = torch.arange(len(self))[mask]
-        return np.random.choice(ids)
+        return np.random.choice(ids, self.neg_samples)
 
     def __getitem__(self, item):
         data = super().__getitem__(item)
-        idx = self._find_same_attributes(data["a"])
-        neg_data, a_ = super().__getitem__(idx)
-        data["y_"] = neg_data["y"]
+        assert "a" in data, "a not in data"
+        y_ = []
+        a = data["a"]
+        for idx in self._find_same_attributes(a):
+            neg_sample = super().__getitem__(idx)
+            y_.append(neg_sample["y"].unsqueeze(0))
+            assert torch.equal(a, neg_sample["a"])
+
+        data['y_'] = torch.cat(y_, 0)
 
         return data
 

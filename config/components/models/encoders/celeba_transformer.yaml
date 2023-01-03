@@ -1,0 +1,9 @@
+class_path: core.models.encoder.VisionTransformer # Just a wrapper for torchvision.models.vision_transformer
+init_args:
+  image_size: 224
+  patch_size: 16
+  num_layers: 8
+  num_heads: 8
+  hidden_dim: 256
+  mlp_dim: 1024
+  num_classes: 64 # This corresponds to the dimension of the representation
