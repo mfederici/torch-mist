@@ -23,6 +23,7 @@ class Projection(nn.Module):
         if no_batch_norm:
             self.model = nn.Sequential(
                 nn.Linear(self.input_dim, self.hidden_dim),
+                nn.InstanceNorm1d(self.hidden_dim),
                 nn.ReLU(),
                 nn.Linear(self.hidden_dim, self.output_dim, bias=False),
             )
@@ -50,6 +51,7 @@ class AdaptedSimCLR(SimCLR):
             output_dim=self.feat_dim,
             no_batch_norm=self.no_batch_norm
         )
+        print(self)
 
     def init_model(self):
         if self.arch == "resnet18":
