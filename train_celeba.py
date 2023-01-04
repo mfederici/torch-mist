@@ -11,6 +11,7 @@ from pl_bolts.models.self_supervised.simclr.simclr_module import SimCLR
 from pl_bolts.models.self_supervised.resnets import resnet18, resnet50
 
 from core.callbacks.online_ssl import SSLOnlineEvaluator
+from core.models.encoder import VisionTransformer
 
 
 class Projection(nn.Module):
@@ -23,7 +24,7 @@ class Projection(nn.Module):
         if no_batch_norm:
             self.model = nn.Sequential(
                 nn.Linear(self.input_dim, self.hidden_dim),
-                nn.InstanceNorm1d(self.hidden_dim),
+                nn.LayerNorm(normalized_shape=self.hidden_dim, eps=1e-6),
                 nn.ReLU(),
                 nn.Linear(self.hidden_dim, self.output_dim, bias=False),
             )
@@ -66,12 +67,27 @@ class AdaptedSimCLR(SimCLR):
         else:
             norm_layer = nn.BatchNorm2d
 
-        return backbone(
-            first_conv=self.first_conv,
-            maxpool1=self.maxpool1,
-            return_all_feature_maps=False,
-            norm_layer=norm_layer
+        encoder = VisionTransformer(
+            image_size=224,
+            patch_size=16,
+            num_layers=8,
+            num_heads=8,
+            hidden_dim=256,
+            mlp_dim=self.hidden_mlp,
+            num_classes=self.hidden_mlp,
         )
+
+        return encoder
+
+    def forward(self, x):
+        return self.encoder(x)
+
+        # return backbone(
+        #     first_conv=self.first_conv,
+        #     maxpool1=self.maxpool1,
+        #     return_all_feature_maps=False,
+        #     norm_layer=norm_layer
+        # )
 
     def shared_step(self, batch):
         # Adapted to deal with dicts
@@ -160,7 +176,7 @@ def cli_main():
             sample_same_attributes=args.sample_same_attributes,
         )
 
-        args.input_height = 218
+        args.input_height = 224
         args.jitter_strength = 0.5
         ssl_t_dim = 30
         ssl_num_classes = 2
@@ -210,7 +226,7 @@ def cli_main():
         num_nodes=args.num_nodes,
         accelerator="ddp" if args.gpus > 1 else None,
         sync_batchnorm=True if args.gpus > 1 else False,
-        precision=32 if args.fp32 else 16,
+        precision=32, #if args.fp32 else 16,
         default_root_dir=args.default_root_dir,
         callbacks=callbacks,
         # fast_dev_run=args.fast_dev_run,
