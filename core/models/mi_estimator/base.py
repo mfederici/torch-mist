@@ -3,11 +3,10 @@ from typing import Tuple, Optional, Dict
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from pytorch_lightning.utilities.types import STEP_OUTPUT
 from torch.distributions import Distribution
 from pyro.distributions import ConditionalDistribution
 
-from core.models.baseline import Baseline, ConstantBaseline, BatchLogMeanExp, ExponentialMovingAverage, LearnableJointBaseline
+from core.models.baseline import Baseline, BatchLogMeanExp
 from core.models.ratio import RatioEstimator
 
 
@@ -268,29 +267,3 @@ class MutualInformationEstimator(nn.Module):
 
 
 
- # TODO integrate with the rest
-class FLO(MutualInformationEstimator):
-    def __init__(
-            self,
-            *args,
-            joint_baseline: nn.Module,
-            **kwargs
-    ):
-        MutualInformationEstimator.__init__(
-            self,
-            *args,
-            baseline=LearnableJointBaseline(joint_baseline),
-            **kwargs
-        )
-
-    @staticmethod
-    def _compute_dual_ratio_value(x, y, f, f_, baseline):
-        b = baseline(f_, x, y)
-        if b.ndim == 1:
-            b = b.unsqueeze(1)
-        assert b.ndim == f_.ndim
-
-        Z = f_.exp().mean(1).unsqueeze(1) / (f - b).exp()
-
-        ratio_value = b - Z + 1
-        return ratio_value.mean()

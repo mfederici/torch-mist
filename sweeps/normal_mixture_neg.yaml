@@ -1,0 +1,50 @@
+program: train.py
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - fit
+  - -c=config/experiments/infomax.yaml
+  - --data=config/components/data/normal_mixture.yaml
+  - --data.batch_size=64
+  - --trainer.logger=pytorch_lightning.loggers.WandbLogger
+  - --trainer.default_root_dir=/tmp
+  - --trainer.accelerator=gpu
+#  - --trainer.max_epochs=1
+#  - --trainer.gpus=0
+#  - --trainer.accelerator=cpu
+  - ${args_no_hyphens}
+method: grid
+parameters:
+  --model.mi_estimator:
+    values:
+      - config/components/models/mi_estimators/NWJ.yaml
+      - config/components/models/mi_estimators/MINE.yaml
+      - config/components/models/mi_estimators/JS.yaml
+      - config/components/models/mi_estimators/InfoNCE.yaml
+      - config/components/models/mi_estimators/SMILE.yaml
+      - config/components/models/mi_estimators/TUBA.yaml
+      - config/components/models/mi_estimators/TUBA_alpha.yaml
+  --model.mi_estimator.proposal:
+    values:
+      - ""
+      - config/components/models/proposals/transformed_normal.yaml
+  --model.mi_estimator.predictor:
+    values:
+      - ""
+      - config/components/models/predictors/conditional_categorical.yaml
+  --data.neg_samples:
+    values:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+      - 32
+      - 64
+  --seed:
+    values:
+      - 7
+#      - 42
+#      - 123
+
