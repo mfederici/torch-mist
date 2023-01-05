@@ -23,16 +23,18 @@ class SampledDataModule(pl.LightningDataModule):
     def __init__(self, dist: JointDistribution, batch_size: int = 128, num_workers: int = 1, samples_per_epoch: int = 100000):
         super().__init__()
 
-        self.batch_size = batch_size
-        assert batch_size % num_workers == 0, "Batch size must be divisible by number of workers"
         self.num_workers = num_workers
+        self.batch_size = batch_size
+        if num_workers == 0:
+            num_workers = 1
+        assert batch_size % num_workers == 0, "Batch size must be divisible by number of workers"
         samples_per_worker = batch_size // num_workers
         self.dataset = SampleDataset(dist, samples_per_epoch=samples_per_epoch, n_samples=samples_per_worker)
 
     def train_dataloader(self):
         return DataLoader(
             self.dataset,
-            batch_size=self.num_workers,
+            batch_size=self.num_workers if self.num_workers > 0 else 1,
             num_workers=self.num_workers,
             collate_fn=collate_fn
         )

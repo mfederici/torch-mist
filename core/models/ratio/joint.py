@@ -22,7 +22,11 @@ class JointRatioEstimator(RatioEstimator):
 
     def forward(self, x, y) -> torch.Tensor:
         if x.ndim < y.ndim:
-            x = x.unsqueeze(1) + y*0    # hack to repeat without specifying the number of repeats
+            x = x.unsqueeze(1)
+
+        # hack to expand to the same shape without specifying the number of repeats
+        x = x + y * 0
+        y = y + x * 0
 
         xy = torch.cat([x, y], -1)
 

@@ -1,6 +1,6 @@
 from torch import nn
 
-from core.models import MutualInformationEstimator  # TODO integrate with the rest
+from core.models.mi_estimator.base import MutualInformationEstimator
 from core.models.baseline import LearnableJointBaseline
 
 
@@ -18,8 +18,7 @@ class FLO(MutualInformationEstimator):
             **kwargs
         )
 
-    @staticmethod
-    def _compute_dual_ratio_value(x, y, f, f_, baseline):
+    def _compute_dual_ratio_value(self, x, y, f, f_, baseline):
         b = baseline(f_, x, y)
         if b.ndim == 1:
             b = b.unsqueeze(1)

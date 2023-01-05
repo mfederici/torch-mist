@@ -58,7 +58,13 @@ class MutualInformationEstimator(nn.Module):
 
         # By default, we use the proposal is p(y)
         if self.proposal is None:
-            # take other ys in the batch as samples from the marginal
+            # If we use the whole batch as negatives
+            if n_samples == N:
+                # simply unsqueeze an empty dimension at the beginning
+                return y[:, 0].unsqueeze(0)
+
+            # Otherwise, take other ys in the batch as samples from the marginal
+            # (excluding the diagonal if neg_samples < N)
 
             # This indexing operation takes care of selecting the appropriate (off-diagonal) y
             idx = torch.arange(N * n_samples).to(y.device).view(N, n_samples).long()
@@ -166,8 +172,7 @@ class MutualInformationEstimator(nn.Module):
 
         return ratio_value, ratio_grad
 
-    @staticmethod
-    def _compute_dual_ratio_value(x, y, f, f_, baseline):
+    def _compute_dual_ratio_value(self, x, y, f, f_, baseline):
         if baseline is not None:
             b = baseline(f_, x, y)
             if b.ndim == 1:
@@ -264,6 +269,3 @@ class MutualInformationEstimator(nn.Module):
             estimates["mi/value"] = primal_value + dual_value
 
         return estimates
-
-
-
