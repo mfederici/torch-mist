@@ -8,7 +8,7 @@ command:
   - --data=config/components/data/normal_mixture.yaml
   - --data.batch_size=64
   - --trainer.logger=pytorch_lightning.loggers.WandbLogger
-  - --trainer.default_root_dir=/tmp
+  - --trainer.default_root_dir=~/results
   - --trainer.accelerator=gpu
 #  - --trainer.max_epochs=1
 #  - --trainer.gpus=0
@@ -21,10 +21,10 @@ parameters:
       - config/components/models/mi_estimators/NWJ.yaml
       - config/components/models/mi_estimators/MINE.yaml
       - config/components/models/mi_estimators/JS.yaml
-      - config/components/models/mi_estimators/InfoNCE.yaml
+#      - config/components/models/mi_estimators/InfoNCE.yaml
       - config/components/models/mi_estimators/SMILE.yaml
-      - config/components/models/mi_estimators/TUBA.yaml
-      - config/components/models/mi_estimators/TUBA_alpha.yaml
+#      - config/components/models/mi_estimators/TUBA.yaml
+#      - config/components/models/mi_estimators/TUBA_alpha.yaml
   --model.mi_estimator.proposal:
     values:
       - ""
@@ -33,7 +33,7 @@ parameters:
     values:
       - ""
       - config/components/models/predictors/conditional_categorical.yaml
-  --data.neg_samples:
+  --model.mi_estimator.neg_samples:
     values:
       - 1
       - 2
@@ -41,7 +41,7 @@ parameters:
       - 8
       - 16
       - 32
-      - 64
+#      - 64
   --seed:
     values:
       - 7

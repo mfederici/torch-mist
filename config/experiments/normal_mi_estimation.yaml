@@ -1,0 +1,23 @@
+data: ../components/data/normal_mixture.yaml
+
+model:
+  class_path: core.task.InfoMax
+
+trainer:
+  max_epochs: 100
+  callbacks:
+    - class_path: pytorch_lightning.callbacks.LearningRateMonitor
+    - class_path: core.callbacks.VarianceLogCallback
+      init_args:
+          key: ["mi/value", "mi/grad"]
+
+optimizer:
+  class_path: torch.optim.Adam
+  init_args:
+    lr: 1e-3
+
+lr_scheduler:
+  class_path: core.optim.lr_scheduler.SimCLRScheduler
+  init_args:
+    warmup_steps: 1
+    total_steps: 100

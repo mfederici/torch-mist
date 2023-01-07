@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
+from torch.distributions import Distribution
 
 from core.models.mi_estimator.base import MutualInformationEstimator
 from core.models.ratio import SeparableRatioEstimator
@@ -44,6 +45,8 @@ class SimCLR(MutualInformationEstimator):
             norm_layer: Optional[nn.Module] = None,
             temperature: float = 0.1,
             predictor: Optional[nn.Module] = None,
+            p_a: Optional[Distribution] = None,
+            h_a: Optional[float] = None,
     ):
         assert x_dim == y_dim, "x_dim and y_dim must be equal"
 
@@ -64,6 +67,8 @@ class SimCLR(MutualInformationEstimator):
             baseline=None,
             neg_samples=0,
             predictor=predictor,
+            p_a=p_a,
+            h_a=h_a,
         )
 
     def _compute_dual_ratio_value(self, x, y, f, f_, baseline):

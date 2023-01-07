@@ -41,8 +41,8 @@ class SampledDataModule(pl.LightningDataModule):
 
 
 class SampledNormalMixture(SampledDataModule):
-    def __init__(self, batch_size: int = 128, num_workers: int = 1, samples_per_epoch: int = 100000, neg_samples: int = 1):
-        p_xy = MultivariateCorrelatedNormalMixture()
+    def __init__(self, n_dim: int = 10, batch_size: int = 128, num_workers: int = 1, samples_per_epoch: int = 100000, neg_samples: int = 1):
+        p_xy = MultivariateCorrelatedNormalMixture(n_dim=n_dim)
         self.batch_size = batch_size
         p_xya = SignResampledDistribution(p_xy, neg_samples=neg_samples)
         self.p_xya = p_xya

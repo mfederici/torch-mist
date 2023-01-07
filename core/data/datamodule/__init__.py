@@ -1,2 +1,2 @@
 from .sampled import SampledDataModule, SampledNormalMixture
-from .celeba import CelebADataModule, ContrastiveCelebADataModule
+from .celeba import CelebABatchDataModule, ContrastiveCelebADataModule

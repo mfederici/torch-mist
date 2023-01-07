@@ -1,4 +1,4 @@
-#data: ../../components/data/normal_mixture.yaml
+data: ../../components/data/celeba.yaml
 
 model:
   class_path: core.task.InfoMax

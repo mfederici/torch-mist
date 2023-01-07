@@ -10,7 +10,7 @@ from core.models.baseline import Baseline, BatchLogMeanExp
 from core.models.ratio import RatioEstimator
 
 
-# The implementations in this work are generally based on
+# The implementations in this work are loosely based on
 # 1) "On Variational Lower bounds of mutual information" https://arxiv.org/pdf/1905.06922.pdf
 # 2) "Undertanding the Limitations of Variational Mutual Information Estimators https://arxiv.org/abs/1910.06222
 
@@ -22,14 +22,14 @@ class MutualInformationEstimator(nn.Module):
             ratio_estimator: Optional[RatioEstimator] = None,
             baseline: Optional[Baseline] = None,
             grad_baseline: Optional[Baseline] = None,
-            p_y: Optional[Distribution] = None,
-            p_a: Optional[Distribution] = None,
-            h_y: Optional[float] = None,
-            h_a: Optional[float] = None,
             neg_samples: int = 1,
             sample_gradient: bool = False,
             tau: Optional[float] = None,
             js_grad: bool = False,
+            p_y: Optional[Distribution] = None,
+            p_a: Optional[Distribution] = None,
+            h_y: Optional[float] = None,
+            h_a: Optional[float] = None,
     ):
         assert predictor is None or proposal is None, "Only one of the two can be specified"
         super(MutualInformationEstimator, self).__init__()
@@ -148,7 +148,7 @@ class MutualInformationEstimator(nn.Module):
 
         return ratio_value, ratio_grad
 
-    def compute_dual_ratio(self, x: torch.Tensor, y: torch.Tensor, y_: torch.Tensor) -> Tuple[
+    def compute_dual_ratio(self, x: torch.Tensor, y: torch.Tensor, y_: Optional[torch.Tensor] = None) -> Tuple[
         Optional[torch.Tensor], torch.Tensor]:
         # Computation of gradient and value of E_{p(x,y)}[f(x,y)]-log E_{r(x,y)}[e^{f(x,y)}]
         if self.ratio_estimator is None:

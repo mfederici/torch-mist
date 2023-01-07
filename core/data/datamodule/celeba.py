@@ -7,7 +7,7 @@ from core.data.sampler import SameAttributesSampler
 from core.data.utils import CompareAttributeSubset
 
 
-class CelebADataModule(LightningDataModule):
+class CelebABatchDataModule(LightningDataModule):
     def __init__(self,
                  data_dir: str,
                  num_workers: int,

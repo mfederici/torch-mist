@@ -2,3 +2,4 @@ class_path: core.data.datamodule.SampledNormalMixture
 init_args:
   batch_size: 128
   num_workers: 8
+  n_dim: 10

@@ -161,14 +161,14 @@ def cli_main():
     ###############
 
     if args.dataset == 'celeba':
-        from core.data.datamodule import CelebADataModule
+        from core.data.datamodule import CelebABatchDataModule
 
         args.hidden_mlp = 512
         train_attributes = np.arange(40)[1::4]
         # Entropy of the attribute distribution
         args.num_samples = 162770
 
-        dm = CelebADataModule(
+        dm = CelebABatchDataModule(
             data_dir=args.data_dir,
             batch_size=args.batch_size,
             num_workers=args.num_workers,
