@@ -1,5 +1,5 @@
 class_path: core.models.proposal.TransformedNormalProposal
 init_args:
-  x_dim: 10
-  y_dim: 10
+  x_dim: 5
+  y_dim: 5
   hidden_dims: [512, 512]
