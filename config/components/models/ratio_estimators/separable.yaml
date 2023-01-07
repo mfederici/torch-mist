@@ -1,7 +1,7 @@
 class_path: core.models.ratio.SeparableRatioEstimatorMLP
 init_args:
-    x_dim: 10
-    y_dim: 10
+    x_dim: 5
+    y_dim: 5
     transform_x: true
     transform_y: false
     hidden_dims: [256, 128]
