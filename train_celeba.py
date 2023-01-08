@@ -146,6 +146,30 @@ class AdaptedSimCLR(SimCLR):
         parser.add_argument('--default_root_dir', type=str, default='.')
 
         return parser
+
+from core.task import InfoMax
+class EInfoMax(InfoMax):
+    def configure_optimizers(self):
+        import torch
+        from pl_bolts.optimizers.lr_scheduler import linear_warmup_decay
+        params = self.parameters()
+
+        optimizer = torch.optim.Adam(params, lr=1e-3, weight_decay=1e-6)
+
+        warmup_steps = 1000
+        total_steps = 100000
+
+        scheduler = {
+            "scheduler": torch.optim.lr_scheduler.LambdaLR(
+                optimizer,
+                linear_warmup_decay(warmup_steps, total_steps, cosine=True),
+            ),
+            "interval": "step",
+            "frequency": 1,
+        }
+
+        return [optimizer], [scheduler]
+
 def cli_main():
     from pl_bolts.models.self_supervised.simclr.transforms import SimCLRTrainDataTransform, SimCLREvalDataTransform
     from pytorch_lightning.callbacks import LearningRateMonitor
@@ -210,10 +234,10 @@ def cli_main():
 
     # model = AdaptedSimCLR(**args.__dict__)
 
-    from core.task import InfoMax
     from core.models.encoder import VisionTransformer
     from core.models.mi_estimator import SimCLR
-    model = InfoMax(
+
+    model = EInfoMax(
         encoder_x=VisionTransformer(
             image_size=224,
             patch_size=16,
@@ -230,28 +254,7 @@ def cli_main():
             out_dim=128
         )
     )
-    import torch
-    from pl_bolts.optimizers.lr_scheduler import linear_warmup_decay
-    def configure_optimizers(self):
-        params = self.parameters()
 
-        optimizer = torch.optim.Adam(params, lr=1e-3, weight_decay=1e-6)
-
-        warmup_steps = 1000
-        total_steps = 100000
-
-        scheduler = {
-            "scheduler": torch.optim.lr_scheduler.LambdaLR(
-                optimizer,
-                linear_warmup_decay(warmup_steps, total_steps, cosine=True),
-            ),
-            "interval": "step",
-            "frequency": 1,
-        }
-
-        return [optimizer], [scheduler]
-
-    model.configure_optimizers = partial(configure_optimizers, self=model)
 
     ###########
     # Trainer #
