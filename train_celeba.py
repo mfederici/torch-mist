@@ -74,7 +74,7 @@ class AdaptedSimCLR(SimCLR):
             num_heads=8,
             hidden_dim=256,
             mlp_dim=self.hidden_mlp,
-            num_classes=self.hidden_mlp,
+            out_dim=self.hidden_mlp,
         )
 
         return encoder
