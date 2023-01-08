@@ -1,4 +1,4 @@
-class_path: core.models.MutualInformationEstimator
+class_path: core.models.mi_estimator.IndoNCE
 init_args:
   ratio_estimator: ../ratio_estimators/separable.yaml
   baseline: ../baselines/batch_logmeanexp.yaml

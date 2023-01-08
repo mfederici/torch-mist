@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Optional
+from typing import Optional, List
 
 import numpy as np
 import torch
@@ -14,20 +14,33 @@ from core.models.ratio import SeparableRatioEstimator
 class Projection(nn.Module):
     def __init__(self,
                  input_dim: int,
-                 hidden_dim: int = 2048,
+                 hidden_dims: List[int],
                  out_dim: int = 128,
                  norm_layer: nn.Module = partial(nn.LayerNorm, eps=1e-6),
                  ):
         super().__init__()
         self.out_dim = out_dim
-        self.input_dim = input_dim
-        self.hidden_dim = hidden_dim
 
-        self.model = nn.Sequential(
-            nn.Linear(self.input_dim, self.hidden_dim),
-            norm_layer(self.hidden_dim),
-            nn.ReLU(),
-            nn.Linear(self.hidden_dim, self.out_dim, bias=False),
+        hidden_dims = [input_dim] + hidden_dims
+
+        self.model = nn.Sequential()
+        for i in range(len(hidden_dims) - 1):
+            self.model.add_module(
+                f"linear_{i}",
+                nn.Linear(hidden_dims[i], hidden_dims[i + 1]),
+            )
+            self.model.add_module(
+                f"norm_{i}",
+                norm_layer(hidden_dims[i + 1]),
+            )
+            self.model.add_module(
+                f"relu_{i}",
+                nn.ReLU(),
+            )
+
+        self.model.add_module(
+            "linear_out",
+            nn.Linear(hidden_dims[-1], self.out_dim, bias=False),
         )
 
     def forward(self, x):
@@ -41,7 +54,7 @@ class SimCLR(MutualInformationEstimator):
             x_dim: int,
             y_dim: int,
             out_dim: int = 128,
-            hidden_dim: int = 1024,
+            hidden_dims: Optional[List[int]] = None,
             norm_layer: Optional[nn.Module] = None,
             temperature: float = 0.1,
             predictor: Optional[nn.Module] = None,
@@ -50,12 +63,15 @@ class SimCLR(MutualInformationEstimator):
     ):
         assert x_dim == y_dim, "x_dim and y_dim must be equal"
 
+        if hidden_dims is None:
+            hidden_dims = [2048]
+
         if norm_layer is None:
             norm_layer = partial(nn.LayerNorm, eps=1e-6)
 
         projector = Projection(
             input_dim=x_dim,
-            hidden_dim=hidden_dim,
+            hidden_dims=hidden_dims,
             out_dim=out_dim,
             norm_layer=norm_layer,
         )

@@ -3,4 +3,4 @@ init_args:
   y_dim: 5
   a_dim: 5
   n_classes: 2
-  hidden_dims: [256]
+  hidden_dims: [256, 128]

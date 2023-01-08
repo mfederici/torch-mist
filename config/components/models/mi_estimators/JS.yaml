@@ -1,5 +1,5 @@
-class_path: core.models.MutualInformationEstimator
+class_path: core.models.mi_estimator.JS
 init_args:
-  ratio_estimator: ../ratio_estimators/joint.yaml
-  baseline: ../baselines/one.yaml
-  js_grad: true
+  x_dim: 5
+  y_dim: 5
+  hidden_dims: [256, 128]

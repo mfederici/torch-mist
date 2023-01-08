@@ -1,4 +1,5 @@
-class_path: core.models.MutualInformationEstimator
+class_path: core.models.mi_estimator.NWJ
 init_args:
-  ratio_estimator: ../ratio_estimators/joint.yaml
-  baseline: ../baselines/one.yaml
+  x_dim: 5
+  y_dim: 5
+  hidden_dims: [256, 128]

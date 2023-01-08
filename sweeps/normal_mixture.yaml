@@ -16,15 +16,15 @@ command:
   - ${args_no_hyphens}
 method: grid
 parameters:
-  --model.mi_estimator:
+  --model.mi_estimator.class_path:
     values:
-      - config/components/models/mi_estimators/NWJ.yaml
-      - config/components/models/mi_estimators/MINE.yaml
-      - config/components/models/mi_estimators/JS.yaml
-      - config/components/models/mi_estimators/InfoNCE.yaml
-      - config/components/models/mi_estimators/SMILE.yaml
-      - config/components/models/mi_estimators/TUBA.yaml
-      - config/components/models/mi_estimators/TUBA_alpha.yaml
+      - core.models.mi_estimator.NWJ
+      - core.models.mi_estimator.MINE
+      - core.models.mi_estimator.JS
+      - core.models.mi_estimator.InfoNCE
+      - core.models.mi_estimator.SMILE
+      - core.models.mi_estimator.TUBA
+      - core.models.mi_estimator.AlphaTuba
   --model.mi_estimator.proposal:
     values:
       - ""

@@ -1,4 +1,0 @@
-class_path: core.models.baseline.LearnableMLPBaseline
-init_args:
-  hidden_dims: [ 64, 64 ]
-  x_dim: 5

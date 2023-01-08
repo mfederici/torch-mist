@@ -2,6 +2,13 @@ data: ../components/data/normal_mixture.yaml
 
 model:
   class_path: core.task.InfoMax
+  init_args:
+    mi_estimator:
+      class_path: core.models.mi_estimator.NWJ
+      init_args:
+        x_dim: 5
+        y_dim: 5
+        hidden_dims: [256, 128]
 
 trainer:
   max_epochs: 100
