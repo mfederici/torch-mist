@@ -208,7 +208,7 @@ def cli_main():
         predictor = ConditionalLinearCategorical(y_dim=args.hidden_mlp, n_classes=2, a_dim=10)
         args.predictor = predictor
 
-    model = AdaptedSimCLR(**args.__dict__)
+    # model = AdaptedSimCLR(**args.__dict__)
 
     from core.task import InfoMax
     from core.models.encoder import VisionTransformer
