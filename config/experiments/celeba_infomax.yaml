@@ -38,6 +38,12 @@ trainer:
     - class_path: core.callbacks.VarianceLogCallback
       init_args:
           key: ["mi/value", "mi/grad"]
+    - class_path: core.callbacks.SSLOnlineEvaluator
+      init_args:
+        z_dim: 512
+        hidden_dim: 256
+        num_classes: 2
+        t_dim: 30
 
 optimizer:
   class_path: torch.optim.AdamW

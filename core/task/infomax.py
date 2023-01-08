@@ -92,7 +92,10 @@ class InfoMax(pl.LightningModule):
 
         estimates = self.mi_estimator(x, y, y_, a)
         estimates["loss"] = -estimates["mi/grad"]
-        estimates.update(batch)
+        if self.encoder_x:
+            estimates["z_x"] = x
+        if self.encoder_y:
+            estimates["z_y"] = y
 
         return estimates
 

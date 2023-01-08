@@ -110,13 +110,13 @@ class SSLOnlineEvaluator(Callback):  # pragma: no cover
         batch: Dict[str, torch.Tensor],
         batch_idx: int,
     ) -> None:
-        assert "z1" in outputs, "The outputs must contain the representation z1 of x"
+        assert "z_x" in outputs, "The outputs must contain the representation z_x of x"
         assert "t" in batch, "The batch must contain the target t"
 
-        z1 = outputs["z1"]
+        z_x = outputs["z_x"]
         t = batch["t"]
 
-        mlp_loss = self.shared_step(z1, t)
+        mlp_loss = self.shared_step(z_x, t)
 
         # update finetune weights
         self.optimizer.zero_grad()
@@ -134,13 +134,13 @@ class SSLOnlineEvaluator(Callback):  # pragma: no cover
         batch_idx: int,
         dataloader_idx: int,
     ) -> None:
-        assert "z1" in outputs, "The outputs must contain the representation z1 of x"
+        assert "z_x" in outputs, "The outputs must contain the representation z_x of x"
         assert "t" in batch, "The batch must contain the target t"
 
-        z1 = outputs["z1"]
+        z_x = outputs["z_x"]
         t = batch["t"]
 
-        mlp_loss = self.shared_step(z1, t)
+        mlp_loss = self.shared_step(z_x, t)
 
         pl_module.log("log q(t|z)/val", -mlp_loss, on_step=False, on_epoch=True)
 
