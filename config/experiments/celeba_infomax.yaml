@@ -5,14 +5,9 @@ data:
     num_workers: 24
     neg_samples: 1
     train_transforms:
-      class_path: pl_bolts.models.self_supervised.simclr.SimCLRTrainDataTransform
-      init_args:
-        jitter_strength: 1.0
-        input_height: 224
+      class_path: core.data.transforms.CelebATrainTransform
     val_transforms:
-      class_path: pl_bolts.models.self_supervised.simclr.SimCLREvalDataTransform
-      init_args:
-        input_height: 224
+      class_path: core.data.transforms.CelebATrainTransform
     train_attributes: [ 1, 5, 9, 13, 17, 21, 25, 29, 33, 37 ]
 
 model:
@@ -21,7 +16,7 @@ model:
     encoder_x:
       class_path: core.models.encoder.VisionTransformer # Just a wrapper for torchvision.models.vision_transformer
       init_args:
-        image_size: 224
+        image_size: 128
         patch_size: 16
         num_layers: 8
         num_heads: 8

@@ -10,17 +10,20 @@ from typing import Optional, Callable, List, Tuple, Any, Dict
 class CelebADict(CelebA):
     def __init__(
             self,
-             root: str,
-             transform: Callable[[Any], Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
-             select_attributes: Optional[List[int]] = None,
-             download: bool = False,
-             split: str = "train",
-             augment_x: bool = True
+            root: str,
+            transform: Callable[[Any], torch.Tensor],
+            select_attributes: Optional[List[int]] = None,
+            download: bool = False,
+            split: str = "train",
+            augment_x: bool = True,
+
     ):
 
-        super().__init__(root=root, download=download, split=split, transform=transform)
+        super().__init__(root=root, download=download, split=split)
         if select_attributes is None:
             select_attributes = list(range(40))
+        self.transform_x = transform
+        self.transform_y = transform
         self.select_attributes = select_attributes
         self.not_selected_attributes = torch.LongTensor([i for i in np.arange(40) if not (i in select_attributes)])
         self.n_attributes = len(select_attributes)
@@ -42,10 +45,9 @@ class CelebADict(CelebA):
         return self._h_a
 
     def __getitem__(self, item) -> Dict[str, torch.Tensor]:
-        pos_imgs, a = super().__getitem__(item)
-
-        x = pos_imgs[0 if self.augment_x else 2]
-        y = pos_imgs[1]
+        img, a = super().__getitem__(item)
+        x = self.transform_x(img)
+        y = self.transform_y(img)
 
         return {
             "x": x,
@@ -59,18 +61,20 @@ class ContrastiveCelebA(CelebADict):
     def __init__(
         self,
         root: str,
-        transform: Callable[[Any], Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
+        transform: Callable[[Any], torch.Tensor],
         select_attributes: Optional[List[int]] = None,
         download: bool = False,
         split: str = "train",
         augment_x: bool = True,
-        neg_samples: int = 1
+        neg_samples: int = 1,
+        sample_negatives: bool = True,
     ):
         super().__init__(root, transform, select_attributes, download, split, augment_x)
+        self.sample_negatives = sample_negatives
         self.neg_samples = neg_samples
         self._id_cache = {}
 
-    def _find_same_attributes(self, a: torch.LongTensor):
+    def _find_same_attributes(self, a: torch.Tensor):
         if a in self._id_cache:
             return self._id_cache[a]
         else:
@@ -81,16 +85,20 @@ class ContrastiveCelebA(CelebADict):
 
     def __getitem__(self, item):
         data = super().__getitem__(item)
-        if self.neg_samples > 0:
+        if self.neg_samples > 0 and self.sample_negatives:
             assert "a" in data, "a not in data"
             y_ = []
             a = data["a"]
             for idx in self._find_same_attributes(a):
-                neg_sample = super().__getitem__(idx)
-                y_.append(neg_sample["y"].unsqueeze(0))
-                assert torch.equal(a, neg_sample["a"])
+                neg_img, a_ = CelebA.__getitem__(self, idx)
+                assert torch.equal(a, a_[self.select_attributes]), f"{a} != {a_}, a and a_ should be equal"
+                neg_sample = self.transform_y(neg_img)
+                y_.append(neg_sample.unsqueeze(0))
 
-            data['y_'] = torch.cat(y_, 0)
+            y_ = torch.cat(y_, 0)
+            if self.neg_samples == 1:
+                y_ = y_.squeeze(0)
+            data['y_'] = y_
 
         return data
 

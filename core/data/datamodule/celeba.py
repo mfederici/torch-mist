@@ -113,7 +113,7 @@ class ContrastiveCelebADataModule(LightningDataModule):
         self.train_set.neg_samples = value
         self.val_set.neg_samples = value
 
-    def setup(self, stage: Optional[str] = None):
+    def prepare_data(self, stage: Optional[str] = None):
         self.train_set = ContrastiveCelebA(
             root=self.data_dir,
             transform=self.train_transforms,

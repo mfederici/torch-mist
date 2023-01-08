@@ -1,1 +1,1 @@
-from .celeba import CelebATrainTransform, CelebAEvalTransform
+from .celeba import CelebATrainTransform #, CelebAEvalTransform
