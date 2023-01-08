@@ -150,7 +150,7 @@ class MutualInformationEstimator(nn.Module):
 
         return ratio_value, ratio_grad
 
-    def compute_dual_ratio(self, x: torch.Tensor, y: torch.Tensor, y_: torch.Tensor) -> Tuple[
+    def compute_dual_ratio(self, x: torch.Tensor, y: torch.Tensor, y_: Optional[torch.Tensor] = None) -> Tuple[
         Optional[torch.Tensor], torch.Tensor]:
         # Computation of gradient and value of E_{p(x,y)}[f(x,y)]-log E_{r(x,y)}[e^{f(x,y)}]
         if self.ratio_estimator is None:
@@ -158,6 +158,10 @@ class MutualInformationEstimator(nn.Module):
         else:
             # Compute the ratio f(x,y) on samples from p(x,y). The expected shape is [N, M]
             f = self.ratio_estimator(x, y)
+
+            # Negative samples from r(y|x) unless samples from p(y|a) are given
+            if y_ is None or self.predictor is None:
+                y_ = self.sample_proposal(x, y)
 
             # Compute the ratio on the samples from the proposal [N, M']
             f_ = self.ratio_estimator(x, y_)
@@ -244,15 +248,12 @@ class MutualInformationEstimator(nn.Module):
         # Compute the ratio using the primal bound
         primal_value, primal_grad = self.compute_primal_ratio(x, y, a)
 
-        # Negative samples from r(y|x) unless samples from p(y|a) are given
-        if y_ is None or self.predictor is None:
-            y_ = self.sample_proposal(x, y)
-        else:
+        if y_ is not None:
             if y_.ndim == x.ndim:
                 # If one dimension is missing, we assume there is only one negative sample
                 y_ = y_.unsqueeze(1)
 
-        assert y_.ndim == x.ndim + 1
+            assert y_.ndim == x.ndim + 1
 
         # And the rest using the dual density ratio
         dual_value, dual_grad = self.compute_dual_ratio(x, y, y_)

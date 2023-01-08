@@ -1,5 +1,6 @@
+import math
 from functools import partial
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 import numpy as np
 import torch
@@ -57,14 +58,13 @@ class SimCLR(MutualInformationEstimator):
             hidden_dims: Optional[List[int]] = None,
             norm_layer: Optional[nn.Module] = None,
             temperature: float = 0.1,
-            predictor: Optional[nn.Module] = None,
-            p_a: Optional[Distribution] = None,
-            h_a: Optional[float] = None,
+            eps: float = 1e-6,
+            **kwargs
     ):
         assert x_dim == y_dim, "x_dim and y_dim must be equal"
 
         if hidden_dims is None:
-            hidden_dims = [2048]
+            hidden_dims = [1024]
 
         if norm_layer is None:
             norm_layer = partial(nn.LayerNorm, eps=1e-6)
@@ -79,40 +79,69 @@ class SimCLR(MutualInformationEstimator):
 
         MutualInformationEstimator.__init__(
             self,
-            ratio_estimator=SeparableRatioEstimator(f_x=projector, f_y=projector),
+            # ratio_estimator=SeparableRatioEstimator(f_x=projector, f_y=projector),
             baseline=None,
             neg_samples=0,
-            predictor=predictor,
-            p_a=p_a,
-            h_a=h_a,
+            **kwargs
         )
 
-    def _compute_dual_ratio_value(self, x, y, f, f_, baseline):
-        f = f / self.temperature
+        self.projector = projector #
+        self.eps = eps
 
-        f_xy = f_ / self.temperature
-        f_yx = f_.T / self.temperature
+    def compute_dual_ratio(self, x: torch.Tensor, y: torch.Tensor, y_: Optional[torch.Tensor]=None) -> Tuple[
+        Optional[torch.Tensor], torch.Tensor]:
+        h_x = self.projector(x)
+        h_y = self.projector(y).squeeze(1)
 
-        # Contrast x against itself
-        f_xx = self.ratio_estimator(x, x.unsqueeze(0)) / self.temperature
-        # Remove the diagonal
-        f_xx = f_xx.tril(-1)[:, :-1] + f_xx.triu(1)[:, 1:]
+        # out: [2 * batch_size, dim]
+        # out_dist: [2 * batch_size * world_size, dim]
+        out = torch.cat([h_x, h_y], dim=0)
 
-        # Same for y
-        f_yy = self.ratio_estimator(y.permute(1, 0, 2), y) / self.temperature
-        f_yy = f_yy.tril(-1)[:, :-1] + f_yy.triu(1)[:, 1:]
+        # cov and sim: [2 * batch_size, 2 * batch_size * world_size]
+        # neg: [2 * batch_size]
+        cov = torch.mm(out, out.t())
+        sim = torch.exp(cov / self.temperature)
+        neg = sim.sum(dim=-1)
 
-        # Compute the log-noramlization constant
-        log_Z_x = torch.logsumexp(
-            torch.cat([f_xx, f_xy], 1), 1
-        ).unsqueeze(1) - np.log(f_.shape[1]+f_xx.shape[1])
+        # from each row, subtract e^(1/temp) to remove similarity measure for x1.x1
+        row_sub = torch.Tensor(neg.shape).fill_(math.e ** (1 / self.temperature)).to(neg.device)
+        neg = torch.clamp(neg - row_sub, min=self.eps)  # clamp for numerical stability
 
-        log_Z_y = torch.logsumexp(
-            torch.cat([f_yx, f_yy], 1), 1
-        ).unsqueeze(1) - np.log(f_.shape[1]+f_yy.shape[1])
+        # Positive similarity, pos becomes [2 * batch_size]
+        pos = torch.exp(torch.sum(h_x * h_y, dim=-1) / self.temperature)
+        pos = torch.cat([pos, pos], dim=0)
 
-        log_Z = log_Z_x / 2.0 + log_Z_y / 2.0
+        loss = -torch.log(pos / (neg + self.eps)).mean()
 
-        ratio_value = f - log_Z
+        return loss, loss
 
-        return ratio_value.mean()
+
+    # def _compute_dual_ratio_value(self, x, y, f, f_, baseline):
+    #     f = f / self.temperature
+    #
+    #     f_xy = f_ / self.temperature
+    #     f_yx = f_.T / self.temperature
+    #
+    #     # Contrast x against itself
+    #     f_xx = self.ratio_estimator(x, x.unsqueeze(0)) / self.temperature
+    #     # Remove the diagonal
+    #     f_xx = f_xx.tril(-1)[:, :-1] + f_xx.triu(1)[:, 1:]
+    #
+    #     # Same for y
+    #     f_yy = self.ratio_estimator(y.permute(1, 0, 2), y) / self.temperature
+    #     f_yy = f_yy.tril(-1)[:, :-1] + f_yy.triu(1)[:, 1:]
+    #
+    #     # Compute the log-noramlization constant
+    #     log_Z_x = torch.logsumexp(
+    #         torch.cat([f_xx, f_xy], 1), 1
+    #     ).unsqueeze(1) - np.log(f_.shape[1]+f_xx.shape[1])
+    #
+    #     log_Z_y = torch.logsumexp(
+    #         torch.cat([f_yx, f_yy], 1), 1
+    #     ).unsqueeze(1) - np.log(f_.shape[1]+f_yy.shape[1])
+    #
+    #     log_Z = log_Z_x / 2.0 + log_Z_y / 2.0
+    #
+    #     ratio_value = f - log_Z
+    #
+    #     return ratio_value.mean()
