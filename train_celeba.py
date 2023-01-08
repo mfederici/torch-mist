@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from functools import partial
 
 import numpy as np
 from torch import nn
@@ -209,14 +210,58 @@ def cli_main():
 
     model = AdaptedSimCLR(**args.__dict__)
 
+    from core.task import InfoMax
+    from core.models.encoder import VisionTransformer
+    from core.models.mi_estimator import SimCLR
+    model = InfoMax(
+        encoder_x=VisionTransformer(
+            image_size=224,
+            patch_size=16,
+            num_layers=8,
+            num_heads=8,
+            hidden_dim=256,
+            mlp_dim=args.hidden_mlp,
+            out_dim=args.hidden_mlp,
+        ),
+        mi_estimator=SimCLR(
+            x_dim=args.hidden_mlp,
+            y_dim=args.hidden_mlp,
+            hidden_dims=[512],
+            out_dim=128
+        )
+    )
+    import torch
+    from pl_bolts.optimizers.lr_scheduler import linear_warmup_decay
+    def configure_optimizers(self):
+        params = self.parameters()
+
+        optimizer = torch.optim.Adam(params, lr=1e-3, weight_decay=1e-6)
+
+        warmup_steps = 1000
+        total_steps = 100000
+
+        scheduler = {
+            "scheduler": torch.optim.lr_scheduler.LambdaLR(
+                optimizer,
+                linear_warmup_decay(warmup_steps, total_steps, cosine=True),
+            ),
+            "interval": "step",
+            "frequency": 1,
+        }
+
+        return [optimizer], [scheduler]
+
+    model.configure_optimizers = partial(configure_optimizers, self=model)
+
     ###########
     # Trainer #
     ###########
 
     lr_monitor = LearningRateMonitor(logging_interval="step")
     model_checkpoint = ModelCheckpoint(save_last=True, save_top_k=1, monitor="loss/val")
-    online_evaluator = SSLOnlineEvaluator(z_dim=args.hidden_mlp, num_classes=ssl_num_classes, t_dim=ssl_t_dim)
-    callbacks = [model_checkpoint, online_evaluator] if args.online_ft else [model_checkpoint]
+    # online_evaluator = SSLOnlineEvaluator(z_dim=args.hidden_mlp, num_classes=ssl_num_classes, t_dim=ssl_t_dim)
+    # online_evaluator
+    callbacks = [model_checkpoint] if args.online_ft else [model_checkpoint]
     callbacks.append(lr_monitor)
 
     trainer = Trainer(
