@@ -87,7 +87,8 @@ class InfoMax(pl.LightningModule):
             x = self.encoder_x(x)
         if self.encoder_y is not None:
             y = self.encoder_y(y)
-            y_ = self.encoder_y(y_)
+            if y_ is not None:
+                y_ = self.encoder_y(y_)
 
         estimates = self.mi_estimator(x, y, y_, a)
         estimates["loss"] = -estimates["mi/grad"]

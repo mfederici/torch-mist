@@ -1,8 +1,8 @@
 data:
   class_path: core.data.datamodule.ContrastiveCelebADataModule
   init_args:
-    batch_size: 64
-    num_workers: 12
+    batch_size: 32
+    num_workers: 24
     neg_samples: 1
     train_transforms:
       class_path: pl_bolts.models.self_supervised.simclr.SimCLRTrainDataTransform

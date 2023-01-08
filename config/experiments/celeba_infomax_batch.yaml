@@ -1,6 +1,8 @@
 data:
   class_path: core.data.datamodule.CelebABatchDataModule
   init_args:
+    num_workers: 24
+    batch_size: 32
     sample_same_attributes: True
     train_transforms:
       class_path: pl_bolts.models.self_supervised.simclr.SimCLRTrainDataTransform
