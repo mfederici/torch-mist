@@ -109,8 +109,6 @@ class ContrastiveCelebADataModule(LightningDataModule):
 
     @neg_samples.setter
     def neg_samples(self, value: int):
-        if value <= 0:
-            value = self.batch_size - value
         self._neg_samples = value
         self.train_set.neg_samples = value
         self.val_set.neg_samples = value

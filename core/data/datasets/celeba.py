@@ -68,23 +68,29 @@ class ContrastiveCelebA(CelebADict):
     ):
         super().__init__(root, transform, select_attributes, download, split, augment_x)
         self.neg_samples = neg_samples
+        self._id_cache = {}
 
     def _find_same_attributes(self, a: torch.LongTensor):
-        mask = (self.attr[:, self.select_attributes] == a).sum(1) == len(a)
-        ids = torch.arange(len(self))[mask]
+        if a in self._id_cache:
+            return self._id_cache[a]
+        else:
+            mask = (self.attr[:, self.select_attributes] == a).sum(1) == len(a)
+            ids = torch.arange(len(self))[mask]
+            self._id_cache[a] = ids
         return np.random.choice(ids, self.neg_samples)
 
     def __getitem__(self, item):
         data = super().__getitem__(item)
-        assert "a" in data, "a not in data"
-        y_ = []
-        a = data["a"]
-        for idx in self._find_same_attributes(a):
-            neg_sample = super().__getitem__(idx)
-            y_.append(neg_sample["y"].unsqueeze(0))
-            assert torch.equal(a, neg_sample["a"])
+        if self.neg_samples > 0:
+            assert "a" in data, "a not in data"
+            y_ = []
+            a = data["a"]
+            for idx in self._find_same_attributes(a):
+                neg_sample = super().__getitem__(idx)
+                y_.append(neg_sample["y"].unsqueeze(0))
+                assert torch.equal(a, neg_sample["a"])
 
-        data['y_'] = torch.cat(y_, 0)
+            data['y_'] = torch.cat(y_, 0)
 
         return data
 
