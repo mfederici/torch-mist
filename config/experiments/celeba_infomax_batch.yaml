@@ -1,0 +1,54 @@
+data:
+  class_path: core.data.datamodule.CelebABatchDataModule
+  init_args:
+    sample_same_attributes: True
+    train_transforms:
+      class_path: pl_bolts.models.self_supervised.simclr.SimCLRTrainDataTransform
+      init_args:
+        jitter_strength: 0.5
+        input_height: 224
+    val_transforms:
+      class_path: pl_bolts.models.self_supervised.simclr.SimCLREvalDataTransform
+      init_args:
+        input_height: 224
+    train_attributes: [ 1, 5, 9, 13, 17, 21, 25, 29, 33, 37 ]
+
+model:
+  class_path: core.task.InfoMax
+  init_args:
+    encoder_x:
+      class_path: core.models.encoder.VisionTransformer # Just a wrapper for torchvision.models.vision_transformer
+      init_args:
+        image_size: 224
+        patch_size: 16
+        num_layers: 8
+        num_heads: 8
+        hidden_dim: 256
+        mlp_dim: 1024
+        out_dim: 256 # This corresponds to the dimension of the representation
+    encoder_y: same
+    mi_estimator:
+      class_path: core.models.mi_estimator.SimCLR
+      init_args:
+        x_dim: 256
+        y_dim: 256
+        hidden_dims: [2048]
+
+trainer:
+  max_epochs: 100
+  callbacks:
+    - class_path: pytorch_lightning.callbacks.LearningRateMonitor
+    - class_path: core.callbacks.VarianceLogCallback
+      init_args:
+          key: ["mi/value", "mi/grad"]
+
+optimizer:
+  class_path: torch.optim.AdamW
+  init_args:
+    lr: 1e-3
+
+lr_scheduler:
+  class_path: core.optim.lr_scheduler.SimCLRScheduler
+  init_args:
+    warmup_steps: 1
+    total_steps: 100
