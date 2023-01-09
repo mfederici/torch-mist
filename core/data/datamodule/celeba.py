@@ -1,4 +1,6 @@
-from typing import Optional, Callable, List
+from typing import Optional, Callable, List, Dict, Union, Any
+
+import torch
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader
 
@@ -12,8 +14,8 @@ class CelebABatchDataModule(LightningDataModule):
                  data_dir: str,
                  num_workers: int,
                  batch_size: int,
-                 train_transforms: Optional[Callable] = None,
-                 val_transforms: Optional[Callable] = None,
+                 train_transforms: Union[Dict[str, Callable[[Any], torch.Tensor]], Callable[[Any], torch.Tensor]],
+                 val_transforms: Union[Dict[str, Callable[[Any], torch.Tensor]], Callable[[Any], torch.Tensor]],
                  train_attributes: Optional[List[int]] = None,
                  sample_same_attributes: bool = False,
                  download: bool = False
@@ -31,7 +33,7 @@ class CelebABatchDataModule(LightningDataModule):
     def setup(self, stage: Optional[str] = None):
         self.train_set = CelebADict(
             root=self.data_dir,
-            transform=self.train_transforms,
+            transforms=self.train_transforms,
             select_attributes=self.train_attributes,
             split="train",
             download=self.download
@@ -39,7 +41,7 @@ class CelebABatchDataModule(LightningDataModule):
 
         self.val_set = CelebADict(
             root=self.data_dir,
-            transform=self.val_transforms,
+            transforms=self.val_transforms,
             select_attributes=self.train_attributes,
             split="valid",
             download=self.download)
@@ -77,14 +79,15 @@ class CelebABatchDataModule(LightningDataModule):
 
 
 class ContrastiveCelebADataModule(LightningDataModule):
+
     def __init__(
             self,
             data_dir: str,
             num_workers: int,
             batch_size: int,
-            neg_samples: int = 1,
-            train_transforms: Optional[Callable] = None,
-            val_transforms: Optional[Callable] = None,
+            train_transforms: Union[Dict[str, Callable[[Any], torch.Tensor]], Callable[[Any], torch.Tensor]],
+            val_transforms: Union[Dict[str, Callable[[Any], torch.Tensor]], Callable[[Any], torch.Tensor]],
+            neg_samples: int = 0,
             train_attributes: Optional[List[int]] = None,
             download: bool = False,
 
@@ -102,7 +105,6 @@ class ContrastiveCelebADataModule(LightningDataModule):
             neg_samples = batch_size - neg_samples
 
         self._neg_samples = neg_samples
-
     @property
     def neg_samples(self) -> int:
         return self._neg_samples
@@ -116,7 +118,7 @@ class ContrastiveCelebADataModule(LightningDataModule):
     def prepare_data(self, stage: Optional[str] = None):
         self.train_set = ContrastiveCelebA(
             root=self.data_dir,
-            transform=self.train_transforms,
+            transforms=self.train_transforms,
             select_attributes=self.train_attributes,
             split="train",
             download=self.download
@@ -124,7 +126,7 @@ class ContrastiveCelebADataModule(LightningDataModule):
 
         self.val_set = ContrastiveCelebA(
             root=self.data_dir,
-            transform=self.val_transforms,
+            transforms=self.val_transforms,
             select_attributes=self.train_attributes,
             split="valid",
             download=self.download

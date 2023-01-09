@@ -7,17 +7,13 @@ class CelebATrainTransform(transforms.Compose):
     def __init__(
             self,
             image_size: int = 128,
-            min_scale: float = 0.8,
-            max_scale: float = 1.1,
-            jitter_strength=0.5,
-            gaussian_blur: bool = True,
-            rotation_deg: float = 0.1,
-            translate: float = 0.05,
-            shear_deg: float = 0.1,
+            min_scale: float = 0.08,
+            max_scale: float = 1.0,
+            jitter_strength = 0.5,
+            gaussian_blur: bool = False,
     ):
 
         t = [
-            transforms.RandomAffine(degrees=rotation_deg, translate=(translate, translate), shear=shear_deg),
             transforms.RandomResizedCrop(size=(image_size, image_size), scale=(min_scale, max_scale)),
             transforms.RandomHorizontalFlip(p=0.5),
             transforms.RandomApply(
@@ -37,9 +33,22 @@ class CelebATrainTransform(transforms.Compose):
                 kernel_size += 1
 
             t.append(transforms.RandomApply([transforms.GaussianBlur(kernel_size=kernel_size)], p=0.5))
-            t.append(transforms.ToTensor())
+        t.append(transforms.ToTensor())
         super().__init__(t)
 
+
+class CelebAEvalTransform(transforms.Compose):
+    def __init__(
+            self,
+            image_size: int = 128,
+    ):
+
+        t = [
+            transforms.CenterCrop(size=(176, 176)),
+            transforms.Resize(size=(image_size, image_size)),
+            transforms.ToTensor()
+        ]
+        super().__init__(t)
 
 # class CelebAEvalTransform(SimCLREvalDataTransform):
 #     def __init__(

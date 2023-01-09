@@ -232,28 +232,28 @@ def cli_main():
         predictor = ConditionalLinearCategorical(y_dim=args.hidden_mlp, n_classes=2, a_dim=10)
         args.predictor = predictor
 
-    # model = AdaptedSimCLR(**args.__dict__)
+    model = AdaptedSimCLR(**args.__dict__)
 
     from core.models.encoder import VisionTransformer
     from core.models.mi_estimator import SimCLR
 
-    model = EInfoMax(
-        encoder_x=VisionTransformer(
-            image_size=224,
-            patch_size=16,
-            num_layers=8,
-            num_heads=8,
-            hidden_dim=256,
-            mlp_dim=args.hidden_mlp,
-            out_dim=args.hidden_mlp,
-        ),
-        mi_estimator=SimCLR(
-            x_dim=args.hidden_mlp,
-            y_dim=args.hidden_mlp,
-            hidden_dims=[512],
-            out_dim=128
-        )
-    )
+    # model = EInfoMax(
+    #     encoder_x=VisionTransformer(
+    #         image_size=224,
+    #         patch_size=16,
+    #         num_layers=8,
+    #         num_heads=8,
+    #         hidden_dim=256,
+    #         mlp_dim=args.hidden_mlp,
+    #         out_dim=args.hidden_mlp,
+    #     ),
+    #     mi_estimator=SimCLR(
+    #         x_dim=args.hidden_mlp,
+    #         y_dim=args.hidden_mlp,
+    #         hidden_dims=[512],
+    #         out_dim=128
+    #     )
+    # )
 
 
     ###########

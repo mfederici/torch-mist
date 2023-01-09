@@ -1,7 +1,7 @@
 from torchvision.datasets import CelebA
 import torch
 import numpy as np
-from typing import Optional, Callable, List, Tuple, Any, Dict
+from typing import Optional, Callable, List, Tuple, Any, Dict, Union
 
 
 # from pl_bolts.models.self_supervised.simclr.transforms import SimCLRTrainDataTransform
@@ -11,7 +11,7 @@ class CelebADict(CelebA):
     def __init__(
             self,
             root: str,
-            transform: Callable[[Any], torch.Tensor],
+            transforms: Union[Dict[str, Callable[[Any], torch.Tensor]], Callable[[Any], torch.Tensor]],
             select_attributes: Optional[List[int]] = None,
             download: bool = False,
             split: str = "train",
@@ -22,8 +22,9 @@ class CelebADict(CelebA):
         super().__init__(root=root, download=download, split=split)
         if select_attributes is None:
             select_attributes = list(range(40))
-        self.transform_x = transform
-        self.transform_y = transform
+        if not isinstance(transforms, dict):
+            transforms = {'x': transforms, 'y': transforms}
+        self.transforms = transforms
         self.select_attributes = select_attributes
         self.not_selected_attributes = torch.LongTensor([i for i in np.arange(40) if not (i in select_attributes)])
         self.n_attributes = len(select_attributes)
@@ -46,22 +47,22 @@ class CelebADict(CelebA):
 
     def __getitem__(self, item) -> Dict[str, torch.Tensor]:
         img, a = super().__getitem__(item)
-        x = self.transform_x(img)
-        y = self.transform_y(img)
 
-        return {
-            "x": x,
-            "y": y,
-            "a": a[self.select_attributes],
-            "t": a[self.not_selected_attributes]
-        }
+        data = {}
+        for key, transform in self.transforms.items():
+            data[key] = transform(img)
+
+        data['a'] = a[self.select_attributes]
+        data['t'] = a[self.not_selected_attributes]
+
+        return data
 
 
 class ContrastiveCelebA(CelebADict):
     def __init__(
         self,
         root: str,
-        transform: Callable[[Any], torch.Tensor],
+        transforms: Dict[str, Callable[[Any], torch.Tensor]],
         select_attributes: Optional[List[int]] = None,
         download: bool = False,
         split: str = "train",
@@ -69,7 +70,8 @@ class ContrastiveCelebA(CelebADict):
         neg_samples: int = 1,
         sample_negatives: bool = True,
     ):
-        super().__init__(root, transform, select_attributes, download, split, augment_x)
+        super().__init__(root, transforms, select_attributes, download, split, augment_x)
+        assert "y" in self.transforms, "y not in transforms"
         self.sample_negatives = sample_negatives
         self.neg_samples = neg_samples
         self._id_cache = {}
@@ -92,7 +94,7 @@ class ContrastiveCelebA(CelebADict):
             for idx in self._find_same_attributes(a):
                 neg_img, a_ = CelebA.__getitem__(self, idx)
                 assert torch.equal(a, a_[self.select_attributes]), f"{a} != {a_}, a and a_ should be equal"
-                neg_sample = self.transform_y(neg_img)
+                neg_sample = self.transforms['y'](neg_img)
                 y_.append(neg_sample.unsqueeze(0))
 
             y_ = torch.cat(y_, 0)

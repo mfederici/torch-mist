@@ -1,9 +1,10 @@
-from pl_bolts.optimizers.lr_scheduler import linear_warmup_decay
+
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LambdaLR
+from pl_bolts.optimizers.lr_scheduler import linear_warmup_decay
 
 
-class SimCLRScheduler(LambdaLR):
+class WarmupScheduler(LambdaLR):
     def __init__(self, optimizer: Optimizer, warmup_steps: int, total_steps: int, cosine: bool = True, linear: bool = False):
         super().__init__(
             optimizer=optimizer,
@@ -11,6 +12,6 @@ class SimCLRScheduler(LambdaLR):
                 warmup_steps=warmup_steps,
                 total_steps=total_steps,
                 cosine=cosine,
-                linear=linear
+                linear=linear,
             )
         )

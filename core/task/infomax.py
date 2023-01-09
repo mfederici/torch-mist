@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Dict, Union
+from typing import Optional, Tuple, Dict, Union, Any, Type
 import pytorch_lightning as pl
 
 import torch
@@ -13,6 +13,11 @@ class InfoMax(pl.LightningModule):
     def __init__(
             self,
             mi_estimator: MutualInformationEstimator,
+            optimizer_class: Type[torch.optim.Optimizer],
+            optimizer_init_args: Optional[Dict[str, Any]] = None,
+            lr_scheduler_class: Optional[Type[torch.optim.lr_scheduler._LRScheduler]] = None,
+            lr_scheduler_init_args: Optional[Dict[str, Any]] = None,
+            lr_scheduler_params: Optional[Dict[str, Any]] = None,
             encoder_x: Optional[nn.Module] = None,
             encoder_y: Optional[Union[EncoderKeywords]] = EncoderKeywords.same,
             tau: float = 0.99,
@@ -42,6 +47,11 @@ class InfoMax(pl.LightningModule):
                 raise ValueError(f"Unknown value for encoder_y: {encoder_y}")
 
         self.encoder_y = encoder_y
+        self.optimizer_class = optimizer_class
+        self.optimizer_init_args = optimizer_init_args
+        self.lr_scheduler_class = lr_scheduler_class
+        self.lr_scheduler_init_args = lr_scheduler_init_args
+        self.lr_scheduler_params = lr_scheduler_params
 
         print(self)
 
@@ -54,7 +64,11 @@ class InfoMax(pl.LightningModule):
                 self.mi_estimator.h_y = self.trainer.datamodule.h_y
 
             # Set the number of negative samples consistently to the number specified on the datamodule
-            if hasattr(self.trainer.datamodule, "neg_samples"):
+            # This is necessary only when using a predictor
+            predictor = None
+            if hasattr(self.mi_estimator, "predictor"):
+                predictor = self.mi_estimator.predictor
+            if hasattr(self.trainer.datamodule, "neg_samples") and predictor is not None:
                 if self.mi_estimator.neg_samples != self.trainer.datamodule.neg_samples:
                     print(
                         "Warning: The number of negative samples specified in the datamodule ("
@@ -94,6 +108,9 @@ class InfoMax(pl.LightningModule):
         estimates["loss"] = -estimates["mi/grad"]
         if self.encoder_x:
             estimates["z_x"] = x
+            # If the batch contains the original image o, encode it (for SSL validation).
+            if "o" in batch:
+                estimates["z_o"] = self.encoder_x(batch["o"])
         if self.encoder_y:
             estimates["z_y"] = y
 
@@ -114,6 +131,19 @@ class InfoMax(pl.LightningModule):
         results = self.shared_step(batch)
         self.log_components(results, "val")
         return results
+
+    def configure_optimizers(self) -> Any:
+        optimizer = self.optimizer_class(self.parameters(), **self.optimizer_init_args)
+        if self.lr_scheduler_class is not None:
+            scheduler = self.lr_scheduler_class(optimizer, **self.lr_scheduler_init_args)
+            if self.lr_scheduler_params is not None:
+                scheduler = {
+                    'scheduler': scheduler,
+                    **self.lr_scheduler_params
+                }
+            return [optimizer], [scheduler]
+        else:
+            return optimizer
 
     def __repr__(self):
         s = f"{self.__class__.__name__}("

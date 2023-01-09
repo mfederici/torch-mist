@@ -3,11 +3,18 @@ data:
   init_args:
     batch_size: 32
     num_workers: 24
-    neg_samples: 1
     train_transforms:
-      class_path: core.data.transforms.CelebATrainTransform
+      x:
+        class_path: core.data.transforms.CelebATrainTransform
+      y:
+        class_path: core.data.transforms.CelebATrainTransform
     val_transforms:
-      class_path: core.data.transforms.CelebATrainTransform
+      x:
+        class_path: core.data.transforms.CelebATrainTransform
+      y:
+        class_path: core.data.transforms.CelebATrainTransform
+      o:
+        class_path: core.data.transforms.CelebAEvalTransform
     train_attributes: [ 1, 5, 9, 13, 17, 21, 25, 29, 33, 37 ]
 
 model:
@@ -30,6 +37,16 @@ model:
         x_dim: 512
         y_dim: 512
         hidden_dims: [512, 256]
+    optimizer_class: torch.optim.AdamW
+    optimizer_init_args:
+        lr: 1e-3
+    lr_scheduler_class: core.optim.lr_scheduler.WarmupScheduler
+    lr_scheduler_init_args:
+      warmup_steps: 50870 #10*[162770/32]
+      total_steps: 508700 #100*[162770/32]
+    lr_scheduler_params:
+      frequency: 1
+      interval: step
 
 trainer:
   max_epochs: 100
@@ -40,18 +57,18 @@ trainer:
           key: ["mi/value", "mi/grad"]
     - class_path: core.callbacks.SSLOnlineEvaluator
       init_args:
+        train_on: z_x
+        evaluate_on: z_o
+        target: t
         z_dim: 512
         hidden_dim: 256
         num_classes: 2
         t_dim: 30
 
-optimizer:
-  class_path: torch.optim.AdamW
-  init_args:
-    lr: 1e-3
 
-lr_scheduler:
-  class_path: core.optim.lr_scheduler.SimCLRScheduler
-  init_args:
-    warmup_steps: 1
-    total_steps: 100
+
+#lr_scheduler:
+#  class_path: core.optim.lr_scheduler.SimCLRScheduler
+#  init_args:
+#    warmup_steps: 1
+#    total_steps: 100

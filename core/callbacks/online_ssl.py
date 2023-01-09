@@ -12,24 +12,16 @@ from core.models.predictor import ConditionalCategoricalMLP
 
 
 # Implementation based on pl_bolts.models.callbacks.ssl_online
-class SSLOnlineEvaluator(Callback):  # pragma: no cover
+class SSLOnlineEvaluator(Callback):
     """Attaches a MLP for fine-tuning using the standard self-supervised protocol.
-    Example::
-        # your datamodule must have 2 attributes
-        dm = DataModule()
-        dm.num_classes = ... # the num of classes in the datamodule
-        dm.name = ... # name of the datamodule (e.g. ImageNet, STL10, CIFAR10)
-        # your model must have 1 attribute
-        model = Model()
-        model.z_dim = ... # the representation dim
-        online_eval = SSLOnlineEvaluator(
-            z_dim=model.z_dim
-        )
     """
 
     def __init__(
         self,
         z_dim: int,
+        train_on: str,
+        evaluate_on: str,
+        target: str = 't',
         hidden_dim: int = 256,
         num_classes: Optional[int] = None,
         t_dim: int = 1,
@@ -38,7 +30,6 @@ class SSLOnlineEvaluator(Callback):  # pragma: no cover
         """
         Args:
             z_dim: Representation dimension
-            drop_p: Dropout probability
             hidden_dim: Hidden dimension for the fine-tuned MLP
         """
         super().__init__()
@@ -46,6 +37,9 @@ class SSLOnlineEvaluator(Callback):  # pragma: no cover
         self.z_dim = z_dim
         self.hidden_dim = hidden_dim
         self.t_dim = t_dim
+        self.train_on = train_on
+        self.evaluate_on = evaluate_on
+        self.target = target
 
         self.optimizer: Optional[Optimizer] = None
         self.online_evaluator: Optional[ConditionalDistributionModule] = None
@@ -71,6 +65,7 @@ class SSLOnlineEvaluator(Callback):  # pragma: no cover
             if hasattr(trainer, "accelerator_connector")
             else trainer._accelerator_connector
         )
+
         if accel.is_distributed:
             if accel.use_ddp:
                 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -110,20 +105,20 @@ class SSLOnlineEvaluator(Callback):  # pragma: no cover
         batch: Dict[str, torch.Tensor],
         batch_idx: int,
     ) -> None:
-        assert "z_x" in outputs, "The outputs must contain the representation z_x of x"
-        assert "t" in batch, "The batch must contain the target t"
+        assert self.train_on in outputs, f"The outputs must contain {self.train_on}"
+        assert self.target in batch, f"The batch must contain the target {self.target}"
 
-        z_x = outputs["z_x"]
+        z = outputs[self.train_on]
         t = batch["t"]
 
-        mlp_loss = self.shared_step(z_x, t)
+        mlp_loss = self.shared_step(z, t)
 
         # update finetune weights
         self.optimizer.zero_grad()
         mlp_loss.backward()
         self.optimizer.step()
 
-        pl_module.log("log q(t|z)/train", -mlp_loss, on_step=True, on_epoch=True)
+        pl_module.log(f"log q({self.target}|{self.train_on})/train", -mlp_loss, on_step=True, on_epoch=True)
 
     def on_validation_batch_end(
         self,
@@ -134,15 +129,15 @@ class SSLOnlineEvaluator(Callback):  # pragma: no cover
         batch_idx: int,
         dataloader_idx: int,
     ) -> None:
-        assert "z_x" in outputs, "The outputs must contain the representation z_x of x"
-        assert "t" in batch, "The batch must contain the target t"
+        assert self.evaluate_on in outputs, f"The outputs must contain {self.evaluate_on}"
+        assert self.target in batch, f"The batch must contain the target {self.target}"
 
-        z_x = outputs["z_x"]
-        t = batch["t"]
+        z = outputs[self.evaluate_on]
+        t = batch[self.target]
 
-        mlp_loss = self.shared_step(z_x, t)
+        mlp_loss = self.shared_step(z, t)
 
-        pl_module.log("log q(t|z)/val", -mlp_loss, on_step=False, on_epoch=True)
+        pl_module.log(f"log q({self.target}|{self.evaluate_on})/val", -mlp_loss, on_step=False, on_epoch=True)
 
     def state_dict(self) -> dict:
         return {"state_dict": self.online_evaluator.state_dict(), "optimizer_state": self.optimizer.state_dict()}
