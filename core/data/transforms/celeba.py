@@ -9,8 +9,7 @@ class CelebATrainTransform(transforms.Compose):
             image_size: int = 128,
             min_scale: float = 0.08,
             max_scale: float = 1.0,
-            jitter_strength = 0.5,
-            gaussian_blur: bool = False,
+            jitter_strength: float = 0.5,
     ):
 
         t = [
@@ -26,14 +25,8 @@ class CelebATrainTransform(transforms.Compose):
                     )]
             ),
             transforms.RandomGrayscale(p=0.2),
+            transforms.ToTensor()
         ]
-        if gaussian_blur:
-            kernel_size = int(0.1 * image_size)
-            if kernel_size % 2 == 0:
-                kernel_size += 1
-
-            t.append(transforms.RandomApply([transforms.GaussianBlur(kernel_size=kernel_size)], p=0.5))
-        t.append(transforms.ToTensor())
         super().__init__(t)
 
 

@@ -1,8 +1,9 @@
 data:
-  class_path: core.data.datamodule.ContrastiveCelebADataModule
+  class_path: core.data.datamodule.CelebABatchDataModule
   init_args:
-    batch_size: 32
     num_workers: 24
+    batch_size: 64
+    sample_same_attributes: True
     train_transforms:
       x:
         class_path: core.data.transforms.CelebATrainTransform
@@ -30,20 +31,28 @@ model:
         hidden_dim: 256
         mlp_dim: 512
         out_dim: 512 # This corresponds to the dimension of the representation
+        dropout: 0.1
     encoder_y: same
     mi_estimator:
-      class_path: core.models.mi_estimator.NWJ
+      class_path: core.models.mi_estimator.SimCLR
       init_args:
         x_dim: 512
         y_dim: 512
         hidden_dims: [512, 256]
+        predictor:
+          class_path: core.models.predictor.ConditionalCategoricalMLP
+          init_args:
+            y_dim: 512
+            hidden_dims: [256]
+            n_classes: 2 # 10 Binary (2 classes) attributes
+            a_dim: 10
     optimizer_class: torch.optim.AdamW
     optimizer_init_args:
         lr: 1e-3
     lr_scheduler_class: core.optim.lr_scheduler.WarmupScheduler
     lr_scheduler_init_args:
-      warmup_steps: 50870 #10*[162770/32]
-      total_steps: 508700 #100*[162770/32]
+      warmup_steps: 25440 #10*[162770/64]
+      total_steps: 254400 #100*[162770/64]
     lr_scheduler_params:
       frequency: 1
       interval: step

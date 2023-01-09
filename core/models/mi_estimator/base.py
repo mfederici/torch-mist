@@ -263,12 +263,15 @@ class MutualInformationEstimator(nn.Module):
         estimates = {
             "mi/primal/grad": primal_grad,
             "mi/dual/grad": dual_grad,
-            "mi/dual/value": dual_value,
             "mi/grad": mi_grad,
         }
 
         if primal_value is not None:
             estimates["mi/primal/value"] = primal_value
-            estimates["mi/value"] = primal_value + dual_value
+
+        if dual_value is not None:
+            estimates["mi/dual/value"] = dual_value
+            if primal_value is not None:
+                estimates["mi/value"] = primal_value + dual_value
 
         return estimates

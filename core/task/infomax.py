@@ -106,11 +106,13 @@ class InfoMax(pl.LightningModule):
 
         estimates = self.mi_estimator(x, y, y_, a)
         estimates["loss"] = -estimates["mi/grad"]
+
         if self.encoder_x:
             estimates["z_x"] = x
             # If the batch contains the original image o, encode it (for SSL validation).
             if "o" in batch:
-                estimates["z_o"] = self.encoder_x(batch["o"])
+                with torch.no_grad():
+                    estimates["z_o"] = self.encoder_x(batch["o"])
         if self.encoder_y:
             estimates["z_y"] = y
 

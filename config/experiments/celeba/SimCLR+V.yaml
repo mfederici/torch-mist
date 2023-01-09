@@ -1,0 +1,76 @@
+data:
+  class_path: core.data.datamodule.ContrastiveCelebADataModule
+  init_args:
+    batch_size: 64
+    num_workers: 24
+    neg_samples: 0
+    train_transforms:
+      x:
+        class_path: core.data.transforms.CelebATrainTransform
+      y:
+        class_path: core.data.transforms.CelebATrainTransform
+    val_transforms:
+      x:
+        class_path: core.data.transforms.CelebATrainTransform
+      y:
+        class_path: core.data.transforms.CelebATrainTransform
+      o:
+        class_path: core.data.transforms.CelebAEvalTransform
+    train_attributes: [ 1, 5, 9, 13, 17, 21, 25, 29, 33, 37 ]
+
+model:
+  class_path: core.task.InfoMax
+  init_args:
+    encoder_x:
+      class_path: core.models.encoder.VisionTransformer # Just a wrapper for torchvision.models.vision_transformer
+      init_args:
+        image_size: 128
+        patch_size: 16
+        num_layers: 8
+        num_heads: 8
+        hidden_dim: 256
+        mlp_dim: 512
+        out_dim: 512 # This corresponds to the dimension of the representation
+        dropout: 0.1
+    encoder_y: same
+    mi_estimator:
+      class_path: core.models.mi_estimator.SimCLR
+      init_args:
+        x_dim: 512
+        y_dim: 512
+        hidden_dims: [512, 256]
+    optimizer_class: torch.optim.AdamW
+    optimizer_init_args:
+        lr: 1e-3
+    lr_scheduler_class: core.optim.lr_scheduler.WarmupScheduler
+    lr_scheduler_init_args:
+      warmup_steps: 25440 #10*[162770/64]
+      total_steps: 254400 #100*[162770/64]
+    lr_scheduler_params:
+      frequency: 1
+      interval: step
+
+trainer:
+  max_epochs: 100
+  callbacks:
+    - class_path: pytorch_lightning.callbacks.LearningRateMonitor
+    - class_path: core.callbacks.VarianceLogCallback
+      init_args:
+          key: ["mi/value", "mi/grad"]
+    - class_path: core.callbacks.SSLOnlineEvaluator
+      init_args:
+        train_on: z_x
+        evaluate_on: z_o
+        target: t
+        z_dim: 512
+        hidden_dim: 256
+        num_classes: 2
+        t_dim: 30
+
+
+
+#lr_scheduler:
+#  class_path: core.optim.lr_scheduler.SimCLRScheduler
+#  init_args:
+#    warmup_steps: 1
+#    total_steps: 100

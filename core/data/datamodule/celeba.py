@@ -100,11 +100,8 @@ class ContrastiveCelebADataModule(LightningDataModule):
         self.val_transforms = val_transforms
         self.train_attributes = train_attributes
         self.download = download
-
-        if neg_samples < 1:
-            neg_samples = batch_size - neg_samples
-
         self._neg_samples = neg_samples
+
     @property
     def neg_samples(self) -> int:
         return self._neg_samples
@@ -121,7 +118,8 @@ class ContrastiveCelebADataModule(LightningDataModule):
             transforms=self.train_transforms,
             select_attributes=self.train_attributes,
             split="train",
-            download=self.download
+            download=self.download,
+            neg_samples=self.neg_samples
         )
 
         self.val_set = ContrastiveCelebA(
@@ -129,7 +127,8 @@ class ContrastiveCelebADataModule(LightningDataModule):
             transforms=self.val_transforms,
             select_attributes=self.train_attributes,
             split="valid",
-            download=self.download
+            download=self.download,
+            neg_samples=self.neg_samples
         )
 
     @property
