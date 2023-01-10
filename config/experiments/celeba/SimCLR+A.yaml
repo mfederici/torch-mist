@@ -3,6 +3,7 @@ data:
   init_args:
     num_workers: 24
     batch_size: 64
+    min_batch_size: 32
     sample_same_attributes: True
     train_transforms:
       x:

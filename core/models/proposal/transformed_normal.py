@@ -1,4 +1,4 @@
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 import pyro.distributions.transforms as pyro_transforms_module
 import core.distributions.transforms as transforms_module
@@ -12,7 +12,7 @@ class TransformedNormalProposal(ConditionalTransformedDistributionModule):
         self,
         x_dim: int,
         y_dim: int,
-        hidden_dims: List[int],
+        hidden_dims: Optional[List[int]] = None,
         transform_name: str = "conditional_linear",
         n_transforms: int = 1,
         transform_params: Dict[Any, Any] = None
@@ -36,3 +36,6 @@ class TransformedNormalProposal(ConditionalTransformedDistributionModule):
             transforms.append(transform)
 
         super(TransformedNormalProposal, self).__init__(base_dist=base, transforms=transforms)
+
+
+

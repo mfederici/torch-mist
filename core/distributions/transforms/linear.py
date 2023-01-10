@@ -7,6 +7,8 @@ from pyro.nn import DenseNN
 from torch import nn
 from torch.distributions import Transform
 
+from core.nn.utils import SkipDenseNN, Identity, Constant, MergeOutputs
+
 
 class ConditionedLinear(Transform):
     domain = constraints.real_vector
@@ -148,6 +150,32 @@ def conditional_linear(
         nn = DenseNN(context_dim, hidden_dims, param_dims=[input_dim, input_dim])
     else:
         nn = DenseNN(context_dim, hidden_dims, param_dims=[input_dim])
+    return ConditionalLinear(nn, scale=scale, initial_scale=initial_scale)
+
+
+def conditional_skip_linear(
+        input_dim,
+        context_dim,
+        hidden_dims=None,
+        learn_loc=False,
+        scale=None,
+        initial_scale: float=1.0,
+):
+    if hidden_dims is None:
+        hidden_dims = [input_dim * 10, input_dim * 10]
+
+    assert input_dim == context_dim
+    if learn_loc:
+        nn = SkipDenseNN(input_dim=context_dim, hidden_dims=hidden_dims, param_dims=[input_dim])
+    else:
+        nn = Identity()
+
+    if scale is None:
+        scale_nn = nn.Sequential(
+            Constant(torch.zeros(context_dim)+np.log(initial_scale)),
+            SkipDenseNN(input_dim=context_dim, hidden_dims=hidden_dims, param_dims=[input_dim])
+        )
+        nn = MergeOutputs(nn, scale_nn)
     return ConditionalLinear(nn, scale=scale, initial_scale=initial_scale)
 
 

@@ -18,6 +18,8 @@ class CelebABatchDataModule(LightningDataModule):
                  val_transforms: Union[Dict[str, Callable[[Any], torch.Tensor]], Callable[[Any], torch.Tensor]],
                  train_attributes: Optional[List[int]] = None,
                  sample_same_attributes: bool = False,
+                 min_batch_size: int = 0,
+                 fixed_batch_size: bool = False,
                  download: bool = False
                  ):
         super().__init__()
@@ -29,6 +31,12 @@ class CelebABatchDataModule(LightningDataModule):
         self.val_transforms = val_transforms
         self.train_attributes = train_attributes
         self.sample_same_attributes = sample_same_attributes
+        self.min_batch_size = min_batch_size
+        self.fixed_batch_size = fixed_batch_size
+
+    @property
+    def h_a(self):
+        return self.train_set.h_a
 
     def setup(self, stage: Optional[str] = None):
         self.train_set = CelebADict(
@@ -46,15 +54,15 @@ class CelebABatchDataModule(LightningDataModule):
             split="valid",
             download=self.download)
 
-        # Define a function that compares the attributes of two images
-        compare_attributes = CompareAttributeSubset(self.train_attributes)
 
         if self.sample_same_attributes:
             # Sampler that samples images with the same attributes (subset)
             self.train_sampler = SameAttributesSampler(
-                attributes=self.train_set.attr,
-                compare_attributes=compare_attributes,
-                batch_size=self.batch_size)
+                attributes=self.train_set.attr[:, self.train_attributes],
+                fixed_batch_size=self.fixed_batch_size,
+                batch_size=self.batch_size,
+                min_batch_size=self.min_batch_size
+            )
 
     def train_dataloader(self):
         if self.sample_same_attributes:
