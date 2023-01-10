@@ -105,7 +105,7 @@ class MutualInformationEstimator(nn.Module):
                 q_a_Y = self.predictor.condition(y)
                 if a.ndim < y.ndim:
                     # Unsqueeze a to have the same shape as y
-                    a_ = a.unsqueeze(1) + y * 0
+                    a_ = a.unsqueeze(1).repeat(1, y.shape[1], 1)
                 else:
                     a_ = a
                 # Compute the cross-entropy

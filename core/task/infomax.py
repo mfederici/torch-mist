@@ -92,9 +92,11 @@ class InfoMax(pl.LightningModule):
 
         if 'y_' in batch:
             y_ = batch['y_']
-            a = batch['a']
         else:
             y_ = None
+        if 'a' in batch:
+            a = batch['a']
+        else:
             a = None
 
         if self.encoder_x is not None:
