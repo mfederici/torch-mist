@@ -2,7 +2,7 @@ data:
   class_path: core.data.datamodule.SampledNormalMixture
   init_args:
     samples_per_epoch: 100000
-    batch_size: 128
+    batch_size: 64
     num_workers: 8
     n_dim: 5
 
@@ -20,8 +20,8 @@ model:
       lr: 1e-3
     lr_scheduler_class: core.optim.lr_scheduler.WarmupScheduler
     lr_scheduler_init_args:
-      warmup_steps: 7820 #10*[100000/128]
-      total_steps: 78200 #100*[100000/128]
+      warmup_steps: 10 #10*[100000/128]
+      total_steps: 100 #100*[100000/128]
     lr_scheduler_params:
       frequency: 1
       interval: step

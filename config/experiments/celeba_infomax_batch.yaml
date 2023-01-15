@@ -40,8 +40,8 @@ model:
       lr: 1e-3
     lr_scheduler_class: core.optim.lr_scheduler.WarmupScheduler
     lr_scheduler_init_args:
-      warmup_steps: 50866 #10*162770/32
-      total_steps: 508657 #100*162770/32
+      warmup_steps: 10 #10*162770/32
+      total_steps: 100 #100*162770/32
     lr_scheduler_params:
       frequency: 1
       interval: step
