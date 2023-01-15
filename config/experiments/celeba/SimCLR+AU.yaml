@@ -43,19 +43,27 @@ model:
         x_dim: 512
         y_dim: 512
         hidden_dims: [512, 256]
+        predictor:
+          class_path: core.models.predictor.ConditionalCategoricalMLP
+          init_args:
+            y_dim: 512
+            hidden_dims: [256]
+            n_classes: 16 # Number of clusters
+            a_dim: 1
     optimizer_class: torch.optim.AdamW
     optimizer_init_args:
         lr: 1e-3
     lr_scheduler_class: core.optim.lr_scheduler.WarmupScheduler
     lr_scheduler_init_args:
-      warmup_steps: 25440 #10*[162770/64]=25440
-      total_steps: 254400 #100*[162770/64]=254400
+      warmup_steps: 25440 #10*[162770/64]/2
+      total_steps: 254400 #100*[162770/64]/2
     lr_scheduler_params:
       frequency: 1
       interval: step
 
 trainer:
   max_epochs: 100
+  reload_dataloaders_every_n_epochs: 1
   callbacks:
     - class_path: pytorch_lightning.callbacks.LearningRateMonitor
     - class_path: core.callbacks.VarianceLogCallback
@@ -70,6 +78,15 @@ trainer:
         hidden_dim: 256
         num_classes: 2
         t_dim: 30
+    - class_path: core.callbacks.ClusteringCallback
+      init_args:
+        epochs: 50
+        key_to_encode: 'o'
+        clustering:
+          class_path: sklearn.cluster.KMeans
+          init_args:
+            n_clusters: 16
+            n_init: 10
 
 #lr_scheduler:
 #  class_path: core.optim.lr_scheduler.SimCLRScheduler

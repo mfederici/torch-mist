@@ -23,6 +23,9 @@ class Constant(nn.Module):
     def forward(self, *args, **kwargs):
         return self.value
 
+    def __repr__(self):
+        return f'Constant({self.value})'
+
 
 class Identity(nn.Module):
     def forward(self, x):

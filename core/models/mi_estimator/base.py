@@ -15,7 +15,6 @@ from core.models.ratio import RatioEstimator
 # 2) "Undertanding the Limitations of Variational Mutual Information Estimators https://arxiv.org/abs/1910.06222
 
 
-
 class MutualInformationEstimator(nn.Module):
     def __init__(
             self,

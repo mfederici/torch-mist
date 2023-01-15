@@ -12,32 +12,53 @@ class CelebADict(CelebA):
             self,
             root: str,
             transforms: Union[Dict[str, Callable[[Any], torch.Tensor]], Callable[[Any], torch.Tensor]],
-            select_attributes: Optional[List[int]] = None,
+            train_attributes: Optional[List[int]] = None,
             download: bool = False,
+            weak_supervision: bool = True,
             split: str = "train",
             augment_x: bool = True,
 
     ):
 
         super().__init__(root=root, download=download, split=split)
-        if select_attributes is None:
-            select_attributes = list(range(40))
+        if train_attributes is None:
+            train_attributes = list(range(40))
         if not isinstance(transforms, dict):
             transforms = {'x': transforms, 'y': transforms}
         self.transforms = transforms
-        self.select_attributes = select_attributes
-        self.not_selected_attributes = torch.LongTensor([i for i in np.arange(40) if not (i in select_attributes)])
-        self.n_attributes = len(select_attributes)
+
+        self.train_attributes = train_attributes
+        self.not_selected_attributes = torch.LongTensor([i for i in np.arange(40) if not (i in train_attributes)])
+
+        if weak_supervision:
+            self._attributes = self.attr[:, self.train_attributes].data.numpy()
+        else:
+            self._attributes = None
+        self.test_attributes = self.attr[:, self.not_selected_attributes].data.numpy()
+
+        self.n_attributes = len(train_attributes)
         self.augment_x = augment_x
         self._h_a = None
 
+    @property
+    def attributes(self):
+        return self._attributes
+
+    @attributes.setter
+    def attributes(self, value):
+        self._attributes = value
+        self._h_a = None
+
     def _compute_attribute_entropy(self):
-        attr = self.attr[:, self.select_attributes]
-        c_attr, _ = np.histogram((2 ** torch.arange(self.n_attributes) * attr).sum(1),
-                                 bins=np.arange(2 ** self.n_attributes + 1))
-        c_attr_dist = c_attr / c_attr.sum()
-        h_a = -np.sum(c_attr_dist[c_attr_dist > 0] * np.log(c_attr_dist[c_attr_dist > 0]))
-        self._h_a = h_a
+        if self.attributes is None:
+            return 0
+        else:
+            base = np.max(self.attributes) + 1
+            c_attr, _ = np.histogram((base ** torch.arange(self.attributes.shape[1]) * self.attributes).sum(1),
+                                     bins=np.arange(base ** self.n_attributes + 1))
+            c_attr_dist = c_attr / c_attr.sum()
+            h_a = -np.sum(c_attr_dist[c_attr_dist > 0] * np.log(c_attr_dist[c_attr_dist > 0]))
+            self._h_a = h_a
 
     @property
     def h_a(self):
@@ -52,8 +73,11 @@ class CelebADict(CelebA):
         for key, transform in self.transforms.items():
             data[key] = transform(img)
 
-        data['a'] = a[self.select_attributes]
-        data['t'] = a[self.not_selected_attributes]
+        if self.attributes is not None:
+            data['a'] = self.attributes[item]
+
+        data['t'] = self.test_attributes[item]
+        data['idx'] = item
 
         return data
 
@@ -63,35 +87,50 @@ class ContrastiveCelebA(CelebADict):
         self,
         root: str,
         transforms: Dict[str, Callable[[Any], torch.Tensor]],
-        select_attributes: Optional[List[int]] = None,
+        train_attributes: Optional[List[int]] = None,
         download: bool = False,
         split: str = "train",
         augment_x: bool = True,
         neg_samples: int = 1,
-        sample_negatives: bool = True,
+        weak_supervision: bool = True,
     ):
-        super().__init__(root, transforms, select_attributes, download, split, augment_x)
+        super().__init__(
+            root=root,
+            transforms=transforms,
+            train_attributes=train_attributes,
+            download=download,
+            split=split,
+            augment_x=augment_x,
+            weak_supervision=weak_supervision,
+        )
+
         assert "y" in self.transforms, "y not in transforms"
-        self.sample_negatives = sample_negatives
         self.neg_samples = neg_samples
-        self._id_cache = {}
+        self.select_attributes = train_attributes
+        self.all_ids = np.arange(len(self))
+        self._cache = {}
 
     def _find_same_attributes(self, a: torch.Tensor):
-        if a in self._id_cache:
-            return self._id_cache[a]
+        a_key = a.numpy().tobytes()
+        if not (a_key in self._cache):
+            v = torch.sum(self.attr[:, self.select_attributes] == a, -1) == len(self.select_attributes)
+            ids = self.all_ids[v]
+            self._cache[a_key] = ids
         else:
-            mask = (self.attr[:, self.select_attributes] == a).sum(1) == len(a)
-            ids = torch.arange(len(self))[mask]
-            self._id_cache[a] = ids
+            ids = self._cache[a_key]
+
         return np.random.choice(ids, self.neg_samples)
 
     def __getitem__(self, item):
         data = super().__getitem__(item)
-        if self.neg_samples > 0 and self.sample_negatives:
+        if self.neg_samples > 0:
             assert "a" in data, "a not in data"
             y_ = []
             a = data["a"]
-            for idx in self._find_same_attributes(a):
+
+            neg_ids = self._find_same_attributes(a)
+            assert len(neg_ids) == self.neg_samples
+            for idx in neg_ids:
                 neg_img, a_ = CelebA.__getitem__(self, idx)
                 assert torch.equal(a, a_[self.select_attributes]), f"{a} != {a_}, a and a_ should be equal"
                 neg_sample = self.transforms['y'](neg_img)

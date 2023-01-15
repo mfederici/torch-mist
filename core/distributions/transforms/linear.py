@@ -166,17 +166,17 @@ def conditional_skip_linear(
 
     assert input_dim == context_dim
     if learn_loc:
-        nn = SkipDenseNN(input_dim=context_dim, hidden_dims=hidden_dims, param_dims=[input_dim])
+        net = SkipDenseNN(input_dim=context_dim, hidden_dims=hidden_dims, param_dims=[input_dim])
     else:
-        nn = Identity()
+        net = Identity()
 
     if scale is None:
-        scale_nn = nn.Sequential(
+        scale_net = nn.Sequential(
             Constant(torch.zeros(context_dim)+np.log(initial_scale)),
             SkipDenseNN(input_dim=context_dim, hidden_dims=hidden_dims, param_dims=[input_dim])
         )
-        nn = MergeOutputs(nn, scale_nn)
-    return ConditionalLinear(nn, scale=scale, initial_scale=initial_scale)
+        net = MergeOutputs(net, scale_net)
+    return ConditionalLinear(net, scale=scale, initial_scale=initial_scale)
 
 
 

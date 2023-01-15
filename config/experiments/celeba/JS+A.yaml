@@ -1,18 +1,14 @@
 data:
-  class_path: core.data.datamodule.CelebABatchDataModule
+  class_path: core.data.datamodule.ContrastiveCelebADataModule
   init_args:
-    num_workers: 12
+    num_workers: 24
     batch_size: 64
-    min_batch_size: 0
-    sample_same_attributes: True
-    weak_supervision: False
+    neg_samples: 1
     train_transforms:
       x:
         class_path: core.data.transforms.CelebATrainTransform
       y:
         class_path: core.data.transforms.CelebATrainTransform
-      o:
-        class_path: core.data.transforms.CelebAEvalTransform
     val_transforms:
       x:
         class_path: core.data.transforms.CelebATrainTransform
@@ -38,18 +34,25 @@ model:
         dropout: 0.0
     encoder_y: same
     mi_estimator:
-      class_path: core.models.mi_estimator.SimCLR
+      class_path: core.models.mi_estimator.JS
       init_args:
         x_dim: 512
         y_dim: 512
         hidden_dims: [512, 256]
+        predictor:
+          class_path: core.models.predictor.ConditionalCategoricalMLP
+          init_args:
+            y_dim: 512
+            hidden_dims: [256]
+            n_classes: 2 # 10 Binary (2 classes) attributes
+            a_dim: 10
     optimizer_class: torch.optim.AdamW
     optimizer_init_args:
         lr: 1e-3
     lr_scheduler_class: core.optim.lr_scheduler.WarmupScheduler
     lr_scheduler_init_args:
-      warmup_steps: 25440 #10*[162770/64]=25440
-      total_steps: 254400 #100*[162770/64]=254400
+      warmup_steps: 25440 #10*[162770/64]
+      total_steps: 254400 #100*[162770/64]
     lr_scheduler_params:
       frequency: 1
       interval: step
@@ -60,7 +63,7 @@ trainer:
     - class_path: pytorch_lightning.callbacks.LearningRateMonitor
     - class_path: core.callbacks.VarianceLogCallback
       init_args:
-          key: ["mi/value", "mi/grad", "mi/primal/value", "mi/primal/grad", "mi/dual/value", "mi/dual/grad"]
+          key: ["mi/value", "mi/grad"]
     - class_path: core.callbacks.SSLOnlineEvaluator
       init_args:
         train_on: z_x
@@ -70,6 +73,8 @@ trainer:
         hidden_dim: 256
         num_classes: 2
         t_dim: 30
+
+
 
 #lr_scheduler:
 #  class_path: core.optim.lr_scheduler.SimCLRScheduler

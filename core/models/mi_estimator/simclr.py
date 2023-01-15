@@ -59,6 +59,7 @@ class SimCLR(MutualInformationEstimator):
             norm_layer: Optional[nn.Module] = None,
             temperature: float = 0.1,
             eps: float = 1e-6,
+            neg_samples: int = 0,
             **kwargs
     ):
         assert x_dim == y_dim, "x_dim and y_dim must be equal"
@@ -81,7 +82,7 @@ class SimCLR(MutualInformationEstimator):
             self,
             # ratio_estimator=SeparableRatioEstimator(f_x=projector, f_y=projector),
             baseline=None,
-            neg_samples=0,
+            neg_samples=neg_samples,
             **kwargs
         )
 
@@ -90,8 +91,10 @@ class SimCLR(MutualInformationEstimator):
 
     def compute_dual_ratio(self, x: torch.Tensor, y: torch.Tensor, y_: Optional[torch.Tensor] = None) -> Tuple[
         Optional[torch.Tensor], torch.Tensor]:
+
         h_x = self.projector(x)
         h_y = self.projector(y).squeeze(1)
+        assert y.shape[1] == 1, "Only one positive sample is supported"
 
         # out: [2 * batch_size, dim]
         # out_dist: [2 * batch_size * world_size, dim]
@@ -99,22 +102,34 @@ class SimCLR(MutualInformationEstimator):
 
         # cov and sim: [2 * batch_size, 2 * batch_size * world_size]
         # neg: [2 * batch_size]
-        cov = torch.mm(out, out.t())
+
+        cov = torch.mm(out, out.T)
+
         sim = torch.exp(cov / self.temperature)
         neg = sim.sum(dim=-1)
 
         # from each row, subtract e^(1/temp) to remove similarity measure for x1.x1
         row_sub = torch.Tensor(neg.shape).fill_(math.e ** (1 / self.temperature)).to(neg.device)
-        neg = torch.clamp(neg - row_sub, min=self.eps)  # clamp for numerical stability
+        neg = neg - row_sub
+
+        if self.proposal is not None:
+            y_ = self.proposal.condition(torch.cat([x.detach(), y.squeeze(1)], 0)).sample([x.shape[0]])
+            h_y_ = self.projector(y_)
+            cov_2 = torch.einsum("bf, nbf -> bn", out, h_y_)
+            sim_2 = torch.exp(cov_2 / self.temperature)
+            neg_2 = sim_2.sum(dim=-1)
+            alpha = 0.5
+            neg = alpha * neg/2.0 + (1 - alpha) * neg_2/2.0
+
+        neg = torch.clamp(neg, min=self.eps)  # clamp for numerical stability
 
         # Positive similarity
         pos = torch.sum(h_x * h_y, dim=-1) / self.temperature
 
         grad = pos.mean() - torch.log(neg + self.eps).mean()
-        value = grad + math.log(h_x.shape[0] * 2 - 1)
+        value = grad + math.log(h_x.shape[0] + h_x.shape[1] - 1)
 
         return value, grad
-
 
     # def _compute_dual_ratio_value(self, x, y, f, f_, baseline):
     #     f = f / self.temperature

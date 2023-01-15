@@ -86,7 +86,7 @@ class InfoMax(pl.LightningModule):
             x = self.encoder_x(x)
         return x
 
-    def shared_step(self, batch: Dict[str, torch.Tensor]) -> STEP_OUTPUT:
+    def shared_step(self, batch: Dict[str, torch.Tensor], step: str) -> STEP_OUTPUT:
         x = batch['x']
         y = batch['y']
 
@@ -111,10 +111,11 @@ class InfoMax(pl.LightningModule):
 
         if self.encoder_x:
             estimates["z_x"] = x
-            # If the batch contains the original image o, encode it (for SSL validation).
-            if "o" in batch:
-                with torch.no_grad():
-                    estimates["z_o"] = self.encoder_x(batch["o"])
+            if step == "val" or step == "test":
+                # If the batch contains the original image o, encode it (for SSL validation).
+                if "o" in batch:
+                    with torch.no_grad():
+                        estimates["z_o"] = self.encoder_x(batch["o"])
         if self.encoder_y:
             estimates["z_y"] = y
 
@@ -126,13 +127,13 @@ class InfoMax(pl.LightningModule):
                 self.log(f"{name}/{step}", value, on_step=step == "train", on_epoch=True)
 
     def training_step(self, batch, batch_idx) -> STEP_OUTPUT:
-        results = self.shared_step(batch)
+        results = self.shared_step(batch, "train")
         self.log_components(results, "train")
 
         return results
 
     def validation_step(self, batch, batch_idx) -> STEP_OUTPUT:
-        results = self.shared_step(batch)
+        results = self.shared_step(batch, "val")
         self.log_components(results, "val")
         return results
 

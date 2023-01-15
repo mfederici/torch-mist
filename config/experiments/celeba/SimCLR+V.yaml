@@ -30,24 +30,26 @@ model:
         num_heads: 8
         hidden_dim: 256
         mlp_dim: 512
-        out_dim: 512 # This corresponds to the dimension of the representation
+        out_dim: 512
         dropout: 0.0
-    encoder_y: same
+    encoder_y: slow
     mi_estimator:
       class_path: core.models.mi_estimator.SimCLR
       init_args:
         x_dim: 512
         y_dim: 512
         hidden_dims: [512, 256]
+        temperature: 0.1
+        neg_samples: 0
         proposal:
           class_path: core.models.proposal.TransformedNormalProposal
           init_args:
             x_dim: 512
             y_dim: 512
+            hidden_dims: [256]
             transform_name: conditional_skip_linear
             transform_params:
-              learn_loc: false
-              initial_scale: 1.0
+              learn_loc: False
     optimizer_class: torch.optim.AdamW
     optimizer_init_args:
         lr: 1e-3
