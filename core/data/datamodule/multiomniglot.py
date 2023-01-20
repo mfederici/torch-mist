@@ -19,6 +19,10 @@ class MultiOmniglotDataModule(DataModuleWithAttributes):
                  num_workers: int,
                  batch_size: int,
                  n_images: int = 1,
+                 train_split="train",
+                 val_split="val",
+                 n_train_samples: int = 50000,
+                 n_val_samples: int = 10000,
                  download: bool = False
     ):
         super().__init__()
@@ -27,6 +31,10 @@ class MultiOmniglotDataModule(DataModuleWithAttributes):
         self.batch_size = batch_size
         self.n_images = n_images
         self.download = download
+        self.n_train_samples = n_train_samples
+        self.n_val_samples = n_val_samples
+        self.train_split = train_split
+        self.val_split = val_split
 
     @property
     def h_a(self):
@@ -37,7 +45,8 @@ class MultiOmniglotDataModule(DataModuleWithAttributes):
             MultiOmniglot(
                 root=os.path.join(self.data_dir, OMNIGLOT_DIR),
                 n_images=self.n_images,
-                split="train",
+                n_samples=self.n_train_samples,
+                split=self.train_split,
                 download=self.download
             )
         )
@@ -46,7 +55,8 @@ class MultiOmniglotDataModule(DataModuleWithAttributes):
             MultiOmniglot(
                 root=os.path.join(self.data_dir, OMNIGLOT_DIR),
                 n_images=self.n_images,
-                split="val",
+                n_samples=self.n_val_samples,
+                split=self.val_split,
                 download=self.download
             )
         )

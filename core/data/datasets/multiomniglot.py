@@ -26,7 +26,7 @@ class MultiOmniglot(Omniglot):
                     lookup[alphabet][c_id].append(version)
 
         self.used_alphabets = []
-        for alphabet, _ in sorted(n_characters.items(), key=lambda item: item[1]):
+        for alphabet, _ in sorted(n_characters.items(), key=lambda item: -item[1]):
             self.used_alphabets.append(alphabet)
             if len(self.used_alphabets) == self.n_images**2:
                 break
@@ -96,6 +96,7 @@ class MultiOmniglot(Omniglot):
 
         data['x'] = make_grid(data['x'], self.n_images, padding=0)[0].unsqueeze(0)
         data['y'] = make_grid(data['y'], self.n_images, padding=0)[0].unsqueeze(0)
+        data['idx'] = idx
 
         return data
 

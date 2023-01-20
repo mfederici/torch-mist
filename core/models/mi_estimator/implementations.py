@@ -8,7 +8,7 @@ from core.models.ratio import SeparableRatioEstimatorMLP
 from core.models.ratio.base import RatioEstimator
 from core.models.ratio.joint import JointRatioEstimatorMLP
 from core.models.baseline.base import Baseline, ConstantBaseline, BatchLogMeanExp, ExponentialMovingAverage, \
-    LearnableMLPBaseline, TUBABaseline
+    LearnableMLPBaseline, TUBABaseline, InterpolatedBaseline
 from core.models.mi_estimator.base import MutualInformationEstimator
 
 
@@ -183,9 +183,12 @@ class AlphaTuba(MutualInformationEstimator):
             hidden_dims=hidden_dims,
         )
 
-        baseline = TUBABaseline(
-            x_dim=x_dim,
-            hidden_dims=baseline_hidden_dims,
+        baseline_1 = BatchLogMeanExp()
+        baseline_2 = LearnableMLPBaseline(x_dim, baseline_hidden_dims)
+
+        baseline = InterpolatedBaseline(
+            baseline_1=baseline_1,
+            baseline_2=baseline_2,
             alpha=alpha
         )
 
