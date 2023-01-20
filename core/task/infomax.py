@@ -94,6 +94,10 @@ class InfoMax(pl.LightningModule):
             y_ = batch['y_']
         else:
             y_ = None
+        if 'x_' in batch:
+            x_ = batch['x_']
+        else:
+            x_ = None
         if 'a' in batch:
             a = batch['a']
         else:
@@ -106,7 +110,7 @@ class InfoMax(pl.LightningModule):
             if y_ is not None:
                 y_ = self.encoder_y(y_)
 
-        estimates = self.mi_estimator(x, y, y_, a)
+        estimates = self.mi_estimator(x, y, x_, y_, a)
         estimates["loss"] = -estimates["mi/grad"]
 
         if self.encoder_x:

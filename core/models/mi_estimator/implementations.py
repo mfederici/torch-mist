@@ -3,37 +3,70 @@ from typing import Optional, List
 from torch.distributions import Distribution
 from pyro.distributions import ConditionalDistribution
 
-from core.models.proposal import TransformedNormalProposal
+from core.models.marginals.transformed_normal import TransformedNormal
+from core.models.learnable_distributions import ConditionalTransformedNormalProposal
 from core.models.ratio import SeparableRatioEstimatorMLP
 from core.models.ratio.base import RatioEstimator
 from core.models.ratio.joint import JointRatioEstimatorMLP
 from core.models.baseline.base import Baseline, ConstantBaseline, BatchLogMeanExp, ExponentialMovingAverage, \
     LearnableMLPBaseline, TUBABaseline, InterpolatedBaseline
-from core.models.mi_estimator.base import MutualInformationEstimator
+from core.models.mi_estimator.base import MutualInformationEstimator, GenerativeMutualInformationEstimator
 
 
-class BA(MutualInformationEstimator):
+class BA(GenerativeMutualInformationEstimator):
+    def __init__(
+            self,
+            x_dim: int,
+            y_dim: int,
+            hidden_dims: List[int],
+            h_y: float,
+            n_transforms: int,
+            conditional_transform_name: str = "conditional_linear",
+    ):
+        proposal = ConditionalTransformedNormalProposal(
+            x_dim=x_dim,
+            y_dim=y_dim,
+            hidden_dims=hidden_dims,
+            transform_name=conditional_transform_name,
+            n_transforms=n_transforms
+        )
+
+        super().__init__(
+            proposal=proposal,
+            h_y=h_y,
+        )
+
+class DoE(GenerativeMutualInformationEstimator):
     def __init__(
             self,
             x_dim: int,
             y_dim: int,
             hidden_dims: List[int],
             transform_name: str = "conditional_linear",
-            **kwargs
-
+            n_transforms: int = 1,
+            marginal_transform_name: str = "linear",
+            n_marginal_transforms: int = 1,
     ):
-        proposal = TransformedNormalProposal(
+        proposal = ConditionalTransformedNormalProposal(
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
-            transform_name=transform_name
+            transform_name=transform_name,
+            n_transforms=n_transforms
+        )
+
+        marginal_y = TransformedNormal(
+            input_dim=y_dim,
+            hidden_dims=hidden_dims,
+            transform_name=marginal_transform_name,
+            n_transforms=n_marginal_transforms
         )
 
         super().__init__(
             proposal=proposal,
-            **kwargs
+            marginal_y=marginal_y,
+            update_marginals=True
         )
-
 
 class NWJ(MutualInformationEstimator):
     def __init__(

@@ -1,6 +1,5 @@
-from typing import Dict, List, Any
+from typing import List
 
-import torch
 from torch import nn
 from torch.distributions import Independent, Categorical
 from pyro.nn import DenseNN
@@ -22,14 +21,14 @@ class ConditionalCategoricalMLP(ConditionalCategorical):
         super().__init__(net)
 
 
-class ConditionalLinearCategorical(ConditionalDistribution, nn.Module):
+class ConditionalCategoricalLinear(ConditionalDistribution, nn.Module):
     def __init__(
             self,
             y_dim: int,
             n_classes: int,
             a_dim: int = 1,
     ):
-        super(ConditionalLinearCategorical, self).__init__()
+        super(ConditionalCategoricalLinear, self).__init__()
         self.w = nn.Linear(y_dim, n_classes * a_dim)
         self.a_dim = a_dim
         self.n_classes = n_classes

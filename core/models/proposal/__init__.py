@@ -1,1 +1,0 @@
-from .transformed_normal import TransformedNormalProposal

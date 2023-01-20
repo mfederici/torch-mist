@@ -84,6 +84,12 @@ class LearnableJointBaseline(LearnableBaseline):
         return self.net(xy).squeeze(-1)
 
 
+class LearnableJointMLPBaseline(LearnableJointBaseline):
+    def __init__(self, x_dim: int, y_dim: int, hidden_dims: List[int]):
+        net = DenseNN(x_dim+y_dim, hidden_dims, [1])
+        super(LearnableJointMLPBaseline, self).__init__(net)
+
+
 class InterpolatedBaseline(Baseline):
     def __init__(self, baseline_1: Baseline, baseline_2: Baseline, alpha: float):
         super(InterpolatedBaseline, self).__init__()

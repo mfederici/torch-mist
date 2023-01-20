@@ -6,16 +6,7 @@ import torch
 from pyro.distributions import ConditionalDistribution
 from torch.distributions import MultivariateNormal, MixtureSameFamily, Categorical, Normal, Distribution
 
-
-class JointDistribution:
-    labels = []
-
-    def entropy(self, labels: Union[str, List[str]]) -> Optional[float]:
-        return None
-
-    @abstractmethod
-    def sample(self, sample_shape: torch.Size = torch.Size()) -> Dict[str, torch.Tensor]:
-        raise NotImplementedError()
+from core.distributions.joint.base import JointDistribution
 
 
 class MultivariateCorrelatedNormalMixture(JointDistribution):

@@ -8,6 +8,7 @@ PARTICLES_FILE = 'particles.npy'
 IID_CLUSTER_FILE = 'iid_clusters.npy'
 NDIM = 2
 PARTICLE_MI = 2.112134
+PARTICLE_H = 2.562166
 
 
 class ParticleTrajectories(Dataset):
