@@ -127,7 +127,13 @@ class InfoMax(pl.LightningModule):
 
     def log_components(self, results: Dict[str, torch.Tensor], step: str):
         for name, value in results.items():
-            if value.shape == torch.Size([]):
+            log = False
+            if isinstance(value, float) or isinstance(value, int):
+                log = True
+            elif isinstance(value, torch.Tensor):
+                if value.shape == torch.Size([]):
+                    log = True
+            if log:
                 self.log(f"{name}/{step}", value, on_step=step == "train", on_epoch=True)
 
     def training_step(self, batch, batch_idx) -> STEP_OUTPUT:
