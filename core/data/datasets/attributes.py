@@ -10,6 +10,8 @@ class AttributeDataset(Dataset):
         super().__init__()
 
         self.dataset = dataset
+        if isinstance(attributes, torch.Tensor):
+            attributes = attributes.long().data.numpy()
         if attributes is not None:
             n_attributes = np.max(attributes)+1
         else:

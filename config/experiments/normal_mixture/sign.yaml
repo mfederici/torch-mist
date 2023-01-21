@@ -1,4 +1,4 @@
-data: ../../components/data/normal_mixture/sign.yaml
+data: ../../components/normal_mixture/data/sign.yaml
 
 model:
   class_path: core.task.InfoMax
@@ -7,17 +7,16 @@ model:
       class_path: core.models.mi_estimator.HybridMutualInformationEstimator
       init_args:
         generative_estimator: ../../components/normal_mixture/mi_estimators/generative/ABC.yaml
-        discriminative_estimator: ../../components/normal_mixture/mi_estimators/discriminative/NJW.yaml
     optimizer_class: torch.optim.Adam
     optimizer_init_args:
-      lr: 1e-3
-    lr_scheduler_class: core.optim.lr_scheduler.WarmupScheduler
-    lr_scheduler_init_args:
-      warmup_steps: 10000
-      total_steps: 100000
-    lr_scheduler_params:
-      frequency: 1
-      interval: step
+      lr: 5e-4
+#    lr_scheduler_class: core.optim.lr_scheduler.WarmupScheduler
+#    lr_scheduler_init_args:
+#      warmup_steps: 10000
+#      total_steps: 100000
+#    lr_scheduler_params:
+#      frequency: 1
+#      interval: step
 
 
 trainer:

@@ -58,8 +58,9 @@ class HybridMutualInformationEstimator(MutualInformationEstimator):
         else:
             r_XY = self.generative_estimator.joint_xy
             assert isinstance(r_XY, JointDistribution)
-            sample = r_XY.sample(torch.Size([n_samples]))
-            x_ = sample['x']
+            assert n_samples == 1, 'Cannot sample for than one y for the same x'
+            sample = r_XY.sample(torch.Size([N, n_samples]))
+            x_ = sample['x'][:, 0]
             y_ = sample['y']
 
         assert x_.shape[0] == N

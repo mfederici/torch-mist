@@ -11,7 +11,7 @@ init_args:
   marginal_y:
     class_path: core.models.learnable_distributions.FlowTransformedNormal
     init_args:
-      dim: 5
+      input_dim: 5
       hidden_dims: [128, 64]
       transform_name: affine_autoregressive
       n_transforms: 3

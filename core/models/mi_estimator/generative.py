@@ -101,6 +101,8 @@ class GenerativeMutualInformationEstimator(MutualInformationEstimator):
             h_y = self.compute_entropy_y(y)
 
             if h_x is not None and h_y is not None:
+                estimates['h_x'] = h_x
+                estimates['h_y'] = h_y
                 estimates['value'] = estimates['grad'] + h_x + h_y
                 estimates['grad'] = estimates['grad'] - h_x - h_y
 
@@ -127,6 +129,7 @@ class GenerativeMutualInformationEstimator(MutualInformationEstimator):
             h_y = self.compute_entropy_y(y)
 
             if h_y is not None:
+                estimates['h_y'] = h_y
                 estimates['value'] = estimates['grad'] + h_y
                 estimates['grad'] = estimates['grad'] - h_y
 
@@ -153,6 +156,7 @@ class GenerativeMutualInformationEstimator(MutualInformationEstimator):
                 h_a = self.compute_entropy_a(a)
 
                 if h_a is not None:
+                    estimates['h_a'] = h_a
                     estimates['value'] = estimates['grad'] + h_a
                     estimates['grad'] = estimates['grad'] - h_a
         else:

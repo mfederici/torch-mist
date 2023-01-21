@@ -8,7 +8,7 @@ from pytorch_lightning import Trainer, LightningModule
 from pytorch_lightning.utilities import rank_zero_warn
 
 from core.distributions.transforms import ConditionalDistributionModule
-from core.models.predictor import ConditionalCategoricalMLP
+from core.models.learnable_distributions import ConditionalCategoricalMLP
 
 
 # Implementation based on pl_bolts.models.callbacks.ssl_online

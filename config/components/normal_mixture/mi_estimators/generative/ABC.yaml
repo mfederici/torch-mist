@@ -6,5 +6,9 @@ init_args:
     init_args:
       y_dim: 5
       n_classes: 32
-      hidden_dims: [256, 128]
+      hidden_dims: [128]
+  marginal_a:
+    class_path: core.models.learnable_distributions.LearnableCategorical
+    init_args:
+      n_classes: 32
 

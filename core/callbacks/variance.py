@@ -51,3 +51,6 @@ class VarianceLogCallback(Callback):
 
     def on_validation_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         self.on_any_epoch_end(pl_module, "val")
+
+    def on_test_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self.on_any_epoch_end(pl_module, "test")

@@ -141,6 +141,12 @@ class InfoMax(pl.LightningModule):
         self.log_components(results, "val")
         return results
 
+    def test_step(self, batch, batch_idx) -> STEP_OUTPUT:
+        results = self.shared_step(batch, "test")
+        self.log_components(results, "test")
+        return results
+
+
     def configure_optimizers(self) -> Any:
         optimizer = self.optimizer_class(self.parameters(), **self.optimizer_init_args)
         if self.lr_scheduler_class is not None:
