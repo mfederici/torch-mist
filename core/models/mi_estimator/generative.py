@@ -61,7 +61,7 @@ class GenerativeMutualInformationEstimator(MutualInformationEstimator):
             value = value.view(-1, *value.shape[2:])
 
             # Compute the entropy
-            h = - marginal.log_prob(value.detach()).mean()
+            h = - marginal.log_prob(value).mean()
         return h
 
     def compute_entropy_y(self, y: torch.Tensor) -> Optional[torch.Tensor]:
@@ -107,6 +107,8 @@ class GenerativeMutualInformationEstimator(MutualInformationEstimator):
         elif self.conditional_y_x is not None:
             # Compute E[log r(y|x)] - H(y)
 
+            self._cached_x = x
+
             # Unsqueeze an empty dimension so that x and y have the same number of dimensions
             x = x.unsqueeze(1)
             assert y.ndim == x.ndim
@@ -118,7 +120,6 @@ class GenerativeMutualInformationEstimator(MutualInformationEstimator):
             log_r_Y_X = r_y_X.log_prob(y)
 
             self._cached_r_y_X = r_y_X
-            self._cached_x = x
 
             estimates['grad'] = log_r_Y_X.mean()
 
@@ -137,6 +138,9 @@ class GenerativeMutualInformationEstimator(MutualInformationEstimator):
             else:
                 r_a_Y = self.conditional_a_y.condition(y)
 
+                if a.ndim == 1:
+                    a = a.unsqueeze(-1)
+
                 if a.ndim < y.ndim:
                     # Unsqueeze a to have the same shape as y
                     a = a.unsqueeze(1).repeat(1, y.shape[1], 1)
@@ -144,7 +148,6 @@ class GenerativeMutualInformationEstimator(MutualInformationEstimator):
                 # Compute the cross-entropy
                 log_r_A_Y = r_a_Y.log_prob(a).mean(1)
 
-                # BUG HERE
                 estimates['grad'] = log_r_A_Y.mean()
 
                 h_a = self.compute_entropy_a(a)

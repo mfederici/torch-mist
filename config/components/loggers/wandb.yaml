@@ -1,1 +1,0 @@
-class_path: pytorch_lightning.loggers.WandbLogger

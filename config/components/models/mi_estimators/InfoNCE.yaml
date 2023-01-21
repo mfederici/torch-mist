@@ -1,5 +1,0 @@
-class_path: core.models.mi_estimator.IndoNCE
-init_args:
-  ratio_estimator: ../ratio_estimators/separable.yaml
-  baseline: ../baselines/batch_logmeanexp.yaml
-  neg_samples: 0 # 0 means use all samples in the batch

@@ -12,8 +12,8 @@ from core.models.mi_estimator.generative import GenerativeMutualInformationEstim
 class HybridMutualInformationEstimator(MutualInformationEstimator):
     def __init__(
             self,
-            generative_estimator: GenerativeMutualInformationEstimator,
-            discriminative_estimator: DiscriminativeMutualInformationEstimator,
+            generative_estimator: Optional[GenerativeMutualInformationEstimator]=None,
+            discriminative_estimator: Optional[DiscriminativeMutualInformationEstimator]=None,
     ):
         super().__init__()
         self.generative_estimator = generative_estimator
@@ -48,10 +48,10 @@ class HybridMutualInformationEstimator(MutualInformationEstimator):
 
         # 3) If we are using a conditional proposal r(y|x), sample from it
         elif self.generative_estimator.conditional_y_x is not None:
-            assert x == self.generative_estimator._cached_x
+            assert torch.equal(x, self.generative_estimator._cached_x)
             r_y_X = self.generative_estimator._cached_r_y_X
             assert isinstance(r_y_X, Distribution)
-            y_ = r_y_X.sample(torch.Size([n_samples]))
+            y_ = r_y_X.sample(torch.Size([n_samples])).squeeze(-2).permute(1, 0, 2)
             x_ = x
 
         # 4) Otherwise, if we are using a joint proposal r(x,y), sample from it
@@ -63,7 +63,7 @@ class HybridMutualInformationEstimator(MutualInformationEstimator):
             y_ = sample['y']
 
         assert x_.shape[0] == N
-        assert y_.shape[0] == N
+        assert y_.shape[0] == N or y_.shape[0] == 1
         assert y_.shape[1] == n_samples
 
         return x_, y_
@@ -81,10 +81,17 @@ class HybridMutualInformationEstimator(MutualInformationEstimator):
         assert x_ is None, 'x_ must be None'
         assert y_ is None, 'y_ must be None'
 
+        if a is not None:
+            if a.ndim == 1:
+                a = a.unsqueeze(-1)
+
         if self.generative_estimator is not None:
             generative_estimates = self.generative_estimator.compute_ratio(x, y, a=a)
         else:
-            generative_estimates = {'value': torch.zeros().to(x.device), 'grad': torch.zeros().to(x.device)}
+            generative_estimates = {
+                'value': torch.zeros(1).to(x.device).sum(),
+                'grad': torch.zeros(1).to(x.device).sum()
+            }
 
         for key, value in generative_estimates.items():
             estimates['gen/' + key] = value
@@ -95,7 +102,10 @@ class HybridMutualInformationEstimator(MutualInformationEstimator):
             # Compute the discriminative value
             discriminative_estimates = self.discriminative_estimator.compute_ratio(x, y, x_, y_)
         else:
-            discriminative_estimates = {'value': torch.zeros().to(x.device), 'grad': torch.zeros().to(x.device)}
+            discriminative_estimates = {
+                'value': torch.zeros(1).to(x.device).sum(),
+                'grad': torch.zeros(1).to(x.device).sum()
+            }
 
         for key, value in discriminative_estimates.items():
             estimates['dis/' + key] = value

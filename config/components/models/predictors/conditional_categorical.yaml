@@ -1,6 +1,0 @@
-class_path: core.models.predictor.ConditionalCategoricalMLP
-init_args:
-  y_dim: 5
-  a_dim: 5
-  n_classes: 2
-  hidden_dims: [256, 128]

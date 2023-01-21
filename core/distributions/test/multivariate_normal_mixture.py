@@ -173,58 +173,58 @@ class MultivariateCorrelatedNormalMixture(JointDistribution):
 #         return {'x': x, 'y': y0, 'y_': y, 'a': a}
 #
 
-
-class SignResampledDistribution(JointDistribution):
-    labels = ["x", "y", "y_", "a"]
-
-    def __init__(self, base_dist: MultivariateCorrelatedNormalMixture, neg_samples: int = 1):
-        super(SignResampledDistribution, self).__init__()
-        self.base_dist = base_dist
-        self.neg_samples = neg_samples
-
-    def entropy(self, labels: Union[str, List[str]]) -> Optional[float]:
-        assert set(labels) <= set(self.labels), f"Labels {labels} not in {self.labels}"
-        assert labels in ["x", "y", "a", ["x", "y"]]
-        if labels == "a":
-            return np.log(2) * self.base_dist.n_dim
-        if labels == "x":
-            return self.base_dist.entropy("x")
-        elif labels == "y":
-            return self.base_dist.entropy("y")
-        elif labels == ["x", "y"]:
-            return self.base_dist.entropy(["x", "y"])
-        else:
-            return None
-
-    def compute_attributes(self, x: torch.Tensor) -> torch.Tensor:
-        return (x > 0).long()
-
-    def sample(self, sample_shape: torch.Size = torch.Size([])):
-        d = self.base_dist.sample(sample_shape)
-        a = self.compute_attributes(d['x'])
-
-        a = a.unsqueeze(1).repeat(1, self.neg_samples, 1)
-        d['a'] = a
-
-        # Note here we are considering the same distributions on all the feature dimensions
-        if len(sample_shape) == 0:
-            n_samples = 1
-        else:
-            n_samples = sample_shape[0]
-            assert len(sample_shape) == 1, "Only 1D sample shapes supported"
-
-        neg_shape = torch.Size([n_samples, self.neg_samples])
-
-        d2 = self.base_dist.sample(neg_shape)
-        x_, y_ = d2['x'], d2['y']
-
-        a_ = self.compute_attributes(x_)
-
-        # The mask is 1 if both a are 0 or 1, -1 otherwise
-        mask = ((a_ + a) != 1).float() * 2 - 1
-        # Flip the y values if a differs
-        y_ *= mask
-
-        d['y_'] = y_
-
-        return d
+#
+# class SignResampledDistribution(JointDistribution):
+#     labels = ["x", "y", "y_", "a"]
+#
+#     def __init__(self, base_dist: MultivariateCorrelatedNormalMixture, neg_samples: int = 1):
+#         super(SignResampledDistribution, self).__init__()
+#         self.base_dist = base_dist
+#         self.neg_samples = neg_samples
+#
+#     def entropy(self, labels: Union[str, List[str]]) -> Optional[float]:
+#         assert set(labels) <= set(self.labels), f"Labels {labels} not in {self.labels}"
+#         assert labels in ["x", "y", "a", ["x", "y"]]
+#         if labels == "a":
+#             return np.log(2) * self.base_dist.n_dim
+#         if labels == "x":
+#             return self.base_dist.entropy("x")
+#         elif labels == "y":
+#             return self.base_dist.entropy("y")
+#         elif labels == ["x", "y"]:
+#             return self.base_dist.entropy(["x", "y"])
+#         else:
+#             return None
+#
+#     def compute_attributes(self, x: torch.Tensor) -> torch.Tensor:
+#         return (x > 0).long()
+#
+#     def sample(self, sample_shape: torch.Size = torch.Size([])):
+#         d = self.base_dist.sample(sample_shape)
+#         a = self.compute_attributes(d['x'])
+#
+#         a = a.unsqueeze(1).repeat(1, self.neg_samples, 1)
+#         d['a'] = a
+#
+#         # Note here we are considering the same distributions on all the feature dimensions
+#         if len(sample_shape) == 0:
+#             n_samples = 1
+#         else:
+#             n_samples = sample_shape[0]
+#             assert len(sample_shape) == 1, "Only 1D sample shapes supported"
+#
+#         neg_shape = torch.Size([n_samples, self.neg_samples])
+#
+#         d2 = self.base_dist.sample(neg_shape)
+#         x_, y_ = d2['x'], d2['y']
+#
+#         a_ = self.compute_attributes(x_)
+#
+#         # The mask is 1 if both a are 0 or 1, -1 otherwise
+#         mask = ((a_ + a) != 1).float() * 2 - 1
+#         # Flip the y values if a differs
+#         y_ *= mask
+#
+#         d['y_'] = y_
+#
+#         return d

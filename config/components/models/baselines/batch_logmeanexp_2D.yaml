@@ -1,3 +1,0 @@
-class_path: core.models.baseline.BatchLogMeanExp
-init_args:
-  dim: 2

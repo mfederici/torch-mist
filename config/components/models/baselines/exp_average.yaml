@@ -1,3 +1,0 @@
-class_path: core.models.baseline.ExponentialMovingAverage
-init_args:
-  gamma: 0.9

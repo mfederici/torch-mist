@@ -144,15 +144,6 @@ class InfoMax(pl.LightningModule):
     def configure_optimizers(self) -> Any:
         optimizer = self.optimizer_class(self.parameters(), **self.optimizer_init_args)
         if self.lr_scheduler_class is not None:
-
-            if "interval" in self.lr_scheduler_params:
-
-                if self.lr_scheduler_params["interval"] == "step":
-                    steps_per_epoch = len(self.trainer.datamodule.train_dataloader())
-                    for param in self.lr_scheduler_init_args:
-                        if param.endswith("steps"):
-                            self.lr_scheduler_init_args[param] *= steps_per_epoch
-
             scheduler = self.lr_scheduler_class(optimizer, **self.lr_scheduler_init_args)
             if self.lr_scheduler_params is not None:
                 scheduler = {

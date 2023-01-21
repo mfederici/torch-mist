@@ -1,5 +1,0 @@
-class_path: core.models.encoder.EncoderMLP
-init_args:
-  input_dim: 5
-  hidden_dims: [64, 64]
-  output_dim: 5

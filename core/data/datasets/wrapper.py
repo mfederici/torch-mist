@@ -8,43 +8,17 @@ class SampleDataset(Dataset):
     def __init__(
             self,
             distribution: JointDistribution,
-            samples_per_epoch: int = 100000,
-            n_samples: int = 0,
-            store_samples: bool = False,
-            attributes=None,
+            n_samples: int = 100000,
     ):
         super(SampleDataset, self).__init__()
 
         self.distribution = distribution
-        self.samples_per_epoch = samples_per_epoch
-        self.n_samples = n_samples
-        if store_samples:
-            self.samples = self.distribution.sample(torch.Size([samples_per_epoch]))
-        else:
-            self.samples = None
-
-        assert not store_samples or attributes is None, "Attributes not supported for stored samples"
-        assert attributes is None or len(
-            attributes) == samples_per_epoch, "Attributes must be of length samples_per_epoch"
-
-        self.attributes = attributes
+        self.samples = self.distribution.sample(torch.Size([n_samples]))
 
     def __getitem__(self, idx):
-        if self.samples is not None:
-            data = {k: v[idx] for k, v in self.samples.items()}
-            if self.attributes is not None:
-                data["a"] = self.attributes[idx]
-            data['idx'] = idx
-            return data
-        else:
-            if self.n_samples > 0:
-                samples = self.distribution.sample(torch.Size([self.n_samples]))
-            else:
-                samples = self.distribution.sample()
-            return samples
+        data = {k: v[idx] for k, v in self.samples.items()}
+        data['idx'] = idx
+        return data
 
     def __len__(self):
-        if self.n_samples == 0:
-            return self.samples_per_epoch
-        else:
-            return self.samples_per_epoch//self.n_samples
+        len(self.samples)

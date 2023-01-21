@@ -1,4 +1,0 @@
-class_path: core.models.mi_estimator.SimCLR
-init_args:
-  x_dim: 5
-  y_dim: 5

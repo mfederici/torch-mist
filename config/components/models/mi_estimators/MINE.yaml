@@ -1,5 +1,0 @@
-class_path: core.models.MutualInformationEstimator
-init_args:
-  ratio_estimator: ../ratio_estimators/joint.yaml
-  baseline: ../baselines/batch_logmeanexp_2D.yaml
-  grad_baseline: ../baselines/exp_average.yaml

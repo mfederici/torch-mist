@@ -1,0 +1,8 @@
+class_path: core.models.mi_estimator.MINE
+init_args:
+  ratio_estimator:
+    class_path: core.models.ratio_estimator.JointRatioEstimatorMLP
+    init_args:
+      x_dim: 5
+      y_dim: 5
+      hidden_dims: [256, 128]

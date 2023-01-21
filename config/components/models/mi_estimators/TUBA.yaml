@@ -1,4 +1,0 @@
-class_path: core.models.MutualInformationEstimator
-init_args:
-  ratio_estimator: ../ratio_estimators/joint.yaml
-  baseline: ../baselines/learned.yaml
