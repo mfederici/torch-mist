@@ -179,6 +179,7 @@ class JS(DiscriminativeMutualInformationEstimator):
         super().__init__(
             ratio_estimator=ratio_estimator,
             neg_samples=neg_samples,
+            js_grad=True,
         )
 
 

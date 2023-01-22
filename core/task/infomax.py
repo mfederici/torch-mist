@@ -133,6 +133,7 @@ class InfoMax(pl.LightningModule):
             elif isinstance(value, torch.Tensor):
                 if value.shape == torch.Size([]):
                     log = True
+
             if log:
                 self.log(f"{name}/{step}", value, on_step=step == "train", on_epoch=True)
 
