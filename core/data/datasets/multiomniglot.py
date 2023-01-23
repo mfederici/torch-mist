@@ -1,9 +1,10 @@
-from torchvision.datasets.omniglot import Omniglot, list_dir, list_files
-import numpy as np
 from os.path import join
-from torchvision.transforms import ToTensor, Compose, Resize
-from torchvision.utils import make_grid
+import torch
+import numpy as np
+
 from PIL import Image
+from torchvision.datasets.omniglot import Omniglot, list_dir, list_files
+from torchvision.transforms import ToTensor, Compose, Resize
 
 
 class MultiOmniglot(Omniglot):
@@ -28,7 +29,7 @@ class MultiOmniglot(Omniglot):
         self.used_alphabets = []
         for alphabet, _ in sorted(n_characters.items(), key=lambda item: -item[1]):
             self.used_alphabets.append(alphabet)
-            if len(self.used_alphabets) == self.n_images**2:
+            if len(self.used_alphabets) == self.n_images:
                 break
         self.lookup = lookup
         self.n_characters = n_characters
@@ -94,8 +95,8 @@ class MultiOmniglot(Omniglot):
             img_y = self.transform(img_y)
             data['y'].append(img_y)
 
-        data['x'] = make_grid(data['x'], self.n_images, padding=0)[0].unsqueeze(0)
-        data['y'] = make_grid(data['y'], self.n_images, padding=0)[0].unsqueeze(0)
+        data['x'] = torch.cat(data['x'], 0)
+        data['y'] = torch.cat(data['y'], 0)
         data['idx'] = idx
 
         return data

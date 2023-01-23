@@ -1,0 +1,12 @@
+class_path: core.models.mi_estimator.AlphaTUBA
+init_args:
+  ratio_estimator:
+    class_path: core.models.ratio.SeparableRatioEstimatorMLP
+    init_args:
+      x_dim: 64
+      y_dim: 64
+      hidden_dims: [512, 256]
+      out_dim: 128
+      transform_y: True
+  alpha: 0.5
+  neg_samples: 0

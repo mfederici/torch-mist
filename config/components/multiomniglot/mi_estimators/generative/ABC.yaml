@@ -1,0 +1,14 @@
+class_path: core.models.mi_estimator.ABC
+init_args:
+  # Using a Normal distribution with learnable (conditional) mean and variance
+  conditional_a_y:
+    class_path: core.models.learnable_distributions.ConditionalCategoricalMLP
+    init_args:
+      y_dim: 64
+      n_classes: 32
+      hidden_dims: [128]
+  marginal_a:
+    class_path: core.models.learnable_distributions.LearnableCategorical
+    init_args:
+      n_classes: 32
+

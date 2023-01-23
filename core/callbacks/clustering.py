@@ -18,7 +18,7 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 class ClusteringCallback(Callback):
     def __init__(
             self,
-            epochs: int,
+            steps: int,
             clustering: Any,
             key_to_encode: str = 'x',
     ):
@@ -27,9 +27,10 @@ class ClusteringCallback(Callback):
         assert hasattr(clustering, 'fit'), "clustering must have a fit method"
         assert hasattr(clustering, 'predict'), "clustering must have a predict method"
 
-        self.epochs = epochs
+        self.steps = steps
         self.clustering = clustering
         self.key_to_encode = key_to_encode
+        self.clustered = False
 
     def _encode_all(self, encoder: nn.Module, dataloader: DataLoader) -> np.ndarray:
         encoder.eval()
@@ -70,9 +71,16 @@ class ClusteringCallback(Callback):
         else:
             dataset.attributes = np.concatenate([dataset.attributes, a], dim=1)
 
-    def on_train_epoch_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
+    def on_train_batch_start(
+            self, trainer: Trainer, pl_module: LightningModule, batch: Any, batch_idx: int
+    ) -> None:
+
         assert isinstance(pl_module, InfoMax), "ClusteringCallback only works with InfoMax"
-        if trainer.current_epoch == self.epochs:
+        if trainer.global_step >= self.steps and not self.clustered:
+            self.clustered = True
+            assert hasattr(trainer, 'datamodule'), "Trainer must have a datamodule"
+            assert isinstance(trainer.datamodule, DataModuleWithAttributes), "ClusteringCallback only works with DataModuleWithAttributes"
+
             print("ClusteringCallback: Encoding all training data...")
             z_train = self._encode_all(pl_module.encoder_x, trainer.datamodule.train_dataloader())
 
@@ -86,12 +94,6 @@ class ClusteringCallback(Callback):
             h_a = -np.sum(p_a[p_a > 0] * np.log(p_a[p_a > 0]))
 
             print(f"Entropy: {h_a}")
-
-            # Update the entropy of the attributes
-            if pl_module.mi_estimator.h_a is None:
-                pl_module.mi_estimator.h_a = h_a
-            else:
-                pl_module.mi_estimator.h_a = pl_module.mi_estimator.h_a + h_a
 
             assert hasattr(trainer, 'datamodule'), "Trainer must have a datamodule"
             assert isinstance(trainer.datamodule, DataModuleWithAttributes), "ClusteringCallback only works with InfoMax"

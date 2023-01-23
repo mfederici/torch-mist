@@ -1,0 +1,14 @@
+class_path: core.models.mi_estimator.FLO
+init_args:
+  ratio_estimator:
+    class_path: core.models.ratio.JointRatioEstimatorMLP
+    init_args:
+      x_dim: 64
+      y_dim: 64
+      hidden_dims: [512, 256]
+  baseline:
+    class_path: core.models.baseline.LearnableJointMLPBaseline
+    init_args:
+      x_dim: 64
+      y_dim: 64
+      hidden_dims: [512, 256]

@@ -55,28 +55,28 @@ class InfoMax(pl.LightningModule):
 
         print(self)
 
-    def on_fit_start(self) -> None:
-        # Set the entropy of a and y if the computation is specified in the dataloader
-        if hasattr(self.trainer, "datamodule"):
-            if hasattr(self.trainer.datamodule, "h_a"):
-                self.mi_estimator.h_a = self.trainer.datamodule.h_a
-            if hasattr(self.trainer.datamodule, "h_y"):
-                self.mi_estimator.h_y = self.trainer.datamodule.h_y
-
-            # Set the number of negative samples consistently to the number specified on the datamodule
-            # This is necessary only when using a predictor
-            predictor = None
-            if hasattr(self.mi_estimator, "predictor"):
-                predictor = self.mi_estimator.predictor
-            if hasattr(self.trainer.datamodule, "neg_samples") and predictor is not None:
-                if self.mi_estimator.neg_samples != self.trainer.datamodule.neg_samples:
-                    print(
-                        "Warning: The number of negative samples specified in the datamodule ("
-                        f"{self.trainer.datamodule.neg_samples}) does not match the number of negative samples "
-                        f"specified in the estimator ({self.mi_estimator.neg_samples}).")
-                    print(
-                        f"Setting the number of negative samples in the data_loader to {self.mi_estimator.neg_samples}")
-                    self.trainer.datamodule.neg_samples = self.mi_estimator.neg_samples
+    # def on_fit_start(self) -> None:
+    #     # Set the entropy of a and y if the computation is specified in the dataloader
+    #     if hasattr(self.trainer, "datamodule"):
+    #         if hasattr(self.trainer.datamodule, "h_a"):
+    #             self.mi_estimator.h_a = self.trainer.datamodule.h_a
+    #         if hasattr(self.trainer.datamodule, "h_y"):
+    #             self.mi_estimator.h_y = self.trainer.datamodule.h_y
+    #
+    #         # Set the number of negative samples consistently to the number specified on the datamodule
+    #         # This is necessary only when using a predictor
+    #         predictor = None
+    #         if hasattr(self.mi_estimator, "predictor"):
+    #             predictor = self.mi_estimator.predictor
+    #         if hasattr(self.trainer.datamodule, "neg_samples") and predictor is not None:
+    #             if self.mi_estimator.neg_samples != self.trainer.datamodule.neg_samples:
+    #                 print(
+    #                     "Warning: The number of negative samples specified in the datamodule ("
+    #                     f"{self.trainer.datamodule.neg_samples}) does not match the number of negative samples "
+    #                     f"specified in the estimator ({self.mi_estimator.neg_samples}).")
+    #                 print(
+    #                     f"Setting the number of negative samples in the data_loader to {self.mi_estimator.neg_samples}")
+    #                 self.trainer.datamodule.neg_samples = self.mi_estimator.neg_samples
 
     def forward(
             self,
