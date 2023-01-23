@@ -136,8 +136,8 @@ class GenerativeMutualInformationEstimator(MutualInformationEstimator):
         elif self.conditional_a_y is not None:
             # Compute E[log r(a|y)] - H(a) if a is provided
             if a is None:
-                estimates['value'] = torch.zeros(1, device=x.device)
-                estimates['grad'] = torch.zeros(1, device=x.device)
+                estimates['value'] = torch.zeros(1, device=x.device).sum()
+                estimates['grad'] = torch.zeros(1, device=x.device).sum()
             else:
                 r_a_Y = self.conditional_a_y.condition(y)
 
