@@ -3,7 +3,7 @@ data:
   init_args:
     n_images: 1
     num_workers: 24
-    batch_size: 128
+    batch_size: 256
 
 model:
   class_path: core.task.InfoMax
@@ -33,11 +33,11 @@ model:
                 n_classes: 128 # Same as the number of clusters
     optimizer_class: torch.optim.Adam
     optimizer_init_args:
-      lr: 1e-3
+      lr: 1e-4
     lr_scheduler_class: core.optim.lr_scheduler.WarmupScheduler
     lr_scheduler_init_args:
-      warmup_steps: 10000
-      total_steps: 100000
+      warmup_steps: 20000
+      total_steps: 200000
     lr_scheduler_params:
       frequency: 1
       interval: step
@@ -51,7 +51,7 @@ trainer:
           key: ["mi/value", "mi/grad", "mi/gen/value", "mi/gen/grad", "mi/dis/value", "mi/dis/grad"]
     - class_path: core.callbacks.ClusteringCallback
       init_args:
-        steps: 50000
+        steps: 100000
         key_to_encode: 'x'
         clustering:
           class_path: sklearn.cluster.KMeans

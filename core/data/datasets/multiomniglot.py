@@ -43,6 +43,8 @@ class MultiOmniglot(Omniglot):
             versions = np.arange(18)
         elif split == "test":
             versions = np.arange(2)+18
+        elif split == "all":
+            versions = np.arange(20)
         else:
             raise Exception("Only train, val, train+val and test splits are available")
 
