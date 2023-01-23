@@ -2,7 +2,7 @@ data:
   class_path: core.data.datamodule.MultiOmniglotDataModule
   init_args:
     n_images: 1
-    num_workers: 24
+    num_workers: 18
     batch_size: 256
 
 model:
@@ -43,7 +43,7 @@ model:
       interval: step
 
 trainer:
-  max_steps: 100000
+  max_steps: 200000
   callbacks:
     - class_path: pytorch_lightning.callbacks.LearningRateMonitor
     - class_path: core.callbacks.VarianceLogCallback

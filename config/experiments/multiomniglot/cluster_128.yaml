@@ -43,7 +43,7 @@ model:
       interval: step
 
 trainer:
-  max_steps: 100000
+  max_steps: 200000
   callbacks:
     - class_path: pytorch_lightning.callbacks.LearningRateMonitor
     - class_path: core.callbacks.VarianceLogCallback
