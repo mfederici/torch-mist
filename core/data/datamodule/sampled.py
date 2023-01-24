@@ -13,7 +13,6 @@ from core.distributions.test.multivariate_normal_mixture import JointDistributio
 
 
 
-
 class SampledDataModule(DataModuleWithAttributes):
     def __init__(
             self,

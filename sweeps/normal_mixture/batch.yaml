@@ -18,7 +18,7 @@ parameters:
   --model.mi_estimator.generative_estimator:
     values:
       - config/components/normal_mixture/mi_estimators/generative/BA.yaml
-      - null
+      - ""
   --model.mi_estimator.discriminative_estimator:
     values:
       - config/components/normal_mixture/mi_estimators/discriminative/NWJ.yaml

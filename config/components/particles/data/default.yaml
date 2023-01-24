@@ -1,0 +1,5 @@
+class_path: core.data.datamodule.ParticlesDataModule
+init_args:
+  traj_file: correlated_particles.npy
+  num_workers: 12
+  batch_size: 128

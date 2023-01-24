@@ -4,7 +4,7 @@ command:
   - ${interpreter}
   - ${program}
   - fit
-  - -c=config/experiments/multiomniglot/base.yaml
+  - -c=config/experiments/multiomniglot/cluster_32.yaml
   - --data.num_workers=16
   - --data.data_dir=$DATA_DIR
   - --trainer.default_root_dir=~/results
@@ -18,16 +18,21 @@ method: grid
 parameters:
   --model.mi_estimator.discriminative_estimator:
     values:
-      - config/components/normal_mixture/mi_estimators/discriminative/NWJ.yaml
-      - config/components/normal_mixture/mi_estimators/discriminative/JS.yaml
-      - config/components/normal_mixture/mi_estimators/discriminative/MINE.yaml
-      - config/components/normal_mixture/mi_estimators/discriminative/SMILE.yaml
-      - config/components/normal_mixture/mi_estimators/discriminative/InfoNCE.yaml
-      - config/components/normal_mixture/mi_estimators/discriminative/NWJ+InfoNCE.yaml
-      - config/components/normal_mixture/mi_estimators/discriminative/FLO.yaml
+      - config/components/multiomniglot/mi_estimators/discriminative/NWJ.yaml
+      - config/components/multiomniglot/mi_estimators/discriminative/JS.yaml
+      - config/components/multiomniglot/mi_estimators/discriminative/MINE.yaml
+      - config/components/multiomniglot/mi_estimators/discriminative/SMILE.yaml
+      - config/components/multiomniglot/mi_estimators/discriminative/InfoNCE.yaml
+      - config/components/multiomniglot/mi_estimators/discriminative/NWJ+InfoNCE.yaml
+      - config/components/multiomniglot/mi_estimators/discriminative/FLO.yaml
+  --data.n_images:
+    values:
+      - 2
+      - 1
+      - 3
   --seed:
     values:
       - 7
-      - 42
-      - 123
+#      - 42
+#      - 123
 

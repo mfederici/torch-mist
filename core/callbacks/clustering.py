@@ -107,8 +107,6 @@ class ClusteringCallback(Callback):
                 a_val = self.clustering.predict(z_val)
 
                 trainer.datamodule.update_val_attributes(a_val)
-                # self._update_sampling(a_val, trainer.val_dataloaders[0])
-                # self._update_data(a_val, trainer.val_dataloaders[0])
 
             print("ClusteringCallback: Done")
 

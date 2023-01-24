@@ -1,0 +1,33 @@
+program: train.py
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - fit
+  - -c=config/experiments/particles/base.yaml
+  - --data.num_workers=18
+  - --data.data_dir=data
+  - --trainer.default_root_dir=tmp/results
+  - --trainer.logger=pytorch_lightning.loggers.WandbLogger
+  - --trainer.accelerator=gpu
+#  - --trainer.max_steps=10 #
+#  - --trainer.gpus=0 #
+#  - --trainer.accelerator=cpu #
+  - ${args_no_hyphens}
+method: grid
+parameters:
+  --model.mi_estimator.discriminative_estimator:
+    values:
+      - config/components/particles/mi_estimators/discriminative/NWJ.yaml
+      - config/components/particles/mi_estimators/discriminative/JS.yaml
+      - config/components/particles/mi_estimators/discriminative/MINE.yaml
+      - config/components/particles/mi_estimators/discriminative/SMILE.yaml
+      - config/components/particles/mi_estimators/discriminative/InfoNCE.yaml
+      - config/components/particles/mi_estimators/discriminative/NWJ+InfoNCE.yaml
+      - config/components/particles/mi_estimators/discriminative/FLO.yaml
+  --seed:
+    values:
+      - 7
+#      - 42
+#      - 123
+

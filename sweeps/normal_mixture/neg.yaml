@@ -15,6 +15,10 @@ command:
   - ${args_no_hyphens}
 method: grid
 parameters:
+  --model.mi_estimator.generative_estimator:
+    values:
+      - config/components/normal_mixture/mi_estimators/generative/BA.yaml
+      - ""
   --model.mi_estimator.discriminative_estimator:
     values:
       - config/components/normal_mixture/mi_estimators/discriminative/NWJ.yaml
