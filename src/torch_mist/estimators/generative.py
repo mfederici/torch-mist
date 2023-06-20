@@ -6,9 +6,8 @@ from torch import nn
 from torch.distributions import Distribution, Categorical
 from pyro.distributions import ConditionalDistribution
 
-from src.torch_mist.distributions.joint.base import JointDistribution
-from src.torch_mist.models.mi_estimator.base import MutualInformationEstimator, Estimation
-from src.torch_mist.quantization import QuantizationFunction
+from torch_mist.estimators.base import MutualInformationEstimator, Estimation
+from torch_mist.quantization import QuantizationFunction
 
 
 class GenerativeMutualInformationEstimator(MutualInformationEstimator):
@@ -146,7 +145,7 @@ class DoE(BA):
 class GM(GenerativeMutualInformationEstimator):
     def __init__(
             self,
-            joint_xy: JointDistribution,
+            joint_xy: Distribution,
             marginal_y: Optional[Distribution] = None,
             H_y: Optional[torch.Tensor] = None,
             marginal_x: Optional[Distribution] = None,
@@ -186,7 +185,12 @@ class GM(GenerativeMutualInformationEstimator):
 
     def log_prob_y_x(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         # Compute E[-log r(y|x)]
-        log_r_XY = self.joint_xy.log_prob({'x': x, 'y': y})
+        x = x + y * 0
+        y = y + x * 0
+
+        xy = torch.cat([x, y], dim=-1)
+
+        log_r_XY = self.joint_xy.log_prob(xy)
         log_r_X = self.log_prob_x(x, y)
         log_r_Y_X = log_r_XY - log_r_X
 
@@ -220,35 +224,6 @@ class GM(GenerativeMutualInformationEstimator):
         s += '  ' + '(marginal_x)=' + str(self.marginal_x).replace('\n', '  \n') + '\n'
         s += '  ' + '(marginal_y)=' + str(self.marginal_y).replace('\n', '  \n') + '\n'
         s += ')' + '\n'
-        return s
-
-
-class PQ(VariationalProposalMutualInformationEstimator):
-    def __init__(
-            self,
-            conditional_qx_y: ConditionalDistribution,
-            q: QuantizationFunction,
-    ):
-        super().__init__(conditional_qx_y)
-        self.q = q
-        self.y_logits = nn.Parameter(torch.zeros(q.num_bins))
-
-    def log_prob_y(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        return Categorical(logits=self.y_logits).log_prob(y)
-
-    def expected_log_ratio(
-            self,
-            x: torch.Tensor,
-            y: torch.Tensor,
-    ) -> Dict[str, torch.Tensor]:
-        # Swap the order of x and y since we are quantizing and predicting the second argument
-        return super().expected_log_ratio(y, self.q(x))
-
-    def __repr__(self):
-        s = self.__class__.__name__ + '(\n'
-        s += '  ' + '(conditional_qx_y)=' + str(self.conditional_x_y).replace('\n', '  \n') + '\n'
-        s += '  ' + '(q)=' + str(self.q).replace('\n', '  \n') + '\n'
-        s += ')'
         return s
 
 
@@ -309,5 +284,34 @@ class L1Out(VariationalProposalMutualInformationEstimator):
         log_p_y = log_p_y + torch.nan_to_num(torch.eye(N).to(y.device)*(-float('inf')), 0, float('inf'), -float('inf'))
         log_p_y = torch.logsumexp(log_p_y, dim=0).unsqueeze(0) - math.log(N-1)
         return log_p_y
+
+
+class PQ(VariationalProposalMutualInformationEstimator):
+    def __init__(
+            self,
+            conditional_qx_y: ConditionalDistribution,
+            q: QuantizationFunction,
+    ):
+        super().__init__(conditional_qx_y)
+        self.q = q
+        self.y_logits = nn.Parameter(torch.zeros(q.num_bins))
+
+    def log_prob_y(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        return Categorical(logits=self.y_logits).log_prob(y)
+
+    def expected_log_ratio(
+            self,
+            x: torch.Tensor,
+            y: torch.Tensor,
+    ) -> Dict[str, torch.Tensor]:
+        # Swap the order of x and y since we are quantizing and predicting the second argument
+        return super().expected_log_ratio(y, self.q(x))
+
+    def __repr__(self):
+        s = self.__class__.__name__ + '(\n'
+        s += '  ' + '(conditional_qx_y)=' + str(self.conditional_x_y).replace('\n', '  \n') + '\n'
+        s += '  ' + '(q)=' + str(self.q).replace('\n', '  \n') + '\n'
+        s += ')'
+        return s
 
 

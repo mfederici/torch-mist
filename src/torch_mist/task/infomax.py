@@ -6,7 +6,7 @@ from pytorch_lightning.utilities.types import STEP_OUTPUT
 from torch import nn
 
 from src.torch_mist.models.encoder import SlowlyUpdatingModel, EncoderKeywords
-from src.torch_mist.models.mi_estimator import MutualInformationEstimator
+from src.torch_mist.estimators import MutualInformationEstimator
 
 
 class InfoMax(pl.LightningModule):

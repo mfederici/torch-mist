@@ -1,3 +1,4 @@
 from .base import UnnormalizedRatioEstimator
-from .joint import JointUnnormalizedRatioEstimator, JointRatioEstimatorMLP
-from .separable import SeparableUnnormalizedRatioEstimator, SeparableRatioEstimatorMLP
+from .joint import JointUnnormalizedRatioEstimator
+from .separable import SeparableUnnormalizedRatioEstimator
+from .utils import unnormalized_log_ratio, joint_unnormalized_log_ratio, separable_unnormalized_log_ratio

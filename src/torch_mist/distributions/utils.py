@@ -2,7 +2,7 @@ from typing import List
 
 from pyro.nn import DenseNN
 
-from src.torch_mist.distributions.conditional import ConditionalCategorical
+from .conditional import ConditionalCategorical
 
 # from core.distributions.transforms import ConditionalTransformedDistributionModule
 # from core.distributions.parametrizations import ParametrizedNormal, ConstantParametrizedConditionalDistribution

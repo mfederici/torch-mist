@@ -7,7 +7,7 @@ from pyro.nn import DenseNN
 from torch import nn
 from torch.distributions import Transform
 
-from src.torch_mist.nn.utils import SkipDenseNN, Identity, Constant, MergeOutputs
+from torch_mist.nn.utils import SkipDenseNN, Identity, Constant, MergeOutputs
 
 
 class ConditionedLinear(Transform):

@@ -1,6 +1,6 @@
 import math
 from abc import abstractmethod
-from typing import Optional, List
+from typing import Optional, List, Any
 
 import torch
 from pyro.nn import DenseNN
@@ -74,8 +74,14 @@ class LearnableBaseline(Baseline):
 
 
 class LearnableMLPBaseline(LearnableBaseline):
-    def __init__(self, x_dim: int, hidden_dims: List[int]):
-        net = DenseNN(x_dim, hidden_dims, [1])
+    def __init__(self, x_dim: int, hidden_dims: List[int], nonlinearity: Any = nn.ReLU(True)):
+        net = DenseNN(
+            input_dim=x_dim,
+            hidden_dims=hidden_dims,
+            param_dims=[1],
+            nonlinearity=nonlinearity
+        )
+
         super(LearnableMLPBaseline, self).__init__(net)
 
 
@@ -87,8 +93,13 @@ class LearnableJointBaseline(LearnableBaseline):
 
 
 class LearnableJointMLPBaseline(LearnableJointBaseline):
-    def __init__(self, x_dim: int, y_dim: int, hidden_dims: List[int]):
-        net = DenseNN(x_dim+y_dim, hidden_dims, [1])
+    def __init__(self, x_dim: int, y_dim: int, hidden_dims: List[int], nonlinearity: Any = nn.ReLU(True)):
+        net = DenseNN(
+            input_dim=x_dim+y_dim,
+            hidden_dims=hidden_dims,
+            param_dims=[1],
+            nonlinearity=nonlinearity
+        )
         super(LearnableJointMLPBaseline, self).__init__(net)
 
 
@@ -101,8 +112,6 @@ class InterpolatedBaseline(Baseline):
         self.baseline_2 = baseline_2
 
     def forward(self, f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
-
-        #log (alpha * b1.exp() + (1 - alpha) * b2.exp()) = log(exp(b1+log a) + exp(b2+log(1-alpha))
         b1 = self.baseline_1.forward(f_=f_, x=x, y=y)
         b2 = self.baseline_2.forward(f_=f_, x=x, y=y)
 
@@ -114,7 +123,7 @@ class InterpolatedBaseline(Baseline):
             return b1
         else:
             # We use logsumexp for numerical stability
-            b = torch.logsumexp(torch.cat([b1.unsqueeze(-1) + math.log(self.alpha), b2.unsqueeze(-1) + math.log(1-self.alpha)], -1), -1)
+            b = torch.log(self.alpha * b1.exp() + (1-self.alpha) * b2.exp())
 
             return b
 

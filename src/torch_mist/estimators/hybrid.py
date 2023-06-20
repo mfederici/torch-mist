@@ -2,9 +2,9 @@ from typing import Optional
 
 import torch
 
-from src.torch_mist.models.mi_estimator.base import MutualInformationEstimator
-from src.torch_mist.models.mi_estimator.discriminative import DiscriminativeMutualInformationEstimator
-from src.torch_mist.models.mi_estimator.generative import VariationalProposalMutualInformationEstimator
+from torch_mist.estimators.base import MutualInformationEstimator
+from torch_mist.estimators.discriminative import DiscriminativeMutualInformationEstimator
+from torch_mist.estimators.generative import VariationalProposalMutualInformationEstimator
 
 
 class HybridMutualInformationEstimator(MutualInformationEstimator):

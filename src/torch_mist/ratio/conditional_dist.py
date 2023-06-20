@@ -2,7 +2,7 @@ import torch
 
 from pyro.distributions import ConditionalDistribution
 
-from src.torch_mist.models.ratio.base import UnnormalizedRatioEstimator
+from .base import UnnormalizedRatioEstimator
 
 
 class ConditionalDistributionRatio(UnnormalizedRatioEstimator):

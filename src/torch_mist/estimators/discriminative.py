@@ -1,33 +1,22 @@
 import math
 from abc import abstractmethod
-from typing import Optional, Union
+from typing import Optional, List, Any
 
 import torch
 import torch.nn.functional as F
 from pyro.distributions import ConditionalDistribution
-from torch.distributions import Distribution
+from torch import nn
 
-from src.torch_mist.models.mi_estimator.base import MutualInformationEstimator, Estimation
-from src.torch_mist.models.ratio import UnnormalizedRatioEstimator, SeparableUnnormalizedRatioEstimator
-from src.torch_mist.models.baseline import Baseline, BatchLogMeanExp, ConstantBaseline, ExponentialMovingAverage, \
-    InterpolatedBaseline, LearnableJointBaseline
-
-
-class EmpiricalDistribution(Distribution):
-    def __init__(self, samples):
-        self.samples = samples
-        super().__init__(validate_args=False)
-
-    def sample_n(self, n_samples: int):
-
-
-        return y_
+from torch_mist.estimators.base import MutualInformationEstimator, Estimation
+from torch_mist.ratio import UnnormalizedRatioEstimator, SeparableUnnormalizedRatioEstimator
+from torch_mist.baselines import Baseline, BatchLogMeanExp, ConstantBaseline, ExponentialMovingAverage, \
+    InterpolatedBaseline, LearnableJointBaseline, LearnableMLPBaseline, LearnableJointMLPBaseline
+from torch_mist.ratio.utils import unnormalized_log_ratio
 
 
 class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
     lower_bound = True
     upper_bound = False
-    proposal: Optional[Union[ConditionalDistribution, Distribution]] = None
 
     def __init__(
             self,
@@ -37,6 +26,7 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
         super().__init__()
         self.unnormalized_log_ratio = unnormalized_log_ratio
         self.mc_samples = mc_samples
+        self.proposal = None
 
     def sample_proposal(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         y_ = None
@@ -72,7 +62,7 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
                 proposal = self.proposal
 
             # sample from the proposal distribution
-            y_ = proposal.sample_n(n_samples).permute(1, 0, 2)
+            y_ = proposal.sample([n_samples]).permute(1, 0, 2)
 
         return y_
 
@@ -240,13 +230,12 @@ class InfoNCE(DiscriminativeMutualInformationEstimator):
     def __init__(
             self,
             unnormalized_log_ratio: SeparableUnnormalizedRatioEstimator,
-            mc_samples: int = 0,  # 0 signifies the whole batch is used as negative samples
     ):
         # Note that this can be equivalently obtained by extending TUBA with a BatchLogMeanExp(dim=1) baseline
         # This implementation saves some computation
         super().__init__(
             unnormalized_log_ratio=unnormalized_log_ratio,
-            mc_samples=mc_samples,
+            mc_samples=0,  # 0 signifies the whole batch is used as negative samples
         )
 
     def _compute_log_ratio(
@@ -385,33 +374,208 @@ class FLO(DiscriminativeMutualInformationEstimator):
         return log_ratio
 
 
-# # Note that this can be implemented as either generative or discriminative estimator
-# class CLUB(TUBA):
-#     lower_bound = False
-#     upper_bound = True
-#
-#     def __init__(
-#             self,
-#             conditional_y_x: ConditionalDistribution,
-#             mc_samples: int = -1,  # Use all the off-diagonal samples as negative samples
-#     ):
-#         assert mc_samples != 0, "CLUB does not support using the whole batch as negative samples. " \
-#                                 "Please use (-1) instead to exclude the diagonal."
-#
-#         super().__init__(
-#             unnormalized_log_ratio=ConditionalDistributionRatio(conditional_y_x),
-#             mc_samples=mc_samples,
-#             baseline=BatchLogMeanExp(dim=1),
-#         )
-#
-#     def _compute_log_ratio(
-#             self,
-#             x: torch.Tensor,
-#             y: torch.Tensor,
-#             f: torch.Tensor,
-#             y_: torch.Tensor,
-#             f_: torch.Tensor
-#     ) -> torch.Tensor:
-#         return super()._compute_log_ratio(
-#             x=x, y=y, f=f, y_=y_, f_=f_.detach()
-#         )
+# Factory functions
+
+def nwj(
+        x_dim: int,
+        y_dim: int,
+        hidden_dims: List[int],
+        mc_samples=1,
+        log_ratio_model='joint',
+        **kwargs
+):
+    url_nn = unnormalized_log_ratio(
+        x_dim=x_dim,
+        y_dim=y_dim,
+        hidden_dims=hidden_dims,
+        log_ratio_model=log_ratio_model,
+        **kwargs
+
+    )
+
+    return NWJ(
+        unnormalized_log_ratio=url_nn,
+        mc_samples=mc_samples,
+    )
+
+
+def tuba(
+        x_dim: int,
+        y_dim: int,
+        hidden_dims: List[int],
+        log_ratio_model='joint',
+        mc_samples=1,
+        nonlinearity: Any = nn.ReLU(True),
+        **kwargs
+):
+    url_nn = unnormalized_log_ratio(
+        x_dim=x_dim,
+        y_dim=y_dim,
+        hidden_dims=hidden_dims,
+        log_ratio_model=log_ratio_model,
+        nonlinearity=nonlinearity,
+        **kwargs
+    )
+    baseline = LearnableMLPBaseline(
+        x_dim=x_dim,
+        hidden_dims=hidden_dims,
+        nonlinearity=nonlinearity,
+    )
+
+    return TUBA(
+        unnormalized_log_ratio=url_nn,
+        baseline=baseline,
+        mc_samples=mc_samples,
+    )
+
+
+def mine(
+        x_dim: int,
+        y_dim: int,
+        hidden_dims: List[int],
+        unnormalized_log_ratio_model='joint',
+        mc_samples=1,
+        gamma: float = 0.9,
+        **kwargs
+):
+    url_nn = unnormalized_log_ratio(
+        x_dim=x_dim,
+        y_dim=y_dim,
+        hidden_dims=hidden_dims,
+        log_ratio_model=unnormalized_log_ratio_model,
+        **kwargs
+    )
+
+    return MINE(
+        unnormalized_log_ratio=url_nn,
+        mc_samples=mc_samples,
+        gamma=gamma,
+    )
+
+
+def infonce(
+        x_dim: int,
+        y_dim: int,
+        hidden_dims: List[int],
+        unnormalized_log_ratio_model='separable',
+        **kwargs
+):
+    url_nn = unnormalized_log_ratio(
+        x_dim=x_dim,
+        y_dim=y_dim,
+        hidden_dims=hidden_dims,
+        log_ratio_model=unnormalized_log_ratio_model,
+        **kwargs
+    )
+
+    return InfoNCE(
+        unnormalized_log_ratio=url_nn,
+    )
+
+
+def js(
+        x_dim: int,
+        y_dim: int,
+        hidden_dims: List[int],
+        unnormalized_log_ratio_model='joint',
+        mc_samples=1,
+        **kwargs
+):
+    url_nn = unnormalized_log_ratio(
+        x_dim=x_dim,
+        y_dim=y_dim,
+        hidden_dims=hidden_dims,
+        log_ratio_model=unnormalized_log_ratio_model,
+        **kwargs
+    )
+
+    return JS(
+        unnormalized_log_ratio=url_nn,
+        mc_samples=mc_samples,
+    )
+
+
+def alpha_tuba(
+        x_dim: int,
+        y_dim: int,
+        hidden_dims: List[int],
+        log_ratio_model='separable',
+        alpha: float = 0.5,
+        nonlinearity: Any = nn.ReLU(True),
+        **kwargs
+):
+    url_nn = unnormalized_log_ratio(
+        x_dim=x_dim,
+        y_dim=y_dim,
+        hidden_dims=hidden_dims,
+        log_ratio_model=log_ratio_model,
+        nonlinearity=nonlinearity,
+        **kwargs
+    )
+    baseline = LearnableMLPBaseline(
+        x_dim=x_dim,
+        hidden_dims=hidden_dims,
+        nonlinearity=nonlinearity,
+    )
+
+    return AlphaTUBA(
+        unnormalized_log_ratio=url_nn,
+        baseline=baseline,
+        alpha=alpha,
+        mc_samples=0,
+    )
+
+
+def smile(
+        x_dim: int,
+        y_dim: int,
+        hidden_dims: List[int],
+        unnormalized_log_ratio_model='joint',
+        mc_samples=1,
+        tau: float = 5.0,
+        **kwargs
+):
+    url_nn = unnormalized_log_ratio(
+        x_dim=x_dim,
+        y_dim=y_dim,
+        hidden_dims=hidden_dims,
+        log_ratio_model=unnormalized_log_ratio_model,
+        **kwargs
+    )
+
+    return SMILE(
+        unnormalized_log_ratio=url_nn,
+        mc_samples=mc_samples,
+        tau=tau,
+    )
+
+
+def flo(
+        x_dim: int,
+        y_dim: int,
+        hidden_dims: List[int],
+        log_ratio_model='joint',
+        mc_samples=1,
+        nonlinearity: Any = nn.ReLU(True),
+        **kwargs
+):
+    url_nn = unnormalized_log_ratio(
+        x_dim=x_dim,
+        y_dim=y_dim,
+        hidden_dims=hidden_dims,
+        log_ratio_model=log_ratio_model,
+        nonlinearity=nonlinearity,
+        **kwargs
+    )
+    baseline = LearnableJointMLPBaseline(
+        x_dim=x_dim,
+        y_dim=y_dim,
+        hidden_dims=hidden_dims,
+        nonlinearity=nonlinearity,
+    )
+
+    return FLO(
+        unnormalized_log_ratio=url_nn,
+        baseline=baseline,
+        mc_samples=mc_samples,
+    )
