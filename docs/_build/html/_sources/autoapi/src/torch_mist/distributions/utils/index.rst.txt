@@ -1,0 +1,26 @@
+:py:mod:`src.torch_mist.distributions.utils`
+============================================
+
+.. py:module:: src.torch_mist.distributions.utils
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   src.torch_mist.distributions.utils.conditional_categorical
+   src.torch_mist.distributions.utils.conditional_mutivariate_categorical
+
+
+
+.. py:function:: conditional_categorical(n_classes: int, context_dim: int, hidden_dims: List[int])
+
+
+.. py:function:: conditional_mutivariate_categorical(n_classes: int, output_dim: int, context_dim: int, hidden_dims: List[int])
+
+

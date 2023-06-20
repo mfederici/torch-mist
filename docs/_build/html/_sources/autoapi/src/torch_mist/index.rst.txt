@@ -1,0 +1,38 @@
+:py:mod:`src.torch_mist`
+========================
+
+.. py:module:: src.torch_mist
+
+
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   baselines/index.rst
+   distributions/index.rst
+   estimators/index.rst
+   models/index.rst
+   nn/index.rst
+   optim/index.rst
+   ratio/index.rst
+   task/index.rst
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   quantization/index.rst
+
+
+Package Contents
+----------------
+
+.. py:data:: __version__
+
+   
+

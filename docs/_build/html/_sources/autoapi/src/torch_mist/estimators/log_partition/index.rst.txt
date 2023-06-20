@@ -1,0 +1,50 @@
+:py:mod:`src.torch_mist.estimators.log_partition`
+=================================================
+
+.. py:module:: src.torch_mist.estimators.log_partition
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   src.torch_mist.estimators.log_partition.LogPartition
+   src.torch_mist.estimators.log_partition.NormalizedLogPartition
+   src.torch_mist.estimators.log_partition.UnnormalizedLogPartition
+
+
+
+
+.. py:class:: LogPartition
+
+
+   .. py:method:: __call__(*args, **kwargs) -> Union[src.torch_mist.estimators.base.Estimation, Tuple[src.torch_mist.estimators.base.Estimation, Dict[str, Any]]]
+      :abstractmethod:
+
+
+
+.. py:class:: NormalizedLogPartition
+
+
+   Bases: :py:obj:`LogPartition`
+
+   Log partition for ratios between normalized densities.
+
+   .. py:method:: __call__(*args, **kwargs) -> src.torch_mist.estimators.base.Estimation
+
+
+
+.. py:class:: UnnormalizedLogPartition
+
+
+   Bases: :py:obj:`LogPartition`
+
+   .. py:method:: sample_proposal(*args, **kwargs) -> Tuple[torch.Tensor, Ellipsis, torch.Tensor]
+      :abstractmethod:
+
+
+

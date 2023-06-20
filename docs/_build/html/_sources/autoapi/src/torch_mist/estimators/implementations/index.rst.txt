@@ -1,0 +1,298 @@
+:py:mod:`src.torch_mist.estimators.implementations`
+===================================================
+
+.. py:module:: src.torch_mist.estimators.implementations
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   src.torch_mist.estimators.implementations.BA
+   src.torch_mist.estimators.implementations.DoE
+   src.torch_mist.estimators.implementations.NWJ
+   src.torch_mist.estimators.implementations.MINE
+   src.torch_mist.estimators.implementations.InfoNCE
+   src.torch_mist.estimators.implementations.JS
+   src.torch_mist.estimators.implementations.TUBA
+   src.torch_mist.estimators.implementations.AlphaTuba
+   src.torch_mist.estimators.implementations.SMILE
+
+
+
+
+.. py:class:: BA(x_dim: int, y_dim: int, hidden_dims: List[int], h_y: float, n_transforms: int, conditional_transform_name: str = 'conditional_linear')
+
+
+   Bases: :py:obj:`src.torch_mist.estimators.base.GenerativeMutualInformationEstimator`
+
+
+.. py:class:: DoE(x_dim: int, y_dim: int, hidden_dims: List[int], transform_name: str = 'conditional_linear', n_transforms: int = 1, marginal_transform_name: str = 'linear', n_marginal_transforms: int = 1)
+
+
+   Bases: :py:obj:`src.torch_mist.estimators.base.GenerativeMutualInformationEstimator`
+
+
+.. py:class:: NWJ(x_dim: int, y_dim: int, hidden_dims: List[int], neg_samples: int = 1, **kwargs)
+
+
+   Bases: :py:obj:`src.torch_mist.estimators.base.MutualInformationEstimator`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+
+.. py:class:: MINE(x_dim: int, y_dim: int, hidden_dims: List[int], neg_samples: int = 1, ratio_estimator: Optional[src.torch_mist.ratio.base.UnnormalizedRatioEstimator] = None, **kwargs)
+
+
+   Bases: :py:obj:`src.torch_mist.estimators.base.MutualInformationEstimator`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+
+.. py:class:: InfoNCE(x_dim: int, y_dim: int, hidden_dims: List[int], **kwargs)
+
+
+   Bases: :py:obj:`src.torch_mist.estimators.base.MutualInformationEstimator`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+
+.. py:class:: JS(x_dim: int, y_dim: int, hidden_dims: List[int], neg_samples: int = 1, **kwargs)
+
+
+   Bases: :py:obj:`src.torch_mist.estimators.base.MutualInformationEstimator`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+
+.. py:class:: TUBA(x_dim: int, y_dim: int, hidden_dims: List[int], baseline_hidden_dims: Optional[List[int]] = None, neg_samples: int = 1, **kwargs)
+
+
+   Bases: :py:obj:`src.torch_mist.estimators.base.MutualInformationEstimator`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+
+.. py:class:: AlphaTuba(x_dim: int, y_dim: int, hidden_dims: List[int], baseline_hidden_dims: Optional[List[int]] = None, alpha: float = 0.5, neg_samples: int = 1, **kwargs)
+
+
+   Bases: :py:obj:`src.torch_mist.estimators.base.MutualInformationEstimator`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+
+.. py:class:: SMILE(x_dim: int, y_dim: int, hidden_dims: List[int], tau: float = 5.0, neg_samples: int = 1, **kwargs)
+
+
+   Bases: :py:obj:`src.torch_mist.estimators.base.MutualInformationEstimator`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+

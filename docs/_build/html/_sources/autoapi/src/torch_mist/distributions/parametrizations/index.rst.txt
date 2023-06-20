@@ -1,0 +1,15 @@
+:py:mod:`src.torch_mist.distributions.parametrizations`
+=======================================================
+
+.. py:module:: src.torch_mist.distributions.parametrizations
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   map/index.rst
+
+

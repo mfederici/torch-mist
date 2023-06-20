@@ -1,0 +1,230 @@
+:py:mod:`src.torch_mist.distributions.transforms.linear`
+========================================================
+
+.. py:module:: src.torch_mist.distributions.transforms.linear
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   src.torch_mist.distributions.transforms.linear.ConditionedLinear
+   src.torch_mist.distributions.transforms.linear.Linear
+   src.torch_mist.distributions.transforms.linear.ConditionalLinear
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   src.torch_mist.distributions.transforms.linear.linear
+   src.torch_mist.distributions.transforms.linear.conditional_linear
+   src.torch_mist.distributions.transforms.linear.conditional_skip_linear
+
+
+
+.. py:class:: ConditionedLinear(params, epsilon=1e-06)
+
+
+   Bases: :py:obj:`torch.distributions.Transform`
+
+   Abstract class for invertable transformations with computable log
+   det jacobians. They are primarily used in
+   :class:`torch.distributions.TransformedDistribution`.
+
+   Caching is useful for transforms whose inverses are either expensive or
+   numerically unstable. Note that care must be taken with memoized values
+   since the autograd graph may be reversed. For example while the following
+   works with or without caching::
+
+       y = t(x)
+       t.log_abs_det_jacobian(x, y).backward()  # x will receive gradients.
+
+   However the following will error when caching due to dependency reversal::
+
+       y = t(x)
+       z = t.inv(y)
+       grad(z.sum(), [y])  # error because z is x
+
+   Derived classes should implement one or both of :meth:`_call` or
+   :meth:`_inverse`. Derived classes that set `bijective=True` should also
+   implement :meth:`log_abs_det_jacobian`.
+
+   :param cache_size: Size of cache. If zero, no caching is done. If one,
+                      the latest single value is cached. Only 0 and 1 are supported.
+   :type cache_size: int
+
+   .. attribute:: domain
+
+      The constraint representing valid inputs to this transform.
+
+      :type: :class:`~torch.distributions.constraints.Constraint`
+
+   .. attribute:: codomain
+
+      The constraint representing valid outputs to this transform
+      which are inputs to the inverse transform.
+
+      :type: :class:`~torch.distributions.constraints.Constraint`
+
+   .. attribute:: bijective
+
+      Whether this transform is bijective. A transform
+      ``t`` is bijective iff ``t.inv(t(x)) == x`` and
+      ``t(t.inv(y)) == y`` for every ``x`` in the domain and ``y`` in
+      the codomain. Transforms that are not bijective should at least
+      maintain the weaker pseudoinverse properties
+      ``t(t.inv(t(x)) == t(x)`` and ``t.inv(t(t.inv(y))) == t.inv(y)``.
+
+      :type: bool
+
+   .. attribute:: sign
+
+      For bijective univariate transforms, this
+      should be +1 or -1 depending on whether transform is monotone
+      increasing or decreasing.
+
+      :type: int or Tensor
+
+   .. py:attribute:: domain
+
+      
+
+   .. py:attribute:: codomain
+
+      
+
+   .. py:attribute:: bijective
+      :value: True
+
+      
+
+   .. py:method:: _call(x)
+
+      Abstract method to compute forward transformation.
+
+
+   .. py:method:: _inverse(y)
+
+      Abstract method to compute inverse transformation.
+
+
+   .. py:method:: log_abs_det_jacobian(x, y)
+
+      Computes the log det jacobian `log |dy/dx|` given input and output.
+
+
+
+.. py:class:: Linear(input_dim, loc=None, scale=None, initial_scale=None, epsilon=1e-06)
+
+
+   Bases: :py:obj:`ConditionedLinear`, :py:obj:`pyro.distributions.TransformModule`
+
+   Abstract class for invertable transformations with computable log
+   det jacobians. They are primarily used in
+   :class:`torch.distributions.TransformedDistribution`.
+
+   Caching is useful for transforms whose inverses are either expensive or
+   numerically unstable. Note that care must be taken with memoized values
+   since the autograd graph may be reversed. For example while the following
+   works with or without caching::
+
+       y = t(x)
+       t.log_abs_det_jacobian(x, y).backward()  # x will receive gradients.
+
+   However the following will error when caching due to dependency reversal::
+
+       y = t(x)
+       z = t.inv(y)
+       grad(z.sum(), [y])  # error because z is x
+
+   Derived classes should implement one or both of :meth:`_call` or
+   :meth:`_inverse`. Derived classes that set `bijective=True` should also
+   implement :meth:`log_abs_det_jacobian`.
+
+   :param cache_size: Size of cache. If zero, no caching is done. If one,
+                      the latest single value is cached. Only 0 and 1 are supported.
+   :type cache_size: int
+
+   .. attribute:: domain
+
+      The constraint representing valid inputs to this transform.
+
+      :type: :class:`~torch.distributions.constraints.Constraint`
+
+   .. attribute:: codomain
+
+      The constraint representing valid outputs to this transform
+      which are inputs to the inverse transform.
+
+      :type: :class:`~torch.distributions.constraints.Constraint`
+
+   .. attribute:: bijective
+
+      Whether this transform is bijective. A transform
+      ``t`` is bijective iff ``t.inv(t(x)) == x`` and
+      ``t(t.inv(y)) == y`` for every ``x`` in the domain and ``y`` in
+      the codomain. Transforms that are not bijective should at least
+      maintain the weaker pseudoinverse properties
+      ``t(t.inv(t(x)) == t(x)`` and ``t.inv(t(t.inv(y))) == t.inv(y)``.
+
+      :type: bool
+
+   .. attribute:: sign
+
+      For bijective univariate transforms, this
+      should be +1 or -1 depending on whether transform is monotone
+      increasing or decreasing.
+
+      :type: int or Tensor
+
+   .. py:method:: _params()
+
+
+
+.. py:class:: ConditionalLinear(net, loc=None, scale=None, initial_scale=None, epsilon=1e-06, skip_connection=False)
+
+
+   Bases: :py:obj:`pyro.distributions.ConditionalTransformModule`
+
+   Conditional transforms with learnable parameters such as normalizing flows should inherit from this class rather
+   than :class:`~pyro.distributions.conditional.ConditionalTransform` so they are also a subclass of
+   :class:`~torch.nn.Module` and inherit all the useful methods of that class.
+
+   .. py:attribute:: domain
+
+      
+
+   .. py:attribute:: codomain
+
+      
+
+   .. py:attribute:: bijective
+      :value: True
+
+      
+
+   .. py:method:: _params(context)
+
+
+   .. py:method:: condition(context)
+
+      :rtype: torch.distributions.Transform
+
+
+
+.. py:function:: linear(input_dim, loc=None, scale=None, initial_scale=None)
+
+
+.. py:function:: conditional_linear(input_dim, context_dim, hidden_dims=None, scale=None, initial_scale=None)
+
+
+.. py:function:: conditional_skip_linear(input_dim, context_dim, hidden_dims=None, learn_loc=False, scale=None, initial_scale: float = 1.0)
+
+

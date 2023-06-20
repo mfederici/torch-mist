@@ -1,0 +1,52 @@
+:py:mod:`src.torch_mist.optim.lr_scheduler`
+===========================================
+
+.. py:module:: src.torch_mist.optim.lr_scheduler
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   src.torch_mist.optim.lr_scheduler.WarmupScheduler
+
+
+
+
+.. py:class:: WarmupScheduler(optimizer: torch.optim.Optimizer, warmup_steps: int, total_steps: int, cosine: bool = True, linear: bool = False)
+
+
+   Bases: :py:obj:`torch.optim.lr_scheduler.LambdaLR`
+
+   Sets the learning rate of each parameter group to the initial lr
+   times a given function. When last_epoch=-1, sets initial lr as lr.
+
+   :param optimizer: Wrapped optimizer.
+   :type optimizer: Optimizer
+   :param lr_lambda: A function which computes a multiplicative
+                     factor given an integer parameter epoch, or a list of such
+                     functions, one for each group in optimizer.param_groups.
+   :type lr_lambda: function or list
+   :param last_epoch: The index of last epoch. Default: -1.
+   :type last_epoch: int
+   :param verbose: If ``True``, prints a message to stdout for
+                   each update. Default: ``False``.
+   :type verbose: bool
+
+   .. rubric:: Example
+
+   >>> # xdoctest: +SKIP
+   >>> # Assuming optimizer has two groups.
+   >>> lambda1 = lambda epoch: epoch // 30
+   >>> lambda2 = lambda epoch: 0.95 ** epoch
+   >>> scheduler = LambdaLR(optimizer, lr_lambda=[lambda1, lambda2])
+   >>> for epoch in range(100):
+   >>>     train(...)
+   >>>     validate(...)
+   >>>     scheduler.step()
+
+

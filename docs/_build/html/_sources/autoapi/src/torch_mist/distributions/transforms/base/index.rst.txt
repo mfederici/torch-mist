@@ -1,0 +1,90 @@
+:py:mod:`src.torch_mist.distributions.transforms.base`
+======================================================
+
+.. py:module:: src.torch_mist.distributions.transforms.base
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   src.torch_mist.distributions.transforms.base.DistributionModule
+   src.torch_mist.distributions.transforms.base.ConditionalDistributionModule
+   src.torch_mist.distributions.transforms.base.ConditionalTransformedDistributionModule
+   src.torch_mist.distributions.transforms.base.TransformedDistributionModule
+
+
+
+
+.. py:class:: DistributionModule(validate_args: bool = True)
+
+
+   Bases: :py:obj:`torch.distributions.Distribution`, :py:obj:`torch.nn.Module`, :py:obj:`abc.ABC`
+
+   Distribution is the abstract base class for probability distributions.
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
+
+
+
+.. py:class:: ConditionalDistributionModule
+
+
+   Bases: :py:obj:`pyro.distributions.ConditionalDistribution`, :py:obj:`torch.nn.Module`, :py:obj:`abc.ABC`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+
+.. py:class:: ConditionalTransformedDistributionModule(base_dist: Union[pyro.distributions.ConditionalDistribution, torch.distributions.Distribution], transforms: Union[pyro.distributions.ConditionalTransform, List[pyro.distributions.ConditionalTransform], Dict[str, Union[pyro.distributions.ConditionalTransform, torch.distributions.Transform]], torch.distributions.Transform, List[torch.distributions.Transform], None])
+
+
+   Bases: :py:obj:`pyro.distributions.ConditionalTransformedDistribution`, :py:obj:`torch.nn.Module`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: condition(context)
+
+      :rtype: torch.distributions.Distribution
+
+
+   .. py:method:: clear_cache()
+
+
+
+.. py:class:: TransformedDistributionModule(base_dist: torch.distributions.Distribution, transforms: Union[torch.distributions.Transform, List[torch.distributions.Transform], Dict[str, torch.distributions.Transform], None])
+
+
+   Bases: :py:obj:`DistributionModule`, :py:obj:`abc.ABC`
+
+   Distribution is the abstract base class for probability distributions.
+
+   .. py:method:: rsample(sample_shape=torch.Size())
+
+      Generates a sample_shape shaped reparameterized sample or sample_shape
+      shaped batch of reparameterized samples if the distribution parameters
+      are batched.
+
+
+   .. py:method:: log_prob(value)
+
+      Returns the log of the probability density/mass function evaluated at
+      `value`.
+
+      :param value:
+      :type value: Tensor
+
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
+
+
+

@@ -1,0 +1,58 @@
+:py:mod:`src.torch_mist.task`
+=============================
+
+.. py:module:: src.torch_mist.task
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   infomax/index.rst
+
+
+Package Contents
+----------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   src.torch_mist.task.InfoMax
+
+
+
+
+.. py:class:: InfoMax(mi_estimator: src.torch_mist.estimators.MutualInformationEstimator, optimizer_class: Type[torch.optim.Optimizer], optimizer_init_args: Optional[Dict[str, Any]] = None, lr_scheduler_class: Optional[Type[torch.optim.lr_scheduler._LRScheduler]] = None, lr_scheduler_init_args: Optional[Dict[str, Any]] = None, lr_scheduler_params: Optional[Dict[str, Any]] = None, encoder_x: Optional[torch.nn.Module] = None, encoder_y: Optional[Union[src.torch_mist.models.encoder.EncoderKeywords]] = EncoderKeywords.same, tau: float = 0.99)
+
+
+   Bases: :py:obj:`pytorch_lightning.LightningModule`
+
+   .. py:method:: forward(x: torch.Tensor) -> Tuple[Optional[torch.Tensor], torch.Tensor]
+
+
+   .. py:method:: shared_step(batch: Dict[str, torch.Tensor], step: str) -> pytorch_lightning.utilities.types.STEP_OUTPUT
+
+
+   .. py:method:: log_components(results: Dict[str, torch.Tensor], step: str)
+
+
+   .. py:method:: training_step(batch, batch_idx) -> pytorch_lightning.utilities.types.STEP_OUTPUT
+
+
+   .. py:method:: validation_step(batch, batch_idx) -> pytorch_lightning.utilities.types.STEP_OUTPUT
+
+
+   .. py:method:: test_step(batch, batch_idx) -> pytorch_lightning.utilities.types.STEP_OUTPUT
+
+
+   .. py:method:: configure_optimizers() -> Any
+
+
+   .. py:method:: __repr__()
+
+
+

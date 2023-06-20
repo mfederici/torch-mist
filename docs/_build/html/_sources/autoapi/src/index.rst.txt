@@ -1,0 +1,15 @@
+:py:mod:`src`
+=============
+
+.. py:module:: src
+
+
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   torch_mist/index.rst
+
+

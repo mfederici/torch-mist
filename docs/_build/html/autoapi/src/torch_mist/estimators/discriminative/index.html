@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.torch_mist.estimators.discriminative &mdash; torch_mist  documentation</title>
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+        <script src="../../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <link rel="next" title="src.torch_mist.estimators.generative" href="../generative/index.html" />
+    <link rel="prev" title="src.torch_mist.estimators.base" href="../base/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            torch_mist
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../../example.html">Example usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../conduct.html">Code of Conduct</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">src</span></code></a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../../index.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">src.torch_mist</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">torch_mist</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">src</span></code></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">src.torch_mist</span></code></a></li>
+          <li class="breadcrumb-item"><a href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">src.torch_mist.estimators</span></code></a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">src.torch_mist.estimators.discriminative</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../../_sources/autoapi/src/torch_mist/estimators/discriminative/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-src.torch_mist.estimators.discriminative">
+<span id="src-torch-mist-estimators-discriminative"></span><h1><a class="reference internal" href="#module-src.torch_mist.estimators.discriminative" title="src.torch_mist.estimators.discriminative"><code class="xref py py-mod docutils literal notranslate"><span class="pre">src.torch_mist.estimators.discriminative</span></code></a><a class="headerlink" href="#module-src.torch_mist.estimators.discriminative" title="Permalink to this heading"></a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading"></a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.torch_mist.estimators.discriminative.EmpiricalDistribution" title="src.torch_mist.estimators.discriminative.EmpiricalDistribution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EmpiricalDistribution</span></code></a></p></td>
+<td><p>Distribution is the abstract base class for probability distributions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator" title="src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DiscriminativeMutualInformationEstimator</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.torch_mist.estimators.discriminative.NWJ" title="src.torch_mist.estimators.discriminative.NWJ"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NWJ</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.torch_mist.estimators.discriminative.TUBA" title="src.torch_mist.estimators.discriminative.TUBA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TUBA</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.torch_mist.estimators.discriminative.MINE" title="src.torch_mist.estimators.discriminative.MINE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MINE</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.torch_mist.estimators.discriminative.InfoNCE" title="src.torch_mist.estimators.discriminative.InfoNCE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InfoNCE</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.torch_mist.estimators.discriminative.JS" title="src.torch_mist.estimators.discriminative.JS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">JS</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.torch_mist.estimators.discriminative.AlphaTUBA" title="src.torch_mist.estimators.discriminative.AlphaTUBA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AlphaTUBA</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#src.torch_mist.estimators.discriminative.SMILE" title="src.torch_mist.estimators.discriminative.SMILE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SMILE</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#src.torch_mist.estimators.discriminative.FLO" title="src.torch_mist.estimators.discriminative.FLO"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FLO</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.EmpiricalDistribution">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.torch_mist.estimators.discriminative.</span></span><span class="sig-name descname"><span class="pre">EmpiricalDistribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.EmpiricalDistribution" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.distributions.Distribution</span></code></p>
+<p>Distribution is the abstract base class for probability distributions.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.EmpiricalDistribution.sample_n">
+<span class="sig-name descname"><span class="pre">sample_n</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.EmpiricalDistribution.sample_n" title="Permalink to this definition"></a></dt>
+<dd><p>Generates n samples or n batches of samples if the distribution
+parameters are batched.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.torch_mist.estimators.discriminative.</span></span><span class="sig-name descname"><span class="pre">DiscriminativeMutualInformationEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unnormalized_log_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ratio/index.html#src.torch_mist.ratio.UnnormalizedRatioEstimator" title="src.torch_mist.ratio.UnnormalizedRatioEstimator"><span class="pre">src.torch_mist.ratio.UnnormalizedRatioEstimator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mc_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../base/index.html#src.torch_mist.estimators.base.MutualInformationEstimator" title="src.torch_mist.estimators.base.MutualInformationEstimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">src.torch_mist.estimators.base.MutualInformationEstimator</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator.lower_bound">
+<span class="sig-name descname"><span class="pre">lower_bound</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator.lower_bound" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator.upper_bound">
+<span class="sig-name descname"><span class="pre">upper_bound</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator.upper_bound" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator.proposal">
+<span class="sig-name descname"><span class="pre">proposal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">pyro.distributions.ConditionalDistribution</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.distributions.Distribution</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator.proposal" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator.sample_proposal">
+<span class="sig-name descname"><span class="pre">sample_proposal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator.sample_proposal" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator.log_ratio">
+<span class="sig-name descname"><span class="pre">log_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../base/index.html#src.torch_mist.estimators.base.Estimation" title="src.torch_mist.estimators.base.Estimation"><span class="pre">src.torch_mist.estimators.base.Estimation</span></a></span></span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator.log_ratio" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator._compute_log_ratio">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_compute_log_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator._compute_log_ratio" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator._compute_log_ratio_grad">
+<span class="sig-name descname"><span class="pre">_compute_log_ratio_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator._compute_log_ratio_grad" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator.__repr__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.NWJ">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.torch_mist.estimators.discriminative.</span></span><span class="sig-name descname"><span class="pre">NWJ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unnormalized_log_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ratio/index.html#src.torch_mist.ratio.UnnormalizedRatioEstimator" title="src.torch_mist.ratio.UnnormalizedRatioEstimator"><span class="pre">src.torch_mist.ratio.UnnormalizedRatioEstimator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mc_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.NWJ" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator" title="src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DiscriminativeMutualInformationEstimator</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.NWJ._compute_log_ratio">
+<span class="sig-name descname"><span class="pre">_compute_log_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.NWJ._compute_log_ratio" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.TUBA">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.torch_mist.estimators.discriminative.</span></span><span class="sig-name descname"><span class="pre">TUBA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unnormalized_log_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ratio/index.html#src.torch_mist.ratio.UnnormalizedRatioEstimator" title="src.torch_mist.ratio.UnnormalizedRatioEstimator"><span class="pre">src.torch_mist.ratio.UnnormalizedRatioEstimator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">baseline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../baselines/index.html#src.torch_mist.baselines.Baseline" title="src.torch_mist.baselines.Baseline"><span class="pre">src.torch_mist.baselines.Baseline</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_baseline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../baselines/index.html#src.torch_mist.baselines.Baseline" title="src.torch_mist.baselines.Baseline"><span class="pre">src.torch_mist.baselines.Baseline</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mc_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.TUBA" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.torch_mist.estimators.discriminative.NWJ" title="src.torch_mist.estimators.discriminative.NWJ"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NWJ</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.TUBA._compute_log_ratio">
+<span class="sig-name descname"><span class="pre">_compute_log_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.TUBA._compute_log_ratio" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.TUBA._compute_log_ratio_grad">
+<span class="sig-name descname"><span class="pre">_compute_log_ratio_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.TUBA._compute_log_ratio_grad" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.MINE">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.torch_mist.estimators.discriminative.</span></span><span class="sig-name descname"><span class="pre">MINE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unnormalized_log_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ratio/index.html#src.torch_mist.ratio.UnnormalizedRatioEstimator" title="src.torch_mist.ratio.UnnormalizedRatioEstimator"><span class="pre">src.torch_mist.ratio.UnnormalizedRatioEstimator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mc_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.9</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.MINE" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.torch_mist.estimators.discriminative.TUBA" title="src.torch_mist.estimators.discriminative.TUBA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TUBA</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.InfoNCE">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.torch_mist.estimators.discriminative.</span></span><span class="sig-name descname"><span class="pre">InfoNCE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unnormalized_log_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ratio/index.html#src.torch_mist.ratio.SeparableUnnormalizedRatioEstimator" title="src.torch_mist.ratio.SeparableUnnormalizedRatioEstimator"><span class="pre">src.torch_mist.ratio.SeparableUnnormalizedRatioEstimator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mc_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.InfoNCE" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator" title="src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DiscriminativeMutualInformationEstimator</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.InfoNCE._compute_log_ratio">
+<span class="sig-name descname"><span class="pre">_compute_log_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.InfoNCE._compute_log_ratio" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.JS">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.torch_mist.estimators.discriminative.</span></span><span class="sig-name descname"><span class="pre">JS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unnormalized_log_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ratio/index.html#src.torch_mist.ratio.UnnormalizedRatioEstimator" title="src.torch_mist.ratio.UnnormalizedRatioEstimator"><span class="pre">src.torch_mist.ratio.UnnormalizedRatioEstimator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mc_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.JS" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.torch_mist.estimators.discriminative.NWJ" title="src.torch_mist.estimators.discriminative.NWJ"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NWJ</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.JS._compute_log_ratio_grad">
+<span class="sig-name descname"><span class="pre">_compute_log_ratio_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.JS._compute_log_ratio_grad" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.AlphaTUBA">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.torch_mist.estimators.discriminative.</span></span><span class="sig-name descname"><span class="pre">AlphaTUBA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unnormalized_log_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ratio/index.html#src.torch_mist.ratio.UnnormalizedRatioEstimator" title="src.torch_mist.ratio.UnnormalizedRatioEstimator"><span class="pre">src.torch_mist.ratio.UnnormalizedRatioEstimator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">baseline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../baselines/index.html#src.torch_mist.baselines.Baseline" title="src.torch_mist.baselines.Baseline"><span class="pre">src.torch_mist.baselines.Baseline</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ConstantBaseline(1.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mc_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.AlphaTUBA" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.torch_mist.estimators.discriminative.TUBA" title="src.torch_mist.estimators.discriminative.TUBA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TUBA</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.SMILE">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.torch_mist.estimators.discriminative.</span></span><span class="sig-name descname"><span class="pre">SMILE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unnormalized_log_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ratio/index.html#src.torch_mist.ratio.UnnormalizedRatioEstimator" title="src.torch_mist.ratio.UnnormalizedRatioEstimator"><span class="pre">src.torch_mist.ratio.UnnormalizedRatioEstimator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mc_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.SMILE" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.torch_mist.estimators.discriminative.MINE" title="src.torch_mist.estimators.discriminative.MINE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MINE</span></code></a>, <a class="reference internal" href="#src.torch_mist.estimators.discriminative.JS" title="src.torch_mist.estimators.discriminative.JS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">JS</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.SMILE._compute_log_ratio">
+<span class="sig-name descname"><span class="pre">_compute_log_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.SMILE._compute_log_ratio" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.SMILE._compute_log_ratio_grad">
+<span class="sig-name descname"><span class="pre">_compute_log_ratio_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.SMILE._compute_log_ratio_grad" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.FLO">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.torch_mist.estimators.discriminative.</span></span><span class="sig-name descname"><span class="pre">FLO</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unnormalized_log_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../ratio/index.html#src.torch_mist.ratio.UnnormalizedRatioEstimator" title="src.torch_mist.ratio.UnnormalizedRatioEstimator"><span class="pre">src.torch_mist.ratio.UnnormalizedRatioEstimator</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">baseline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../baselines/index.html#src.torch_mist.baselines.LearnableJointBaseline" title="src.torch_mist.baselines.LearnableJointBaseline"><span class="pre">src.torch_mist.baselines.LearnableJointBaseline</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mc_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.FLO" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator" title="src.torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DiscriminativeMutualInformationEstimator</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.torch_mist.estimators.discriminative.FLO._compute_log_ratio">
+<span class="sig-name descname"><span class="pre">_compute_log_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="headerlink" href="#src.torch_mist.estimators.discriminative.FLO._compute_log_ratio" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../base/index.html" class="btn btn-neutral float-left" title="src.torch_mist.estimators.base" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../generative/index.html" class="btn btn-neutral float-right" title="src.torch_mist.estimators.generative" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Marco Federici.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
