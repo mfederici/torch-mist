@@ -1,0 +1,170 @@
+:py:mod:`torch_mist.estimators.discriminative`
+==============================================
+
+.. py:module:: torch_mist.estimators.discriminative
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator
+   torch_mist.estimators.discriminative.NWJ
+   torch_mist.estimators.discriminative.TUBA
+   torch_mist.estimators.discriminative.MINE
+   torch_mist.estimators.discriminative.InfoNCE
+   torch_mist.estimators.discriminative.JS
+   torch_mist.estimators.discriminative.AlphaTUBA
+   torch_mist.estimators.discriminative.SMILE
+   torch_mist.estimators.discriminative.FLO
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.estimators.discriminative.nwj
+   torch_mist.estimators.discriminative.tuba
+   torch_mist.estimators.discriminative.mine
+   torch_mist.estimators.discriminative.infonce
+   torch_mist.estimators.discriminative.js
+   torch_mist.estimators.discriminative.alpha_tuba
+   torch_mist.estimators.discriminative.smile
+   torch_mist.estimators.discriminative.flo
+
+
+
+.. py:class:: DiscriminativeMutualInformationEstimator(unnormalized_log_ratio: torch_mist.ratio.UnnormalizedRatioEstimator, mc_samples: int = 1)
+
+
+   Bases: :py:obj:`torch_mist.estimators.base.MutualInformationEstimator`
+
+   .. py:attribute:: lower_bound
+      :value: True
+
+      
+
+   .. py:attribute:: upper_bound
+      :value: False
+
+      
+
+   .. py:method:: sample_proposal(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch_mist.estimators.base.Estimation
+
+
+   .. py:method:: _compute_log_ratio(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, y_: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
+      :abstractmethod:
+
+
+   .. py:method:: _compute_log_ratio_grad(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, y_: torch.Tensor, f_: torch.Tensor) -> Optional[torch.Tensor]
+
+
+   .. py:method:: __repr__()
+
+
+
+.. py:class:: NWJ(unnormalized_log_ratio: torch_mist.ratio.UnnormalizedRatioEstimator, mc_samples: int = 1)
+
+
+   Bases: :py:obj:`DiscriminativeMutualInformationEstimator`
+
+   .. py:method:: _compute_log_ratio(x: torch.Tensor, y: torch.Tensor, y_: torch.Tensor, f: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
+
+
+
+.. py:class:: TUBA(unnormalized_log_ratio: torch_mist.ratio.UnnormalizedRatioEstimator, baseline: torch_mist.baselines.Baseline, grad_baseline: Optional[torch_mist.baselines.Baseline] = None, mc_samples: int = 1)
+
+
+   Bases: :py:obj:`NWJ`
+
+   .. py:method:: _compute_log_ratio(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, y_: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: _compute_log_ratio_grad(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, y_: torch.Tensor, f_: torch.Tensor) -> Optional[torch.Tensor]
+
+
+
+.. py:class:: MINE(unnormalized_log_ratio: torch_mist.ratio.UnnormalizedRatioEstimator, mc_samples: int = 1, gamma: float = 0.9)
+
+
+   Bases: :py:obj:`TUBA`
+
+
+.. py:class:: InfoNCE(unnormalized_log_ratio: torch_mist.ratio.SeparableUnnormalizedRatioEstimator)
+
+
+   Bases: :py:obj:`DiscriminativeMutualInformationEstimator`
+
+   .. py:method:: _compute_log_ratio(x: torch.Tensor, y: torch.Tensor, y_: torch.Tensor, f: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
+
+
+
+.. py:class:: JS(unnormalized_log_ratio: torch_mist.ratio.UnnormalizedRatioEstimator, mc_samples: int = 1)
+
+
+   Bases: :py:obj:`NWJ`
+
+   .. py:method:: _compute_log_ratio_grad(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, y_: torch.Tensor, f_: torch.Tensor) -> Optional[torch.Tensor]
+
+
+
+.. py:class:: AlphaTUBA(unnormalized_log_ratio: torch_mist.ratio.UnnormalizedRatioEstimator, baseline: torch_mist.baselines.Baseline = ConstantBaseline(1.0), alpha: float = 0.5, mc_samples: int = 1)
+
+
+   Bases: :py:obj:`TUBA`
+
+
+.. py:class:: SMILE(unnormalized_log_ratio: torch_mist.ratio.UnnormalizedRatioEstimator, mc_samples: int = 1, tau: float = 5.0)
+
+
+   Bases: :py:obj:`MINE`, :py:obj:`JS`
+
+   .. py:method:: _compute_log_ratio(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, y_: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: _compute_log_ratio_grad(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, y_: torch.Tensor, f_: torch.Tensor) -> Optional[torch.Tensor]
+
+
+
+.. py:class:: FLO(unnormalized_log_ratio: torch_mist.ratio.UnnormalizedRatioEstimator, baseline: torch_mist.baselines.LearnableJointBaseline, mc_samples: int = 1)
+
+
+   Bases: :py:obj:`DiscriminativeMutualInformationEstimator`
+
+   .. py:method:: _compute_log_ratio(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, y_: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
+
+
+
+.. py:function:: nwj(x_dim: int, y_dim: int, hidden_dims: List[int], mc_samples=1, log_ratio_model='joint', **kwargs)
+
+
+.. py:function:: tuba(x_dim: int, y_dim: int, hidden_dims: List[int], log_ratio_model='joint', mc_samples=1, nonlinearity: Any = nn.ReLU(True), **kwargs)
+
+
+.. py:function:: mine(x_dim: int, y_dim: int, hidden_dims: List[int], unnormalized_log_ratio_model='joint', mc_samples=1, gamma: float = 0.9, **kwargs)
+
+
+.. py:function:: infonce(x_dim: int, y_dim: int, hidden_dims: List[int], unnormalized_log_ratio_model='separable', **kwargs)
+
+
+.. py:function:: js(x_dim: int, y_dim: int, hidden_dims: List[int], unnormalized_log_ratio_model='joint', mc_samples=1, **kwargs)
+
+
+.. py:function:: alpha_tuba(x_dim: int, y_dim: int, hidden_dims: List[int], log_ratio_model='separable', alpha: float = 0.5, nonlinearity: Any = nn.ReLU(True), **kwargs)
+
+
+.. py:function:: smile(x_dim: int, y_dim: int, hidden_dims: List[int], unnormalized_log_ratio_model='joint', mc_samples=1, tau: float = 5.0, **kwargs)
+
+
+.. py:function:: flo(x_dim: int, y_dim: int, hidden_dims: List[int], log_ratio_model='joint', mc_samples=1, nonlinearity: Any = nn.ReLU(True), **kwargs)
+
+

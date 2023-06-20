@@ -9,6 +9,7 @@
 project = u"torch_mist"
 copyright = u"2023, Marco Federici"
 author = u"Marco Federici"
+html_logo = "media/torch-mist-logo.png"
 
 # -- General configuration ---------------------------------------------------
 

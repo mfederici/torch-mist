@@ -1,0 +1,76 @@
+:py:mod:`torch_mist.models.learnable_distributions.categorical`
+===============================================================
+
+.. py:module:: torch_mist.models.learnable_distributions.categorical
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.models.learnable_distributions.categorical.ConditionalCategoricalMLP
+   torch_mist.models.learnable_distributions.categorical.ConditionalCategoricalLinear
+   torch_mist.models.learnable_distributions.categorical.LearnableCategorical
+
+
+
+
+.. py:class:: ConditionalCategoricalMLP(y_dim: int, n_classes: int, hidden_dims: List[int], a_dim: int = 1)
+
+
+   Bases: :py:obj:`src.torch_mist.distributions.conditional.ConditionalCategorical`
+
+
+.. py:class:: ConditionalCategoricalLinear(y_dim: int, n_classes: int, a_dim: int = 1)
+
+
+   Bases: :py:obj:`pyro.distributions.ConditionalDistribution`, :py:obj:`torch.nn.Module`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: condition(x)
+
+      :rtype: torch.distributions.Distribution
+
+
+
+.. py:class:: LearnableCategorical(n_classes: int, a_dim: int = 1)
+
+
+   Bases: :py:obj:`torch.distributions.Distribution`, :py:obj:`torch.nn.Module`
+
+   Distribution is the abstract base class for probability distributions.
+
+   .. py:method:: log_prob(value)
+
+      Returns the log of the probability density/mass function evaluated at
+      `value`.
+
+      :param value:
+      :type value: Tensor
+
+
+   .. py:method:: sample(sample_shape=torch.Size())
+
+      Generates a sample_shape shaped sample or sample_shape shaped batch of
+      samples if the distribution parameters are batched.
+
+
+   .. py:method:: rsample(sample_shape=torch.Size())
+
+      Generates a sample_shape shaped reparameterized sample or sample_shape
+      shaped batch of reparameterized samples if the distribution parameters
+      are batched.
+
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
+
+
+

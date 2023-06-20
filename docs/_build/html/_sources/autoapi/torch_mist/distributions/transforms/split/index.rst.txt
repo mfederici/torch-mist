@@ -1,0 +1,60 @@
+:py:mod:`torch_mist.distributions.transforms.split`
+===================================================
+
+.. py:module:: torch_mist.distributions.transforms.split
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.distributions.transforms.split.SplitTransform
+
+
+
+
+.. py:class:: SplitTransform(input_dim, out_dim)
+
+
+   Bases: :py:obj:`pyro.distributions.TransformModule`
+
+   Transforms with learnable parameters such as normalizing flows should inherit from this class rather
+   than `Transform` so they are also a subclass of `nn.Module` and inherit all the useful methods of that class.
+
+   .. py:attribute:: domain
+
+      
+
+   .. py:attribute:: codomain
+
+      
+
+   .. py:method:: dist()
+
+
+   .. py:method:: add_dims(x)
+
+
+   .. py:method:: remove_dims(y)
+
+
+   .. py:method:: _call(x)
+
+      Abstract method to compute forward transformation.
+
+
+   .. py:method:: _inverse(y)
+
+      Abstract method to compute inverse transformation.
+
+
+   .. py:method:: log_abs_det_jacobian(x, y)
+
+      Computes the log det jacobian `log |dy/dx|` given input and output.
+
+
+

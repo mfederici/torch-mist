@@ -1,0 +1,30 @@
+:py:mod:`torch_mist.ratio.utils`
+================================
+
+.. py:module:: torch_mist.ratio.utils
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.ratio.utils.separable_unnormalized_log_ratio
+   torch_mist.ratio.utils.joint_unnormalized_log_ratio
+   torch_mist.ratio.utils.unnormalized_log_ratio
+
+
+
+.. py:function:: separable_unnormalized_log_ratio(x_dim: int, y_dim: int, hidden_dims: List[int], projection_head: str = 'symmetric', output_dim: int = 128, nonlinearity=nn.ReLU(True), temperature: float = 0.1)
+
+
+.. py:function:: joint_unnormalized_log_ratio(x_dim: int, y_dim: int, hidden_dims: List[int], nonlinearity=nn.ReLU(True))
+
+
+.. py:function:: unnormalized_log_ratio(x_dim, y_dim, hidden_dims, log_ratio_model, **kwargs)
+
+

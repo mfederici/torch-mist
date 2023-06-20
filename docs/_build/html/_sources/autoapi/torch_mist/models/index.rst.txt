@@ -1,0 +1,16 @@
+:py:mod:`torch_mist.models`
+===========================
+
+.. py:module:: torch_mist.models
+
+
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   encoder/index.rst
+   learnable_distributions/index.rst
+
+
