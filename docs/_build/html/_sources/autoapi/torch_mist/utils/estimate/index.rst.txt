@@ -1,0 +1,30 @@
+:py:mod:`torch_mist.utils.estimate`
+===================================
+
+.. py:module:: torch_mist.utils.estimate
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.utils.estimate.optimize_mi_estimator
+   torch_mist.utils.estimate.estimate_mi
+   torch_mist.utils.estimate.estimate_mi_std
+
+
+
+.. py:function:: optimize_mi_estimator(estimator: torch_mist.estimators.MutualInformationEstimator, dataloader: collections.Iterator[Tuple[torch.Tensor, torch.Tensor]], n_epochs: int = 1, optimizer_class: Type[torch.optim.Optimizer] = Adam, optimizer_params: Optional[Dict[str, Any]] = None) -> pandas.DataFrame
+
+
+.. py:function:: estimate_mi(estimator: torch_mist.estimators.MutualInformationEstimator, dataloader: collections.Iterator[Tuple[torch.Tensor, torch.Tensor]]) -> float
+
+
+.. py:function:: estimate_mi_std(estimator: torch_mist.estimators.MutualInformationEstimator, dataloader: collections.Iterator[Tuple[torch.Tensor, torch.Tensor]]) -> Tuple[float, float]
+
+

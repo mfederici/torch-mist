@@ -8,10 +8,10 @@ from pyro.distributions import ConditionalDistribution
 from torch import nn
 
 from torch_mist.estimators.base import MutualInformationEstimator, Estimation
-from torch_mist.ratio import UnnormalizedRatioEstimator, SeparableUnnormalizedRatioEstimator
+from torch_mist.critic import Critic, SeparableCritic
 from torch_mist.baselines import Baseline, BatchLogMeanExp, ConstantBaseline, ExponentialMovingAverage, \
     InterpolatedBaseline, LearnableJointBaseline, LearnableMLPBaseline, LearnableJointMLPBaseline
-from torch_mist.ratio.utils import unnormalized_log_ratio
+from torch_mist.critic.utils import critic
 
 
 class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
@@ -20,7 +20,7 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
 
     def __init__(
             self,
-            unnormalized_log_ratio: UnnormalizedRatioEstimator,
+            unnormalized_log_ratio: Critic,
             mc_samples: int = 1,
     ):
         super().__init__()
@@ -41,12 +41,11 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
         if self.proposal is None:
             # If we want to the whole batch as negatives and the unnormalized log-ratio is separable
             if (
-                    self.mc_samples == N and
-                    isinstance(self.unnormalized_log_ratio, SeparableUnnormalizedRatioEstimator)
+                    self.mc_samples == 0 and
+                    isinstance(self.unnormalized_log_ratio, SeparableCritic)
             ):
                 # simply unsqueeze an empty dimension at the beginning since we don't want to forward (N**2) samples
                 y_ = y[:, 0].unsqueeze(0)
-                proposal = None
             else:
                 # Otherwise, we sample from the proposal distribution (off diagonal elements)
                 # This indexing operation takes care of selecting the appropriate (off-diagonal) y
@@ -125,7 +124,7 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
 class NWJ(DiscriminativeMutualInformationEstimator):
     def __init__(
             self,
-            unnormalized_log_ratio: UnnormalizedRatioEstimator,
+            unnormalized_log_ratio: Critic,
             mc_samples: int = 1,
     ):
         super().__init__(
@@ -149,7 +148,7 @@ class NWJ(DiscriminativeMutualInformationEstimator):
 class TUBA(NWJ):
     def __init__(
             self,
-            unnormalized_log_ratio: UnnormalizedRatioEstimator,
+            unnormalized_log_ratio: Critic,
             baseline: Baseline,
             grad_baseline: Optional[Baseline] = None,
             mc_samples: int = 1
@@ -210,11 +209,22 @@ class TUBA(NWJ):
             f_=f_ - grad_b
         )
 
+    def __repr__(self):
+        s = self.__class__.__name__ + '(\n'
+        s += '  (ratio_estimator): ' + str(self.unnormalized_log_ratio).replace('\n', '\n' + '  ') + '\n'
+        s += '  (baseline): ' + str(self.baseline).replace('\n', '\n' + '  ') + '\n'
+        if self.grad_baseline is not None:
+            s += '  (grad_baseline): ' + str(self.grad_baseline).replace('\n', '\n' + '  ') + '\n'
+        s += '  (mc_samples): ' + str(self.mc_samples) + '\n'
+        s += ')'
+
+        return s
+
 
 class MINE(TUBA):
     def __init__(
             self,
-            unnormalized_log_ratio: UnnormalizedRatioEstimator,
+            unnormalized_log_ratio: Critic,
             mc_samples: int = 1,
             gamma: float = 0.9,
     ):
@@ -229,7 +239,7 @@ class MINE(TUBA):
 class InfoNCE(DiscriminativeMutualInformationEstimator):
     def __init__(
             self,
-            unnormalized_log_ratio: SeparableUnnormalizedRatioEstimator,
+            unnormalized_log_ratio: SeparableCritic,
     ):
         # Note that this can be equivalently obtained by extending TUBA with a BatchLogMeanExp(dim=1) baseline
         # This implementation saves some computation
@@ -260,7 +270,7 @@ class InfoNCE(DiscriminativeMutualInformationEstimator):
 class JS(NWJ):
     def __init__(
             self,
-            unnormalized_log_ratio: UnnormalizedRatioEstimator,
+            unnormalized_log_ratio: Critic,
             mc_samples: int = 1,
     ):
         super().__init__(
@@ -283,10 +293,10 @@ class JS(NWJ):
 class AlphaTUBA(TUBA):
     def __init__(
             self,
-            unnormalized_log_ratio: UnnormalizedRatioEstimator,
+            unnormalized_log_ratio: Critic,
             baseline: Baseline = ConstantBaseline(1.0),
             alpha: float = 0.5,
-            mc_samples: int = 1,
+            mc_samples: int = -1,
     ):
         alpha_baseline = InterpolatedBaseline(
             baseline_1=BatchLogMeanExp(dim=1),
@@ -304,7 +314,7 @@ class AlphaTUBA(TUBA):
 class SMILE(MINE, JS):
     def __init__(
             self,
-            unnormalized_log_ratio: UnnormalizedRatioEstimator,
+            unnormalized_log_ratio: Critic,
             mc_samples: int = 1,
             tau: float = 5.0,
     ):
@@ -343,7 +353,7 @@ class SMILE(MINE, JS):
 class FLO(DiscriminativeMutualInformationEstimator):
     def __init__(
             self,
-            unnormalized_log_ratio: UnnormalizedRatioEstimator,
+            unnormalized_log_ratio: Critic,
             baseline: LearnableJointBaseline,
             mc_samples: int = 1,
     ):
@@ -381,14 +391,14 @@ def nwj(
         y_dim: int,
         hidden_dims: List[int],
         mc_samples=1,
-        log_ratio_model='joint',
+        critic_type='joint',
         **kwargs
-):
-    url_nn = unnormalized_log_ratio(
+) -> NWJ:
+    url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
-        log_ratio_model=log_ratio_model,
+        critic_type=critic_type,
         **kwargs
 
     )
@@ -403,16 +413,16 @@ def tuba(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],
-        log_ratio_model='joint',
+        critic_type='joint',
         mc_samples=1,
         nonlinearity: Any = nn.ReLU(True),
         **kwargs
-):
-    url_nn = unnormalized_log_ratio(
+) -> TUBA:
+    url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
-        log_ratio_model=log_ratio_model,
+        critic_type=critic_type,
         nonlinearity=nonlinearity,
         **kwargs
     )
@@ -433,16 +443,16 @@ def mine(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],
-        unnormalized_log_ratio_model='joint',
+        critic_type='joint',
         mc_samples=1,
         gamma: float = 0.9,
         **kwargs
-):
-    url_nn = unnormalized_log_ratio(
+) -> MINE:
+    url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
-        log_ratio_model=unnormalized_log_ratio_model,
+        critic_type=critic_type,
         **kwargs
     )
 
@@ -457,14 +467,14 @@ def infonce(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],
-        unnormalized_log_ratio_model='separable',
+        critic_type='separable',
         **kwargs
-):
-    url_nn = unnormalized_log_ratio(
+) -> InfoNCE:
+    url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
-        log_ratio_model=unnormalized_log_ratio_model,
+        critic_type=critic_type,
         **kwargs
     )
 
@@ -477,15 +487,15 @@ def js(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],
-        unnormalized_log_ratio_model='joint',
+        critic_type='joint',
         mc_samples=1,
         **kwargs
-):
-    url_nn = unnormalized_log_ratio(
+) -> JS:
+    url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
-        log_ratio_model=unnormalized_log_ratio_model,
+        critic_type=critic_type,
         **kwargs
     )
 
@@ -499,30 +509,35 @@ def alpha_tuba(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],
-        log_ratio_model='separable',
-        alpha: float = 0.5,
+        critic_type='joint',
+        alpha: float = 0.01,
         nonlinearity: Any = nn.ReLU(True),
+        learnable_baseline: bool = True,
+        mc_samples=-1,
         **kwargs
-):
-    url_nn = unnormalized_log_ratio(
+) -> AlphaTUBA:
+    url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
-        log_ratio_model=log_ratio_model,
+        critic_type=critic_type,
         nonlinearity=nonlinearity,
         **kwargs
     )
-    baseline = LearnableMLPBaseline(
-        x_dim=x_dim,
-        hidden_dims=hidden_dims,
-        nonlinearity=nonlinearity,
-    )
+    if learnable_baseline:
+        baseline = LearnableMLPBaseline(
+            x_dim=x_dim,
+            hidden_dims=hidden_dims,
+            nonlinearity=nonlinearity,
+        )
+    else:
+        baseline = ConstantBaseline(1.0)
 
     return AlphaTUBA(
         unnormalized_log_ratio=url_nn,
         baseline=baseline,
         alpha=alpha,
-        mc_samples=0,
+        mc_samples=mc_samples,
     )
 
 
@@ -530,16 +545,16 @@ def smile(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],
-        unnormalized_log_ratio_model='joint',
+        critic_type='joint',
         mc_samples=1,
         tau: float = 5.0,
         **kwargs
-):
-    url_nn = unnormalized_log_ratio(
+) -> SMILE:
+    url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
-        log_ratio_model=unnormalized_log_ratio_model,
+        critic_type=critic_type,
         **kwargs
     )
 
@@ -554,16 +569,16 @@ def flo(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],
-        log_ratio_model='joint',
+        critic_type='joint',
         mc_samples=1,
         nonlinearity: Any = nn.ReLU(True),
         **kwargs
-):
-    url_nn = unnormalized_log_ratio(
+) -> FLO:
+    url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
-        log_ratio_model=log_ratio_model,
+        critic_type=critic_type,
         nonlinearity=nonlinearity,
         **kwargs
     )

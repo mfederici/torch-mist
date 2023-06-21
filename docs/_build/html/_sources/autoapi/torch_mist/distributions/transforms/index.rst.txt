@@ -47,7 +47,7 @@ Functions
 
 
 
-.. py:class:: DistributionModule(validate_args: bool = True)
+.. py:class:: DistributionModule(validate_args: bool = False)
 
 
    Bases: :py:obj:`torch.distributions.Distribution`, :py:obj:`torch.nn.Module`, :py:obj:`abc.ABC`

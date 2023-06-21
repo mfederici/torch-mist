@@ -10,13 +10,11 @@ Subpackages
    :titlesonly:
    :maxdepth: 3
 
-   baselines/index.rst
+   critic/index.rst
    distributions/index.rst
    estimators/index.rst
-   models/index.rst
    nn/index.rst
-   ratio/index.rst
-   task/index.rst
+   utils/index.rst
 
 
 Submodules
@@ -25,6 +23,7 @@ Submodules
    :titlesonly:
    :maxdepth: 1
 
+   baselines/index.rst
    quantization/index.rst
 
 

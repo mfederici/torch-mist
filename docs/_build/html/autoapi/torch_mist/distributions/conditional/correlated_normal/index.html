@@ -30,13 +30,13 @@
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search"  style="background: #1a1a1a" >
 
           
           
-          <a href="../../../../../index.html" class="icon icon-home">
-            torch_mist
-              <img src="../../../../../_static/torch-mist-logo.png" class="logo" alt="Logo"/>
+          <a href="../../../../../index.html">
+            
+              <img src="../../../../../_static/logo.png" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
@@ -54,13 +54,11 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../../../../index.html">API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist</span></code></a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="../../../index.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="../../../baselines/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.baselines</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../critic/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.critic</span></code></a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.distributions</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../estimators/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.estimators</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../models/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.models</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../nn/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.nn</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../ratio/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.ratio</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../task/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.task</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.utils</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../index.html#submodules">Submodules</a></li>
@@ -75,7 +73,7 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #1a1a1a" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../../index.html">torch_mist</a>
       </nav>
@@ -129,13 +127,13 @@
 </table>
 <dl class="py class">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.CorrelatedNormal">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.conditional.correlated_normal.</span></span><span class="sig-name descname"><span class="pre">CorrelatedNormal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CorrelatedNormal" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.conditional.correlated_normal.</span></span><span class="sig-name descname"><span class="pre">CorrelatedNormal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#CorrelatedNormal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CorrelatedNormal" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pyro.distributions.ConditionalDistribution</span></code></p>
 <p>Helper class that provides a standard way to create an ABC using
 inheritance.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.CorrelatedNormal.condition">
-<span class="sig-name descname"><span class="pre">condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CorrelatedNormal.condition" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#CorrelatedNormal.condition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CorrelatedNormal.condition" title="Permalink to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.distributions.Distribution</p>
@@ -147,7 +145,7 @@ inheritance.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.CubicPTransform">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.conditional.correlated_normal.</span></span><span class="sig-name descname"><span class="pre">CubicPTransform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CubicPTransform" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.conditional.correlated_normal.</span></span><span class="sig-name descname"><span class="pre">CubicPTransform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#CubicPTransform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CubicPTransform" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.distributions.Transform</span></code></p>
 <p>Abstract class for invertable transformations with computable log
 det jacobians. They are primarily used in
@@ -244,19 +242,19 @@ increasing or decreasing.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.CubicPTransform._call">
-<span class="sig-name descname"><span class="pre">_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CubicPTransform._call" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#CubicPTransform._call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CubicPTransform._call" title="Permalink to this definition"></a></dt>
 <dd><p>Abstract method to compute forward transformation.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.CubicPTransform._inverse">
-<span class="sig-name descname"><span class="pre">_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CubicPTransform._inverse" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#CubicPTransform._inverse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CubicPTransform._inverse" title="Permalink to this definition"></a></dt>
 <dd><p>Abstract method to compute inverse transformation.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.CubicPTransform.log_abs_det_jacobian">
-<span class="sig-name descname"><span class="pre">log_abs_det_jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CubicPTransform.log_abs_det_jacobian" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">log_abs_det_jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#CubicPTransform.log_abs_det_jacobian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CubicPTransform.log_abs_det_jacobian" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the log det jacobian <cite>log |dy/dx|</cite> given input and output.</p>
 </dd></dl>
 
@@ -264,7 +262,7 @@ increasing or decreasing.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.RandomFlipTransform">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.conditional.correlated_normal.</span></span><span class="sig-name descname"><span class="pre">RandomFlipTransform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.RandomFlipTransform" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.conditional.correlated_normal.</span></span><span class="sig-name descname"><span class="pre">RandomFlipTransform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#RandomFlipTransform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.RandomFlipTransform" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.distributions.Transform</span></code></p>
 <p>Abstract class for invertable transformations with computable log
 det jacobians. They are primarily used in
@@ -361,7 +359,7 @@ increasing or decreasing.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.RandomFlipTransform._call">
-<span class="sig-name descname"><span class="pre">_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.RandomFlipTransform._call" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#RandomFlipTransform._call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.RandomFlipTransform._call" title="Permalink to this definition"></a></dt>
 <dd><p>Abstract method to compute forward transformation.</p>
 </dd></dl>
 
@@ -369,13 +367,13 @@ increasing or decreasing.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.CubicCorrelatedNormal">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.conditional.correlated_normal.</span></span><span class="sig-name descname"><span class="pre">CubicCorrelatedNormal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CubicCorrelatedNormal" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.conditional.correlated_normal.</span></span><span class="sig-name descname"><span class="pre">CubicCorrelatedNormal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#CubicCorrelatedNormal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CubicCorrelatedNormal" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pyro.distributions.ConditionalDistribution</span></code></p>
 <p>Helper class that provides a standard way to create an ABC using
 inheritance.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.CubicCorrelatedNormal.condition">
-<span class="sig-name descname"><span class="pre">condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CubicCorrelatedNormal.condition" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#CubicCorrelatedNormal.condition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.CubicCorrelatedNormal.condition" title="Permalink to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.distributions.Distribution</p>
@@ -387,7 +385,7 @@ inheritance.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.Translate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.conditional.correlated_normal.</span></span><span class="sig-name descname"><span class="pre">Translate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.Translate" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.conditional.correlated_normal.</span></span><span class="sig-name descname"><span class="pre">Translate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#Translate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.Translate" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.distributions.Transform</span></code></p>
 <p>Abstract class for invertable transformations with computable log
 det jacobians. They are primarily used in
@@ -484,19 +482,19 @@ increasing or decreasing.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.Translate._call">
-<span class="sig-name descname"><span class="pre">_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.Translate._call" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#Translate._call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.Translate._call" title="Permalink to this definition"></a></dt>
 <dd><p>Abstract method to compute forward transformation.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.Translate._inverse">
-<span class="sig-name descname"><span class="pre">_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.Translate._inverse" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#Translate._inverse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.Translate._inverse" title="Permalink to this definition"></a></dt>
 <dd><p>Abstract method to compute inverse transformation.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.Translate.log_abs_det_jacobian">
-<span class="sig-name descname"><span class="pre">log_abs_det_jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.Translate.log_abs_det_jacobian" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">log_abs_det_jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#Translate.log_abs_det_jacobian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.Translate.log_abs_det_jacobian" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the log det jacobian <cite>log |dy/dx|</cite> given input and output.</p>
 </dd></dl>
 
@@ -504,13 +502,13 @@ increasing or decreasing.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.SkewedCorrelatedNormal">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.conditional.correlated_normal.</span></span><span class="sig-name descname"><span class="pre">SkewedCorrelatedNormal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.SkewedCorrelatedNormal" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.conditional.correlated_normal.</span></span><span class="sig-name descname"><span class="pre">SkewedCorrelatedNormal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#SkewedCorrelatedNormal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.SkewedCorrelatedNormal" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pyro.distributions.ConditionalDistribution</span></code></p>
 <p>Helper class that provides a standard way to create an ABC using
 inheritance.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.correlated_normal.SkewedCorrelatedNormal.condition">
-<span class="sig-name descname"><span class="pre">condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.SkewedCorrelatedNormal.condition" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/correlated_normal.html#SkewedCorrelatedNormal.condition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.correlated_normal.SkewedCorrelatedNormal.condition" title="Permalink to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.distributions.Distribution</p>

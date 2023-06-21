@@ -1,1 +1,0 @@
-from .infomax import InfoMax

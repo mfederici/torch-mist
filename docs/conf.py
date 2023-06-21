@@ -9,7 +9,6 @@
 project = u"torch_mist"
 copyright = u"2023, Marco Federici"
 author = u"Marco Federici"
-html_logo = "media/torch-mist-logo.png"
 
 # -- General configuration ---------------------------------------------------
 
@@ -35,3 +34,10 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # a list of builtin themes.
 #
 html_theme = "sphinx_rtd_theme"
+html_logo = "logo.png"
+# Change the color of search and top bar
+html_theme_options = {
+    "style_nav_header_background": "#1a1a1a",
+    "logo_only": True,
+}
+

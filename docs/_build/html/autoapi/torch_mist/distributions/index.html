@@ -23,20 +23,20 @@
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="torch_mist.distributions.conditional" href="conditional/index.html" />
-    <link rel="prev" title="torch_mist.baselines.base" href="../baselines/base/index.html" /> 
+    <link rel="prev" title="torch_mist.critic.utils" href="../critic/utils/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search"  style="background: #1a1a1a" >
 
           
           
-          <a href="../../../index.html" class="icon icon-home">
-            torch_mist
-              <img src="../../../_static/torch-mist-logo.png" class="logo" alt="Logo"/>
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -54,13 +54,11 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist</span></code></a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="../index.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="../baselines/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.baselines</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../critic/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.critic</span></code></a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.distributions</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../estimators/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.estimators</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../models/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.models</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../nn/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.nn</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../ratio/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.ratio</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../task/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.task</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.utils</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../index.html#submodules">Submodules</a></li>
@@ -75,7 +73,7 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #1a1a1a" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../index.html">torch_mist</a>
       </nav>
@@ -131,39 +129,13 @@
 </ul>
 </div>
 </section>
-<section id="package-contents">
-<h2>Package Contents<a class="headerlink" href="#package-contents" title="Permalink to this heading"></a></h2>
-<section id="functions">
-<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#torch_mist.distributions.conditional_categorical" title="torch_mist.distributions.conditional_categorical"><code class="xref py py-obj docutils literal notranslate"><span class="pre">conditional_categorical</span></code></a>(n_classes, context_dim, ...)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#torch_mist.distributions.conditional_mutivariate_categorical" title="torch_mist.distributions.conditional_mutivariate_categorical"><code class="xref py py-obj docutils literal notranslate"><span class="pre">conditional_mutivariate_categorical</span></code></a>(n_classes, ...)</p></td>
-<td><p></p></td>
-</tr>
-</tbody>
-</table>
-<dl class="py function">
-<dt class="sig sig-object py" id="torch_mist.distributions.conditional_categorical">
-<span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.</span></span><span class="sig-name descname"><span class="pre">conditional_categorical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional_categorical" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="torch_mist.distributions.conditional_mutivariate_categorical">
-<span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.</span></span><span class="sig-name descname"><span class="pre">conditional_mutivariate_categorical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional_mutivariate_categorical" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</section>
-</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../baselines/base/index.html" class="btn btn-neutral float-left" title="torch_mist.baselines.base" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../critic/utils/index.html" class="btn btn-neutral float-left" title="torch_mist.critic.utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="conditional/index.html" class="btn btn-neutral float-right" title="torch_mist.distributions.conditional" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

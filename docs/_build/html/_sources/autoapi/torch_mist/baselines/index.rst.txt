@@ -4,17 +4,8 @@
 .. py:module:: torch_mist.baselines
 
 
-Submodules
-----------
-.. toctree::
-   :titlesonly:
-   :maxdepth: 1
-
-   base/index.rst
-
-
-Package Contents
-----------------
+Module Contents
+---------------
 
 Classes
 ~~~~~~~
@@ -22,14 +13,15 @@ Classes
 .. autoapisummary::
 
    torch_mist.baselines.Baseline
-   torch_mist.baselines.LearnableBaseline
-   torch_mist.baselines.InterpolatedBaseline
    torch_mist.baselines.ConstantBaseline
-   torch_mist.baselines.BatchLogMeanExp
    torch_mist.baselines.ExponentialMovingAverage
-   torch_mist.baselines.LearnableJointBaseline
+   torch_mist.baselines.BatchLogMeanExp
+   torch_mist.baselines.LearnableBaseline
    torch_mist.baselines.LearnableMLPBaseline
+   torch_mist.baselines.LearnableJointBaseline
    torch_mist.baselines.LearnableJointMLPBaseline
+   torch_mist.baselines.InterpolatedBaseline
+   torch_mist.baselines.AlphaTUBABaseline
 
 
 
@@ -75,127 +67,7 @@ Classes
 
 
 
-.. py:class:: LearnableBaseline(net: torch.nn.Module)
-
-
-   Bases: :py:obj:`Baseline`
-
-   Base class for all neural network modules.
-
-   Your models should also subclass this class.
-
-   Modules can also contain other Modules, allowing to nest them in
-   a tree structure. You can assign the submodules as regular attributes::
-
-       import torch.nn as nn
-       import torch.nn.functional as F
-
-       class Model(nn.Module):
-           def __init__(self):
-               super().__init__()
-               self.conv1 = nn.Conv2d(1, 20, 5)
-               self.conv2 = nn.Conv2d(20, 20, 5)
-
-           def forward(self, x):
-               x = F.relu(self.conv1(x))
-               return F.relu(self.conv2(x))
-
-   Submodules assigned in this way will be registered, and will have their
-   parameters converted too when you call :meth:`to`, etc.
-
-   .. note::
-       As per the example above, an ``__init__()`` call to the parent class
-       must be made before assignment on the child.
-
-   :ivar training: Boolean represents whether this module is in training or
-                   evaluation mode.
-   :vartype training: bool
-
-   .. py:method:: forward(f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
-
-
-
-.. py:class:: InterpolatedBaseline(baseline_1: Baseline, baseline_2: Baseline, alpha: float)
-
-
-   Bases: :py:obj:`Baseline`
-
-   Base class for all neural network modules.
-
-   Your models should also subclass this class.
-
-   Modules can also contain other Modules, allowing to nest them in
-   a tree structure. You can assign the submodules as regular attributes::
-
-       import torch.nn as nn
-       import torch.nn.functional as F
-
-       class Model(nn.Module):
-           def __init__(self):
-               super().__init__()
-               self.conv1 = nn.Conv2d(1, 20, 5)
-               self.conv2 = nn.Conv2d(20, 20, 5)
-
-           def forward(self, x):
-               x = F.relu(self.conv1(x))
-               return F.relu(self.conv2(x))
-
-   Submodules assigned in this way will be registered, and will have their
-   parameters converted too when you call :meth:`to`, etc.
-
-   .. note::
-       As per the example above, an ``__init__()`` call to the parent class
-       must be made before assignment on the child.
-
-   :ivar training: Boolean represents whether this module is in training or
-                   evaluation mode.
-   :vartype training: bool
-
-   .. py:method:: forward(f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
-
-
-
 .. py:class:: ConstantBaseline(value: float = 0)
-
-
-   Bases: :py:obj:`Baseline`
-
-   Base class for all neural network modules.
-
-   Your models should also subclass this class.
-
-   Modules can also contain other Modules, allowing to nest them in
-   a tree structure. You can assign the submodules as regular attributes::
-
-       import torch.nn as nn
-       import torch.nn.functional as F
-
-       class Model(nn.Module):
-           def __init__(self):
-               super().__init__()
-               self.conv1 = nn.Conv2d(1, 20, 5)
-               self.conv2 = nn.Conv2d(20, 20, 5)
-
-           def forward(self, x):
-               x = F.relu(self.conv1(x))
-               return F.relu(self.conv2(x))
-
-   Submodules assigned in this way will be registered, and will have their
-   parameters converted too when you call :meth:`to`, etc.
-
-   .. note::
-       As per the example above, an ``__init__()`` call to the parent class
-       must be made before assignment on the child.
-
-   :ivar training: Boolean represents whether this module is in training or
-                   evaluation mode.
-   :vartype training: bool
-
-   .. py:method:: forward(f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
-
-
-
-.. py:class:: BatchLogMeanExp(dim=1)
 
 
    Bases: :py:obj:`Baseline`
@@ -275,10 +147,50 @@ Classes
 
 
 
-.. py:class:: LearnableJointBaseline(net: torch.nn.Module)
+.. py:class:: BatchLogMeanExp(dim=1)
 
 
-   Bases: :py:obj:`LearnableBaseline`
+   Bases: :py:obj:`Baseline`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+   .. py:method:: forward(f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
+
+
+
+.. py:class:: LearnableBaseline(net: torch.nn.Module)
+
+
+   Bases: :py:obj:`Baseline`
 
    Base class for all neural network modules.
 
@@ -352,10 +264,127 @@ Classes
    :vartype training: bool
 
 
+.. py:class:: LearnableJointBaseline(net: torch.nn.Module)
+
+
+   Bases: :py:obj:`LearnableBaseline`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+   .. py:method:: forward(f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
+
+
+
 .. py:class:: LearnableJointMLPBaseline(x_dim: int, y_dim: int, hidden_dims: List[int], nonlinearity: Any = nn.ReLU(True))
 
 
    Bases: :py:obj:`LearnableJointBaseline`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+
+.. py:class:: InterpolatedBaseline(baseline_1: Baseline, baseline_2: Baseline, alpha: float)
+
+
+   Bases: :py:obj:`Baseline`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+   .. py:method:: forward(f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
+
+
+
+.. py:class:: AlphaTUBABaseline(x_dim: int, hidden_dims: List[int], alpha: float)
+
+
+   Bases: :py:obj:`InterpolatedBaseline`
 
    Base class for all neural network modules.
 

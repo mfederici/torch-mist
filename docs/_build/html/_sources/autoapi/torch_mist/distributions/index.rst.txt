@@ -25,23 +25,3 @@ Submodules
    utils/index.rst
 
 
-Package Contents
-----------------
-
-
-Functions
-~~~~~~~~~
-
-.. autoapisummary::
-
-   torch_mist.distributions.conditional_categorical
-   torch_mist.distributions.conditional_mutivariate_categorical
-
-
-
-.. py:function:: conditional_categorical(n_classes: int, context_dim: int, hidden_dims: List[int])
-
-
-.. py:function:: conditional_mutivariate_categorical(n_classes: int, output_dim: int, context_dim: int, hidden_dims: List[int])
-
-

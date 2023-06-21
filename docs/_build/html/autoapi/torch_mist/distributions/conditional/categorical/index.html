@@ -30,13 +30,13 @@
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search"  style="background: #1a1a1a" >
 
           
           
-          <a href="../../../../../index.html" class="icon icon-home">
-            torch_mist
-              <img src="../../../../../_static/torch-mist-logo.png" class="logo" alt="Logo"/>
+          <a href="../../../../../index.html">
+            
+              <img src="../../../../../_static/logo.png" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
@@ -54,13 +54,11 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../../../../index.html">API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist</span></code></a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="../../../index.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="../../../baselines/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.baselines</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../critic/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.critic</span></code></a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.distributions</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../estimators/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.estimators</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../models/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.models</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../nn/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.nn</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../ratio/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.ratio</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../task/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.task</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.utils</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../index.html#submodules">Submodules</a></li>
@@ -75,7 +73,7 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #1a1a1a" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../../index.html">torch_mist</a>
       </nav>
@@ -114,13 +112,13 @@
 </table>
 <dl class="py class">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.categorical.ConditionalCategorical">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.conditional.categorical.</span></span><span class="sig-name descname"><span class="pre">ConditionalCategorical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.nn.Module</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.categorical.ConditionalCategorical" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.conditional.categorical.</span></span><span class="sig-name descname"><span class="pre">ConditionalCategorical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.nn.Module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/categorical.html#ConditionalCategorical"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.categorical.ConditionalCategorical" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pyro.distributions.ConditionalDistribution</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.nn.Module</span></code></p>
 <p>Helper class that provides a standard way to create an ABC using
 inheritance.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="torch_mist.distributions.conditional.categorical.ConditionalCategorical.condition">
-<span class="sig-name descname"><span class="pre">condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.conditional.categorical.ConditionalCategorical.condition" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/distributions/conditional/categorical.html#ConditionalCategorical.condition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.conditional.categorical.ConditionalCategorical.condition" title="Permalink to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.distributions.Distribution</p>

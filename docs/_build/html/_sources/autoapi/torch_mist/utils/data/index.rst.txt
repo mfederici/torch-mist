@@ -1,0 +1,33 @@
+:py:mod:`torch_mist.utils.data`
+===============================
+
+.. py:module:: torch_mist.utils.data
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.utils.data.SampleDataLoader
+
+
+
+
+.. py:class:: SampleDataLoader(joint_dist: torch.distributions.Distribution, batch_size: int, max_samples: int = 100000, split_dim: int = -1)
+
+
+   Bases: :py:obj:`collections.abc.Iterator`\ [\ :py:obj:`Tuple`\ [\ :py:obj:`torch.Tensor`\ , :py:obj:`torch.Tensor`\ ]\ ]
+
+   .. py:method:: __next__() -> Tuple[torch.Tensor, torch.Tensor]
+
+      Return the next item from the iterator. When exhausted, raise StopIteration
+
+
+   .. py:method:: __len__()
+
+
+

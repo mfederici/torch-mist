@@ -22,7 +22,7 @@
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="torch_mist.models" href="../../models/index.html" />
+    <link rel="next" title="torch_mist.nn" href="../../nn/index.html" />
     <link rel="prev" title="torch_mist.estimators.generative" href="../generative/index.html" /> 
 </head>
 
@@ -30,13 +30,13 @@
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search"  style="background: #1a1a1a" >
 
           
           
-          <a href="../../../../index.html" class="icon icon-home">
-            torch_mist
-              <img src="../../../../_static/torch-mist-logo.png" class="logo" alt="Logo"/>
+          <a href="../../../../index.html">
+            
+              <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -54,13 +54,11 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist</span></code></a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="../../baselines/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.baselines</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../critic/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.critic</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../distributions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.distributions</span></code></a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.estimators</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../models/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.models</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../nn/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.nn</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../ratio/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.ratio</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../task/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.task</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.utils</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../index.html#submodules">Submodules</a></li>
@@ -75,7 +73,7 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #1a1a1a" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../index.html">torch_mist</a>
       </nav>
@@ -113,7 +111,7 @@
 </table>
 <dl class="py class">
 <dt class="sig sig-object py" id="torch_mist.estimators.hybrid.HybridMutualInformationEstimator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.estimators.hybrid.</span></span><span class="sig-name descname"><span class="pre">HybridMutualInformationEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generative_estimator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../generative/index.html#torch_mist.estimators.generative.VariationalProposalMutualInformationEstimator" title="torch_mist.estimators.generative.VariationalProposalMutualInformationEstimator"><span class="pre">torch_mist.estimators.generative.VariationalProposalMutualInformationEstimator</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discriminative_estimator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../discriminative/index.html#torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator" title="torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator"><span class="pre">torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.estimators.hybrid.HybridMutualInformationEstimator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.estimators.hybrid.</span></span><span class="sig-name descname"><span class="pre">HybridMutualInformationEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generative_estimator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../generative/index.html#torch_mist.estimators.generative.VariationalProposalMutualInformationEstimator" title="torch_mist.estimators.generative.VariationalProposalMutualInformationEstimator"><span class="pre">torch_mist.estimators.generative.VariationalProposalMutualInformationEstimator</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discriminative_estimator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../discriminative/index.html#torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator" title="torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator"><span class="pre">torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/estimators/hybrid.html#HybridMutualInformationEstimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.estimators.hybrid.HybridMutualInformationEstimator" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="../base/index.html#torch_mist.estimators.base.MutualInformationEstimator" title="torch_mist.estimators.base.MutualInformationEstimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">torch_mist.estimators.base.MutualInformationEstimator</span></code></a></p>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -148,7 +146,7 @@ evaluation mode.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="torch_mist.estimators.hybrid.HybridMutualInformationEstimator.log_ratio">
-<span class="sig-name descname"><span class="pre">log_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.estimators.hybrid.HybridMutualInformationEstimator.log_ratio" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">log_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/estimators/hybrid.html#HybridMutualInformationEstimator.log_ratio"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.estimators.hybrid.HybridMutualInformationEstimator.log_ratio" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -162,7 +160,7 @@ evaluation mode.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../generative/index.html" class="btn btn-neutral float-left" title="torch_mist.estimators.generative" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../../models/index.html" class="btn btn-neutral float-right" title="torch_mist.models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../../nn/index.html" class="btn btn-neutral float-right" title="torch_mist.nn" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -9,7 +9,7 @@ from torch.distributions import Distribution, Transform, TransformedDistribution
 
 
 class DistributionModule(Distribution, nn.Module, ABC):
-    def __init__(self, validate_args: bool = True):
+    def __init__(self, validate_args: bool = False):
         Distribution.__init__(self, validate_args=validate_args)
         nn.Module.__init__(self)
 

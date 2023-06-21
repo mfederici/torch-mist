@@ -1,0 +1,30 @@
+:py:mod:`torch_mist.critic.utils`
+=================================
+
+.. py:module:: torch_mist.critic.utils
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.critic.utils.separable_critic
+   torch_mist.critic.utils.joint_critic
+   torch_mist.critic.utils.critic
+
+
+
+.. py:function:: separable_critic(x_dim: int, y_dim: int, hidden_dims: List[int], projection_head: str = 'symmetric', output_dim: int = 128, nonlinearity=nn.ReLU(True), temperature: float = 0.1)
+
+
+.. py:function:: joint_critic(x_dim: int, y_dim: int, hidden_dims: List[int], nonlinearity=nn.ReLU(True))
+
+
+.. py:function:: critic(x_dim, y_dim, hidden_dims, critic_type, **kwargs)
+
+
