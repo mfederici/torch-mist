@@ -176,7 +176,7 @@ Functions
 
 
 
-.. py:function:: critic(x_dim, y_dim, hidden_dims, critic_type, **kwargs)
+.. py:function:: critic(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str, critic_params: Optional[Dict[str, Any]] = None)
 
 
 .. py:function:: joint_critic(x_dim: int, y_dim: int, hidden_dims: List[int], nonlinearity=nn.ReLU(True))

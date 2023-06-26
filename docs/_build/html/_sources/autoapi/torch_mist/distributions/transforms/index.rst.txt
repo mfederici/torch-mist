@@ -72,7 +72,7 @@ Functions
 .. py:class:: TransformedDistributionModule(base_dist: torch.distributions.Distribution, transforms: Union[torch.distributions.Transform, List[torch.distributions.Transform], Dict[str, torch.distributions.Transform], None])
 
 
-   Bases: :py:obj:`DistributionModule`, :py:obj:`abc.ABC`
+   Bases: :py:obj:`DistributionModule`
 
    Distribution is the abstract base class for probability distributions.
 
@@ -112,6 +112,11 @@ Functions
 
 
    .. py:method:: clear_cache()
+
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
 
 
 

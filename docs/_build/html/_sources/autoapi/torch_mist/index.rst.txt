@@ -14,6 +14,7 @@ Subpackages
    distributions/index.rst
    estimators/index.rst
    nn/index.rst
+   quantization/index.rst
    utils/index.rst
 
 
@@ -24,7 +25,6 @@ Submodules
    :maxdepth: 1
 
    baselines/index.rst
-   quantization/index.rst
 
 
 Package Contents

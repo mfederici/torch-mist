@@ -1,6 +1,6 @@
 import math
 from abc import abstractmethod
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict, Callable
 
 import torch
 import torch.nn.functional as F
@@ -390,16 +390,16 @@ def nwj(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],
-        mc_samples=1,
-        critic_type='joint',
-        **kwargs
+        mc_samples: int = 1,
+        critic_type: str = 'joint',
+        critic_params: Dict[str, Any] = None,
 ) -> NWJ:
     url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
         critic_type=critic_type,
-        **kwargs
+        critic_params=critic_params
 
     )
 
@@ -413,23 +413,26 @@ def tuba(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],
-        critic_type='joint',
-        mc_samples=1,
-        nonlinearity: Any = nn.ReLU(True),
-        **kwargs
+        critic_type: str = 'joint',
+        mc_samples: int = 1,
+        critic_params: Dict[str, Any] = None,
+        baseline_params: Dict[str, Any] = None,
 ) -> TUBA:
     url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
         critic_type=critic_type,
-        nonlinearity=nonlinearity,
-        **kwargs
+        critic_params=critic_params
     )
+
+    if baseline_params is None:
+        baseline_params = {}
+
     baseline = LearnableMLPBaseline(
         x_dim=x_dim,
         hidden_dims=hidden_dims,
-        nonlinearity=nonlinearity,
+        **baseline_params
     )
 
     return TUBA(
@@ -443,17 +446,17 @@ def mine(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],
-        critic_type='joint',
-        mc_samples=1,
+        critic_type: str = 'joint',
+        mc_samples: int = 1,
         gamma: float = 0.9,
-        **kwargs
+        critic_params: Dict[str, Any] = None,
 ) -> MINE:
     url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
         critic_type=critic_type,
-        **kwargs
+        critic_params=critic_params
     )
 
     return MINE(
@@ -468,14 +471,14 @@ def infonce(
         y_dim: int,
         hidden_dims: List[int],
         critic_type='separable',
-        **kwargs
+        critic_params: Dict[str, Any] = None,
 ) -> InfoNCE:
     url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
         critic_type=critic_type,
-        **kwargs
+        critic_params=critic_params
     )
 
     return InfoNCE(
@@ -487,16 +490,16 @@ def js(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],
-        critic_type='joint',
-        mc_samples=1,
-        **kwargs
+        critic_type: str = 'joint',
+        mc_samples: int = 1,
+        critic_params: Dict[str, Any] = None,
 ) -> JS:
     url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
         critic_type=critic_type,
-        **kwargs
+        critic_params=critic_params
     )
 
     return JS(
@@ -509,29 +512,32 @@ def alpha_tuba(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],
-        critic_type='joint',
+        critic_type: str = 'joint',
         alpha: float = 0.01,
-        nonlinearity: Any = nn.ReLU(True),
         learnable_baseline: bool = True,
         mc_samples=-1,
-        **kwargs
+        critic_params: Dict[str, Any] = None,
+        baseline_params: Dict[str, Any] = None,
 ) -> AlphaTUBA:
     url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
         critic_type=critic_type,
-        nonlinearity=nonlinearity,
-        **kwargs
+        critic_params=critic_params
     )
+
     if learnable_baseline:
+        if baseline_params is None:
+            baseline_params = {}
         baseline = LearnableMLPBaseline(
             x_dim=x_dim,
             hidden_dims=hidden_dims,
-            nonlinearity=nonlinearity,
+            **baseline_params
         )
     else:
-        baseline = ConstantBaseline(1.0)
+        assert baseline_params is None
+        baseline = ConstantBaseline(value=1.0)
 
     return AlphaTUBA(
         unnormalized_log_ratio=url_nn,
@@ -545,17 +551,17 @@ def smile(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],
-        critic_type='joint',
-        mc_samples=1,
+        critic_type: str = 'joint',
+        mc_samples: int = 1,
         tau: float = 5.0,
-        **kwargs
+        critic_params: Dict[str, Any] = None,
 ) -> SMILE:
     url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
         critic_type=critic_type,
-        **kwargs
+        critic_params=critic_params
     )
 
     return SMILE(
@@ -569,24 +575,26 @@ def flo(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],
-        critic_type='joint',
-        mc_samples=1,
-        nonlinearity: Any = nn.ReLU(True),
-        **kwargs
+        critic_type: str = 'joint',
+        mc_samples: int = 1,
+        critic_params: Dict[str, Any] = None,
+        baseline_params: Dict[str, Any] = None,
 ) -> FLO:
     url_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
         critic_type=critic_type,
-        nonlinearity=nonlinearity,
-        **kwargs
+        critic_params=critic_params
     )
+
+    if baseline_params is None:
+        baseline_params = {}
     baseline = LearnableJointMLPBaseline(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
-        nonlinearity=nonlinearity,
+        **baseline_params
     )
 
     return FLO(

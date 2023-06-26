@@ -89,19 +89,12 @@
 
 <div class="viewcode-block" id="ConditionalCategorical.condition"><a class="viewcode-back" href="../../../../autoapi/torch_mist/distributions/conditional/index.html#torch_mist.distributions.conditional.categorical.ConditionalCategorical.condition">[docs]</a>    <span class="k">def</span> <span class="nf">condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">net</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">indep_dims</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
-            <span class="n">logits</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span>
-                <span class="n">l</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">logits</span>
-            <span class="p">],</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
-            <span class="n">indep_dims</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="k">else</span><span class="p">:</span>
 
-            <span class="c1"># Corner case to handle 1D</span>
-            <span class="k">if</span> <span class="n">logits</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
-                <span class="n">logits</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># Corner case to handle 1D</span>
+        <span class="k">if</span> <span class="n">logits</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+            <span class="n">logits</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">Independent</span><span class="p">(</span><span class="n">Categorical</span><span class="p">(</span><span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">),</span> <span class="n">indep_dims</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">Categorical</span><span class="p">(</span><span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

@@ -76,32 +76,29 @@
            <div itemprop="articleBody">
              
   <h1>Source code for torch_mist.distributions.utils</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
 
 <span class="kn">from</span> <span class="nn">pyro.nn</span> <span class="kn">import</span> <span class="n">DenseNN</span>
 
-<span class="kn">from</span> <span class="nn">.conditional</span> <span class="kn">import</span> <span class="n">ConditionalCategorical</span>
-
-<span class="c1"># from core.distributions.transforms import ConditionalTransformedDistributionModule</span>
-<span class="c1"># from core.distributions.parametrizations import ParametrizedNormal, ConstantParametrizedConditionalDistribution</span>
 <span class="kn">from</span> <span class="nn">torch.distributions</span> <span class="kn">import</span> <span class="n">Distribution</span><span class="p">,</span> <span class="n">Independent</span>
-<span class="kn">from</span> <span class="nn">torch_mist.distributions.parametrizations.map</span> <span class="kn">import</span> <span class="n">LocScaleMap</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
 <span class="kn">from</span> <span class="nn">torch.distributions</span> <span class="kn">import</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">TransformedDistribution</span>
-<span class="kn">import</span> <span class="nn">pyro.distributions.transforms</span> <span class="k">as</span> <span class="nn">pyro_transforms_module</span>
 
-<span class="kn">import</span> <span class="nn">torch_mist.distributions.transforms</span> <span class="k">as</span> <span class="nn">transforms_module</span>
 
-<span class="kn">from</span> <span class="nn">torch_mist.distributions.transforms</span> <span class="kn">import</span> <span class="n">ConditionalTransformedDistributionModule</span><span class="p">,</span> <span class="n">DistributionModule</span>
+<span class="kn">from</span> <span class="nn">torch_mist.distributions.transforms</span> <span class="kn">import</span> <span class="n">ConditionalTransformedDistributionModule</span><span class="p">,</span> <span class="n">DistributionModule</span><span class="p">,</span> \
+    <span class="n">TransformedDistributionModule</span><span class="p">,</span> <span class="n">ConditionalDistributionModule</span>
 <span class="kn">from</span> <span class="nn">torch_mist.distributions.parametrizations.map</span> <span class="kn">import</span> <span class="n">LocScaleMap</span>
+<span class="kn">from</span> <span class="nn">torch_mist.distributions.conditional</span> <span class="kn">import</span> <span class="n">ConditionalCategorical</span>
 
 
 <div class="viewcode-block" id="fetch_transform"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.fetch_transform">[docs]</a><span class="k">def</span> <span class="nf">fetch_transform</span><span class="p">(</span><span class="n">transform_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">pyro.distributions.transforms</span> <span class="k">as</span> <span class="nn">pyro_transforms_module</span>
+    <span class="kn">import</span> <span class="nn">torch_mist.distributions.transforms</span> <span class="k">as</span> <span class="nn">transforms_module</span>
+
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">pyro_transforms_module</span><span class="p">,</span> <span class="n">transform_name</span><span class="p">):</span>
         <span class="n">transform_factory</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">pyro_transforms_module</span><span class="p">,</span> <span class="n">transform_name</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">transforms_module</span><span class="p">,</span> <span class="n">transform_name</span><span class="p">):</span>
@@ -113,94 +110,111 @@
     <span class="k">return</span> <span class="n">transform_factory</span></div>
 
 
-<div class="viewcode-block" id="ParametricNormal"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.ParametricNormal">[docs]</a><span class="k">class</span> <span class="nc">ParametricNormal</span><span class="p">(</span><span class="n">Distribution</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<div class="viewcode-block" id="NormalModule"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.NormalModule">[docs]</a><span class="k">class</span> <span class="nc">NormalModule</span><span class="p">(</span><span class="n">Distribution</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">loc</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span>
         <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">Distribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">validate_args</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">loc</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">log_scale</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">scale</span><span class="o">.</span><span class="n">log</span><span class="p">())</span>
+        <span class="n">Distribution</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">event_shape</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([</span><span class="n">loc</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]),</span>
+            <span class="n">validate_args</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="n">loc</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s1">&#39;log_scale&#39;</span><span class="p">,</span> <span class="n">scale</span><span class="o">.</span><span class="n">log</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parametrization</span> <span class="o">=</span> <span class="n">LocScaleMap</span><span class="p">()</span>
 
-<div class="viewcode-block" id="ParametricNormal.rsample"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.ParametricNormal.rsample">[docs]</a>    <span class="k">def</span> <span class="nf">rsample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_shape</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">()):</span>
+<div class="viewcode-block" id="NormalModule.rsample"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.NormalModule.rsample">[docs]</a>    <span class="k">def</span> <span class="nf">rsample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_shape</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">()):</span>
         <span class="k">return</span> <span class="n">Normal</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">parametrization</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_scale</span><span class="p">]))</span><span class="o">.</span><span class="n">rsample</span><span class="p">(</span><span class="n">sample_shape</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ParametricNormal.log_prob"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.ParametricNormal.log_prob">[docs]</a>    <span class="k">def</span> <span class="nf">log_prob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">Independent</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">parametrization</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_scale</span><span class="p">])),</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div></div>
+<div class="viewcode-block" id="NormalModule.log_prob"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.NormalModule.log_prob">[docs]</a>    <span class="k">def</span> <span class="nf">log_prob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Independent</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">parametrization</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_scale</span><span class="p">])),</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NormalModule.__repr__"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.NormalModule.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Normal()&quot;</span></div></div>
 
 
-<span class="k">class</span> <span class="nc">ConditionalFlowTransformedNormal</span><span class="p">(</span><span class="n">ConditionalTransformedDistributionModule</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">x_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">y_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">hidden_dims</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">transform_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;conditional_linear&quot;</span><span class="p">,</span>
-        <span class="n">n_transforms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="n">transform_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">):</span>
-        <span class="k">if</span> <span class="n">transform_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">transform_params</span> <span class="o">=</span> <span class="p">{}</span>
+<div class="viewcode-block" id="ConditionalStandardNormalModule"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.ConditionalStandardNormalModule">[docs]</a><span class="k">class</span> <span class="nc">ConditionalStandardNormalModule</span><span class="p">(</span><span class="n">ConditionalDistributionModule</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_dim</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s1">&#39;log_scale&#39;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_dim</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parametrization</span> <span class="o">=</span> <span class="n">LocScaleMap</span><span class="p">()</span>
 
-        <span class="n">base</span> <span class="o">=</span> <span class="n">ParametricNormal</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">y_dim</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">y_dim</span><span class="p">))</span>
-        <span class="n">transforms</span> <span class="o">=</span> <span class="p">[]</span>
+<div class="viewcode-block" id="ConditionalStandardNormalModule.condition"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.ConditionalStandardNormalModule.condition">[docs]</a>    <span class="k">def</span> <span class="nf">condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">extra_dims</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">loc</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="n">loc</span><span class="p">,</span> <span class="n">log_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_scale</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">extra_dims</span><span class="p">):</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">loc</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">log_scale</span> <span class="o">=</span> <span class="n">log_scale</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-        <span class="n">transform_factory</span> <span class="o">=</span> <span class="n">fetch_transform</span><span class="p">(</span><span class="n">transform_name</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">transform</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_transforms</span><span class="p">):</span>
-            <span class="n">transform</span> <span class="o">=</span> <span class="n">transform_factory</span><span class="p">(</span>
-                <span class="n">input_dim</span><span class="o">=</span><span class="n">y_dim</span><span class="p">,</span>
-                <span class="n">context_dim</span><span class="o">=</span><span class="n">x_dim</span><span class="p">,</span>
-                <span class="n">hidden_dims</span><span class="o">=</span><span class="n">hidden_dims</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">transform_params</span>
-            <span class="p">)</span>
-
-            <span class="n">transforms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
-
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">base_dist</span><span class="o">=</span><span class="n">base</span><span class="p">,</span> <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Independent</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">parametrization</span><span class="p">([</span><span class="n">loc</span><span class="p">,</span> <span class="n">log_scale</span><span class="p">])),</span> <span class="mi">1</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="FlowTransformedNormal"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.FlowTransformedNormal">[docs]</a><span class="k">class</span> <span class="nc">FlowTransformedNormal</span><span class="p">(</span><span class="n">DistributionModule</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="conditional_transformed_normal"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.conditional_transformed_normal">[docs]</a><span class="k">def</span> <span class="nf">conditional_transformed_normal</span><span class="p">(</span>
+    <span class="n">input_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">context_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">hidden_dims</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">transform_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;conditional_linear&quot;</span><span class="p">,</span>
+    <span class="n">n_transforms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">transform_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">):</span>
+    <span class="k">if</span> <span class="n">transform_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">transform_params</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">assert</span> <span class="n">n_transforms</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;n_transforms must be greater than 0&quot;</span>
+
+    <span class="n">base</span> <span class="o">=</span> <span class="n">ConditionalStandardNormalModule</span><span class="p">(</span><span class="n">input_dim</span><span class="p">)</span>
+    <span class="n">transforms</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">transform_factory</span> <span class="o">=</span> <span class="n">fetch_transform</span><span class="p">(</span><span class="n">transform_name</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">transform</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_transforms</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;hidden_dims&quot;</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">transform_factory</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+            <span class="n">transform_params</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;hidden_dims&quot;</span><span class="p">:</span> <span class="n">hidden_dims</span><span class="p">})</span>
+
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">transform_factory</span><span class="p">(</span>
+            <span class="n">input_dim</span><span class="o">=</span><span class="n">input_dim</span><span class="p">,</span>
+            <span class="n">context_dim</span><span class="o">=</span><span class="n">context_dim</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">transform_params</span>
+        <span class="p">)</span>
+
+        <span class="n">transforms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ConditionalTransformedDistributionModule</span><span class="p">(</span><span class="n">base_dist</span><span class="o">=</span><span class="n">base</span><span class="p">,</span> <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="transformed_normal"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.transformed_normal">[docs]</a><span class="k">def</span> <span class="nf">transformed_normal</span><span class="p">(</span>
         <span class="n">input_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">hidden_dims</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">transform_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
         <span class="n">n_transforms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">transform_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">validate_args</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TransformedDistributionModule</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">transform_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">transform_params</span> <span class="o">=</span> <span class="p">{}</span>
 
-        <span class="k">if</span> <span class="n">transform_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">transform_params</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">assert</span> <span class="n">n_transforms</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;n_transforms must be greater than 0&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s1">&#39;loc&#39;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">input_dim</span><span class="p">))</span>
+    <span class="n">base_dist</span> <span class="o">=</span> <span class="n">NormalModule</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">input_dim</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">input_dim</span><span class="p">))</span>
+    <span class="n">transforms</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">transforms</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+    <span class="n">transform_factory</span> <span class="o">=</span> <span class="n">fetch_transform</span><span class="p">(</span><span class="n">transform_name</span><span class="p">)</span>
 
-        <span class="n">transform_factory</span> <span class="o">=</span> <span class="n">fetch_transform</span><span class="p">(</span><span class="n">transform_name</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">transform</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_transforms</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;hidden_dims&quot;</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">transform_factory</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+            <span class="n">transform_params</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;hidden_dims&quot;</span><span class="p">:</span> <span class="n">hidden_dims</span><span class="p">})</span>
 
-        <span class="k">for</span> <span class="n">transform</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_transforms</span><span class="p">):</span>
-            <span class="n">transform</span> <span class="o">=</span> <span class="n">transform_factory</span><span class="p">(</span>
-                <span class="n">input_dim</span><span class="o">=</span><span class="n">input_dim</span><span class="p">,</span>
-                <span class="n">hidden_dims</span><span class="o">=</span><span class="n">hidden_dims</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">transform_params</span>
-            <span class="p">)</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">transform_factory</span><span class="p">(</span>
+            <span class="n">input_dim</span><span class="o">=</span><span class="n">input_dim</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">transform_params</span>
+        <span class="p">)</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
+        <span class="n">transforms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">TransformedDistribution</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transforms</span><span class="p">])</span>
-
-<div class="viewcode-block" id="FlowTransformedNormal.rsample"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.FlowTransformedNormal.rsample">[docs]</a>    <span class="k">def</span> <span class="nf">rsample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_shape</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">()):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="o">.</span><span class="n">rsample</span><span class="p">(</span><span class="n">sample_shape</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="FlowTransformedNormal.sample"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.FlowTransformedNormal.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_shape</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">()):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">sample_shape</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="FlowTransformedNormal.log_prob"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.FlowTransformedNormal.log_prob">[docs]</a>    <span class="k">def</span> <span class="nf">log_prob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div></div>
-
+    <span class="k">return</span> <span class="n">TransformedDistributionModule</span><span class="p">(</span>
+        <span class="n">base_dist</span><span class="o">=</span><span class="n">base_dist</span><span class="p">,</span>
+        <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">,</span>
+    <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="conditional_categorical"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.conditional_categorical">[docs]</a><span class="k">def</span> <span class="nf">conditional_categorical</span><span class="p">(</span>

@@ -12,8 +12,8 @@ Classes
 
 .. autoapisummary::
 
-   torch_mist.distributions.utils.ParametricNormal
-   torch_mist.distributions.utils.FlowTransformedNormal
+   torch_mist.distributions.utils.NormalModule
+   torch_mist.distributions.utils.ConditionalStandardNormalModule
 
 
 
@@ -24,7 +24,7 @@ Functions
 
    torch_mist.distributions.utils.fetch_transform
    torch_mist.distributions.utils.conditional_transformed_normal
-   torch_mist.distributions.utils.flow_transformed_normal
+   torch_mist.distributions.utils.transformed_normal
    torch_mist.distributions.utils.conditional_categorical
    torch_mist.distributions.utils.conditional_mutivariate_categorical
 
@@ -33,7 +33,7 @@ Functions
 .. py:function:: fetch_transform(transform_name: str)
 
 
-.. py:class:: ParametricNormal(loc: torch.Tensor, scale: torch.Tensor)
+.. py:class:: NormalModule(loc: torch.Tensor, scale: torch.Tensor)
 
 
    Bases: :py:obj:`torch.distributions.Distribution`, :py:obj:`torch.nn.Module`
@@ -56,44 +56,30 @@ Functions
       :type value: Tensor
 
 
+   .. py:method:: __repr__()
+
+      Return repr(self).
+
+
+
+.. py:class:: ConditionalStandardNormalModule(n_dim: int)
+
+
+   Bases: :py:obj:`torch_mist.distributions.transforms.ConditionalDistributionModule`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: condition(context)
+
+      :rtype: torch.distributions.Distribution
+
+
 
 .. py:function:: conditional_transformed_normal(input_dim: int, context_dim: int, hidden_dims: Optional[List[int]] = None, transform_name: str = 'conditional_linear', n_transforms: int = 1, transform_params: Dict[Any, Any] = None)
 
 
-.. py:class:: FlowTransformedNormal(input_dim: int, hidden_dims: Optional[List[int]] = None, transform_name: str = 'linear', n_transforms: int = 1, transform_params: Dict[Any, Any] = None)
-
-
-   Bases: :py:obj:`torch_mist.distributions.transforms.DistributionModule`
-
-   Distribution is the abstract base class for probability distributions.
-
-   .. py:property:: dist
-
-
-   .. py:method:: rsample(sample_shape=torch.Size())
-
-      Generates a sample_shape shaped reparameterized sample or sample_shape
-      shaped batch of reparameterized samples if the distribution parameters
-      are batched.
-
-
-   .. py:method:: sample(sample_shape=torch.Size())
-
-      Generates a sample_shape shaped sample or sample_shape shaped batch of
-      samples if the distribution parameters are batched.
-
-
-   .. py:method:: log_prob(value)
-
-      Returns the log of the probability density/mass function evaluated at
-      `value`.
-
-      :param value:
-      :type value: Tensor
-
-
-
-.. py:function:: flow_transformed_normal(input_dim: int, hidden_dims: Optional[List[int]] = None, transform_name: str = 'linear', n_transforms: int = 1, transform_params: Dict[Any, Any] = None) -> FlowTransformedNormal
+.. py:function:: transformed_normal(input_dim: int, hidden_dims: Optional[List[int]] = None, transform_name: str = 'linear', n_transforms: int = 1, transform_params: Dict[Any, Any] = None) -> torch_mist.distributions.transforms.TransformedDistributionModule
 
 
 .. py:function:: conditional_categorical(n_classes: int, context_dim: int, hidden_dims: List[int])

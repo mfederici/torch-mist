@@ -1,0 +1,253 @@
+:py:mod:`torch_mist.quantization.functions`
+===========================================
+
+.. py:module:: torch_mist.quantization.functions
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.quantization.functions.QuantizationFunction
+   torch_mist.quantization.functions.LearnableQuantization
+   torch_mist.quantization.functions.VectorQuantization
+   torch_mist.quantization.functions.LearnableVectorQuantization
+   torch_mist.quantization.functions.FixedQuantization
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.quantization.functions.learnable_vector_quantization
+   torch_mist.quantization.functions.trained_vector_quantization
+
+
+
+.. py:class:: QuantizationFunction(*args, **kwargs)
+
+
+   Bases: :py:obj:`torch.nn.Module`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+   .. py:property:: n_bins
+      :type: int
+
+
+   .. py:method:: forward(x: torch.Tensor) -> torch.Tensor
+
+
+
+.. py:class:: LearnableQuantization(*args, **kwargs)
+
+
+   Bases: :py:obj:`QuantizationFunction`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+
+.. py:class:: VectorQuantization(input_dim: int, n_bins: int)
+
+
+   Bases: :py:obj:`QuantizationFunction`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+   .. py:property:: n_bins
+      :type: int
+
+
+   .. py:method:: codebook_lookup(x: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: forward(x: torch.Tensor) -> torch.Tensor
+
+
+
+.. py:class:: LearnableVectorQuantization(net: torch.nn.Module, quantization_dim: int, n_bins: int)
+
+
+   Bases: :py:obj:`VectorQuantization`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+   .. py:method:: forward(x: torch.Tensor) -> torch.Tensor
+
+
+
+.. py:class:: FixedQuantization(input_dim: int, thresholds: torch.Tensor)
+
+
+   Bases: :py:obj:`QuantizationFunction`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+   .. py:property:: n_bins
+      :type: int
+
+
+   .. py:method:: forward(x: torch.Tensor) -> torch.Tensor
+
+
+
+.. py:function:: learnable_vector_quantization(input_dim: int, quantization_dim: int, hidden_dims: List[int], n_bins: int) -> LearnableVectorQuantization
+
+
+.. py:function:: trained_vector_quantization(dataloader: Iterator, x_dim: int, n_bins: int, hidden_dims: List[int], cross_modal: bool = False, decoder_transform_params: Optional[Dict[str, Any]] = None, beta: float = 0.2, n_train_epochs=1, optimizer_class=torch.optim.Adam, optimizer_params: Optional[Dict[str, Any]] = None, y_dim: Optional[int] = None) -> LearnableVectorQuantization
+
+

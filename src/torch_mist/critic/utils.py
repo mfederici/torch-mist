@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional, Dict, Any, Callable
 
 from pyro.nn import DenseNN
 from torch import nn
@@ -13,7 +13,7 @@ def separable_critic(
         projection_head: str = 'symmetric',
         output_dim: int = 128,
         nonlinearity=nn.ReLU(True),
-        temperature: float=0.1
+        temperature: float = 0.1
 ):
     assert projection_head in ['symmetric', 'asymmetric', 'one'], \
         F"projection_heads must be one of ['symmetric', 'asymmetric', 'one'], got {projection_head}"
@@ -69,21 +69,30 @@ def joint_critic(
     return unnormalized_log_ratio
 
 
-def critic(x_dim, y_dim, hidden_dims, critic_type, **kwargs):
+def critic(
+        x_dim: int,
+        y_dim: int,
+        hidden_dims: List[int],
+        critic_type: str,
+        critic_params: Optional[Dict[str, Any]] = None,
+):
     assert critic_type in ['joint', 'separable'], \
         f'critic must be one of [joint, separable, separable_asymm], got {critic_type}'
+
+    if critic_params is None:
+        critic_params = {}
 
     if critic_type == 'joint':
         return joint_critic(
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
-            **kwargs
+            **critic_params
         )
     else:
         return separable_critic(
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
-            **kwargs
+            **critic_params
         )

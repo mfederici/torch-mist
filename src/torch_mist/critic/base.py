@@ -18,6 +18,3 @@ class Critic(nn.Module):
         :return: The value of the ratio estimator on the given pair
         '''
         raise NotImplemented()
-
-
-
