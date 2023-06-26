@@ -30,6 +30,9 @@ class SampleDataLoader(Iterator[Tuple[torch.Tensor, torch.Tensor]]):
                 2,
                 self.split_dim
             )
+            x = x.squeeze(self.split_dim)
+            y = y.squeeze(self.split_dim)
+
             return x, y
 
     def __len__(self):

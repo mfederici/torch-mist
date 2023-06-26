@@ -11,16 +11,9 @@ class ConditionalCategorical(ConditionalDistribution, nn.Module):
 
     def condition(self, x):
         logits = self.net(x)
-        indep_dims = 1
-        if isinstance(logits, tuple):
-            logits = torch.cat([
-                l.unsqueeze(-2) for l in logits
-            ], -2)
-            indep_dims = 1
-        else:
 
-            # Corner case to handle 1D
-            if logits.ndim == x.ndim:
-                logits = logits.unsqueeze(-2)
+        # Corner case to handle 1D
+        if logits.ndim == x.ndim:
+            logits = logits.unsqueeze(-2)
 
-        return Independent(Categorical(logits=logits), indep_dims)
+        return Categorical(logits=logits)

@@ -38,18 +38,22 @@ class ConditionalTransformedDistributionModule(ConditionalTransformedDistributio
                 List[Transform],
                 None
             ]):
-        nn.Module.__init__(self)
-
-        self.base_dist = base_dist
 
         if isinstance(transforms, ConditionalTransform) or isinstance(transforms, Transform):
             transforms = [transforms]
         elif isinstance(transforms, dict):
             transforms = [transforms[k] for k in sorted(transforms.keys())]
-        if not (transforms is None):
-            self.transforms = nn.ModuleList(list(transforms))
+
+        if transforms is not None:
+            transforms = nn.ModuleList(list(transforms))
         else:
-            self.transforms = []
+            transforms = []
+
+        self._base_dist_repr = base_dist.__repr__()
+
+        nn.Module.__init__(self)
+        self.base_dist = base_dist
+        self.transforms = transforms
 
     def condition(self, context):
         base_dist = (self.base_dist.condition(context) if isinstance(self.base_dist, ConditionalDistribution)
@@ -65,8 +69,15 @@ class ConditionalTransformedDistributionModule(ConditionalTransformedDistributio
     def clear_cache(self):
         pass
 
+    def __repr__(self):
+        s = self.__class__.__name__ + '('
+        s += '\n  (base_dist): ' + str(self._base_dist_repr).replace('\n', '\n  ')
+        s += '\n  (transforms): ' + str(self.transforms).replace('\n', '\n  ')
+        s += '\n'
+        return s
 
-class TransformedDistributionModule(DistributionModule, ABC):
+
+class TransformedDistributionModule(DistributionModule):
     def __init__(
             self,
             base_dist: Distribution,
@@ -76,7 +87,7 @@ class TransformedDistributionModule(DistributionModule, ABC):
                 Dict[str, Transform],
                 None
             ]):
-        nn.Module.__init__(self)
+        super().__init__()
 
         self.base_dist = base_dist
 
@@ -102,7 +113,7 @@ class TransformedDistributionModule(DistributionModule, ABC):
 
     def __repr__(self):
         s = self.__class__.__name__+'('
-        s += '\n  (base_dist)'+str(self.base_dist).replace('\n', '\n  ')
-        s += '\n  (transforms)'+str(self.transforms).replace('\n', '\n  ')
+        s += '\n  (base_dist): '+str(self.base_dist).replace('\n', '\n  ')
+        s += '\n  (transforms): '+str(self.transforms).replace('\n', '\n  ')
         s += '\n'
         return s
