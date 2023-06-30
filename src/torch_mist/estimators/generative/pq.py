@@ -1,59 +1,78 @@
-from typing import List
+from typing import List, Optional
 
 import torch
 from pyro.distributions import ConditionalDistribution
 from torch import nn
-from torch.distributions import Categorical
+from torch.distributions import Categorical, Distribution
 
-from torch_mist.estimators.generative.base import GenerativeMutualInformationEstimator
-from torch_mist.estimators.base import Estimation
+from torch_mist.distributions.utils import CategoricalModule
+from torch_mist.estimators.generative.doe import DoE
 from torch_mist.quantization import QuantizationFunction
+from torch_mist.utils.caching import cached, reset_cache_after_call
 
 
-class PQ(GenerativeMutualInformationEstimator):
+class PQ(DoE):
     def __init__(
             self,
-            conditional_qy_x: ConditionalDistribution,
+            q_qY_given_X: ConditionalDistribution,
             quantization: QuantizationFunction,
             temperature: float = 0.1,
     ):
-        super().__init__()
-        self.quantization = quantization
-        self.qy_logits = nn.Parameter(torch.zeros(quantization.n_bins))
-        self.conditional_qy_x = conditional_qy_x
-        self.temperature = temperature
+        super().__init__(
+            q_Y_given_X=q_qY_given_X, 
+            q_Y=CategoricalModule(torch.zeros(quantization.n_bins), temperature=temperature, learnable=True)
+        )
+        self.quantization=quantization
 
-    def log_ratio(
-            self,
-            x: torch.Tensor,
-            y: torch.Tensor,
-    ) -> Estimation:
-        # probabilities for the categorical distribution over q(y), shape [N, M, BINS]
-        p_qy_y = self.quantization(y).detach()
+    @cached
+    def quantize_y(self, y: torch.Tensor) -> torch.Tensor:
+        return self.quantization(y)
 
-        r_qy_x = self.conditional_qy_x.condition(x)
-        assert isinstance(r_qy_x, Categorical)
-        # log-probabilities for the categorical distribution r(q(y)|x), shape [N, 1, BINS]
-        log_r_qy_x = r_qy_x.logits - torch.logsumexp(r_qy_x.logits, dim=-1, keepdim=True)
+    @cached
+    def q_Y_given_x(self, x: torch.Tensor) -> Distribution:
+        q_qY_given_x = self.q_Y_given_X.condition(x)
+        assert isinstance(q_qY_given_x, Categorical)
+        return q_qY_given_x
 
+    @cached
+    def approx_log_p_y_given_x(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        # probabilities for the categorical distribution over q(y), shape [N, N_BINS]
+        y = self.quantize_y(y=y)
 
-        # log-probabilities for the marginal categorical distribution r(q(y)), shape [1, 1, BINS]
-        log_r_qy = self.qy_logits/self.temperature - torch.logsumexp(self.qy_logits/self.temperature, dim=-1, keepdim=True)
-        log_r_qy = log_r_qy.unsqueeze(0).unsqueeze(0)
+        q_qy_given_x = self.q_Y_given_x(x=x)
 
-        # log-ratio, shape [N, M]
-        log_ratio = torch.sum(p_qy_y * (log_r_qy_x - log_r_qy), -1)
+        assert isinstance(q_qy_given_x, Categorical)
+        # log-probabilities for the categorical distribution r(q(y)|x), shape [N, N_BINS]
+        log_q_qy_x = q_qy_given_x.logits - torch.logsumexp(q_qy_given_x.logits, dim=-1, keepdim=True)
 
-        loss = -torch.sum(p_qy_y * log_r_qy_x, -1).mean()
-        loss += -torch.sum(p_qy_y * log_r_qy, -1).mean()
+        assert log_q_qy_x.ndim == y.ndim, f'log_r_qy_x.shape={log_q_qy_x.shape}'
 
-        return Estimation(value=log_ratio, loss=loss)
+        # E_q(Q(y)|y)[log q(Q(y)|x)]
+        log_q_qy_given_x = torch.sum(y * log_q_qy_x, -1)
+        return log_q_qy_given_x
+
+    @cached
+    def approx_log_p_y(self, y: torch.Tensor, x: Optional[torch.Tensor] = None) -> torch.Tensor:
+        # probabilities for the categorical distribution over q(y), shape [N, BINS]
+        y = self.quantize_y(y=y)
+
+        logits = self.q_Y.logits/self.q_Y.temperature
+
+        # log-probabilities for the marginal categorical distribution q(q(y)), shape [1, N_BINS]
+        log_q_qy = logits - torch.logsumexp(logits, dim=-1, keepdim=True)
+
+        while log_q_qy.ndim < y.ndim:
+            log_q_qy = log_q_qy.unsqueeze(0)
+
+        assert log_q_qy.ndim == y.ndim, f'log_q_qy.shape={log_q_qy.shape}'
+
+        return torch.sum(y * log_q_qy, -1)
 
 
 def pq(
         x_dim: int,
-        quantization: QuantizationFunction,
         hidden_dims: List[int],
+        quantization: QuantizationFunction,
 ) -> PQ:
     from torch_mist.distributions.utils import conditional_categorical
 
@@ -64,6 +83,6 @@ def pq(
     )
 
     return PQ(
-        conditional_qy_x=q_y_x,
+        q_qY_given_X=q_y_x,
         quantization=quantization,
     )

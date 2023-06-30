@@ -1,9 +1,8 @@
 import math
 from abc import abstractmethod
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Callable
 
 import torch
-from pyro.nn import DenseNN
 from torch import nn
 
 
@@ -73,34 +72,12 @@ class LearnableBaseline(Baseline):
         return self.net(x)
 
 
-class LearnableMLPBaseline(LearnableBaseline):
-    def __init__(self, x_dim: int, hidden_dims: List[int], nonlinearity: Any = nn.ReLU(True)):
-        net = DenseNN(
-            input_dim=x_dim,
-            hidden_dims=hidden_dims,
-            param_dims=[1],
-            nonlinearity=nonlinearity
-        )
-
-        super(LearnableMLPBaseline, self).__init__(net)
-
-
 class LearnableJointBaseline(LearnableBaseline):
     def forward(self, f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
         x = x.unsqueeze(1)+y*0
         xy = torch.cat([x, y], -1)
         return self.net(xy).squeeze(-1)
 
-
-class LearnableJointMLPBaseline(LearnableJointBaseline):
-    def __init__(self, x_dim: int, y_dim: int, hidden_dims: List[int], nonlinearity: Any = nn.ReLU(True)):
-        net = DenseNN(
-            input_dim=x_dim+y_dim,
-            hidden_dims=hidden_dims,
-            param_dims=[1],
-            nonlinearity=nonlinearity
-        )
-        super(LearnableJointMLPBaseline, self).__init__(net)
 
 
 class InterpolatedBaseline(Baseline):
@@ -137,6 +114,39 @@ class InterpolatedBaseline(Baseline):
 class AlphaTUBABaseline(InterpolatedBaseline):
     def __init__(self, x_dim: int, hidden_dims: List[int], alpha: float):
         baseline_1 = BatchLogMeanExp(dim=1)
-        baseline_2 = LearnableMLPBaseline(x_dim, hidden_dims)
+        baseline_2 = baseline_nn(x_dim, hidden_dims)
         super(AlphaTUBABaseline, self).__init__(baseline_1=baseline_1, baseline_2=baseline_2, alpha=alpha)
 
+
+def baseline_nn(
+        x_dim: int,
+        hidden_dims: List[int],
+        nonlinearity: Callable = nn.ReLU(True)
+) -> LearnableBaseline:
+    from pyro.nn import DenseNN
+
+    net = DenseNN(
+        input_dim=x_dim,
+        hidden_dims=hidden_dims,
+        param_dims=[1],
+        nonlinearity=nonlinearity
+    )
+
+    return LearnableBaseline(net)
+
+
+def joint_baseline_nn(
+        x_dim: int,
+        y_dim: int,
+        hidden_dims: List[int],
+        nonlinearity: Any = nn.ReLU(True)
+) -> LearnableJointBaseline:
+    from pyro.nn import DenseNN
+
+    net = DenseNN(
+            input_dim=x_dim+y_dim,
+            hidden_dims=hidden_dims,
+            param_dims=[1],
+            nonlinearity=nonlinearity
+        )
+    return LearnableJointBaseline(net)

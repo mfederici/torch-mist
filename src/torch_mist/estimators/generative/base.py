@@ -1,84 +1,73 @@
-from typing import Optional
+from abc import abstractmethod, ABC
+from typing import Optional, List
 
 import torch
 from pyro.distributions import ConditionalDistribution
+from torch.distributions import Distribution
 
-from torch_mist.estimators.base import MutualInformationEstimator, Estimation
+from torch_mist.estimators.base import MutualInformationEstimator
+from torch_mist.utils.caching import cached, reset_cache_after_call, reset_cache_before_call
 
 
 class GenerativeMutualInformationEstimator(MutualInformationEstimator):
-    def log_prob_y(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        raise NotImplemented()
+    def __init__(
+            self,
+            q_Y_given_X: ConditionalDistribution
+    ):
+        super().__init__()
+        self.q_Y_given_X = q_Y_given_X
 
-    def log_prob_y_x(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        raise NotImplemented()
+    @cached
+    def q_Y_given_x(self, x: torch.Tensor) -> Distribution:
+        # q(Y|X=x)
+        q_Y_given_x = self.q_Y_given_X.condition(x)
 
-    def compute_loss(
+        return q_Y_given_x
+
+    @cached
+    def approx_log_p_y_given_x(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        q_Y_given_x = self.q_Y_given_x(x=x)
+
+        # Compute log q(Y=y|X=x)]
+        log_q_y_given_x = q_Y_given_x.log_prob(y)
+
+        assert log_q_y_given_x.ndim == y.ndim - 1, f'log_p_Y_X.shape={log_q_y_given_x.shape}, y.shape={y.shape}'
+        return log_q_y_given_x
+
+    @reset_cache_after_call
+    def loss(
             self,
             x: torch.Tensor,
             y: torch.Tensor,
-            log_p_y: torch.Tensor,
-            log_p_y_x: torch.Tensor,
-    ) -> Optional[torch.Tensor]:
-        raise NotImplemented()
+    ) -> torch.Tensor:
+        log_q_y_x = self.approx_log_p_y_given_x(x=x, y=y)
+        return -log_q_y_x.mean()
 
+    @abstractmethod
+    def approx_log_p_y(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        raise NotImplementedError()
+
+    @reset_cache_before_call
     def log_ratio(
             self,
             x: torch.Tensor,
             y: torch.Tensor,
-    ) -> Estimation:
-        # Compute the ratio using the primal bound
-        estimates = {}
-        if x.ndim < y.ndim:
-            x = x.unsqueeze(1)
-        assert x.ndim == y.ndim
+    ) -> torch.Tensor:
+        assert x.ndim == y.ndim, f'x.ndim={x.ndim}, y.ndim={y.ndim}'
 
-        log_p_y_x = self.log_prob_y_x(x, y)  # [N, M]
-        log_p_y = self.log_prob_y(x, y)  # [N, M]
+        # Compute the ratio using the primal KL bound
+        approx_log_p_y_given_x = self.approx_log_p_y_given_x(x=x, y=y)
+        approx_log_p_y = self.approx_log_p_y(x=x, y=y)
 
-        assert log_p_y_x.ndim == log_p_y.ndim == 2, f'log_p_y_x.ndim={log_p_y_x.ndim}, log_p_y.ndim={log_p_y.ndim}'
+        assert approx_log_p_y_given_x.ndim == approx_log_p_y.ndim == x.ndim - 1, \
+            f'log_p_y_x.ndim={approx_log_p_y_given_x.ndim}, log_p_y.ndim={approx_log_p_y.ndim}'
+        log_ratio = approx_log_p_y_given_x - approx_log_p_y
 
-        value = log_p_y_x - log_p_y
-        loss = self.compute_loss(x=x, y=y, log_p_y_x=log_p_y_x, log_p_y=log_p_y)
-
-        return Estimation(value=value, loss=loss)
-
-
-class VariationalProposalMutualInformationEstimator(GenerativeMutualInformationEstimator):
-    def __init__(self, conditional_y_x: ConditionalDistribution):
-        super().__init__()
-        self.conditional_y_x = conditional_y_x
-
-        self._cached_p_y_X = None
-        self._cached_x = None
-        self._cached_y = None
-
-    def log_prob_y_x(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        # Compute E[log r(y|x)]
-        p_y_X = self.conditional_y_x.condition(x)
-        log_p_Y_X = p_y_X.log_prob(y)
-
-        assert log_p_Y_X.shape == y.shape[:-1], f'log_p_Y_X.shape={log_p_Y_X.shape}, y.shape={y.shape}'
-
-        # Cache the conditional p(y|X=x) and the inputs x, y
-        self._cached_p_y_X = p_y_X
-        self._cached_x = x
-        self._cached_y = y
-
-        return log_p_Y_X
-
-    def compute_loss(
-            self,
-            x: torch.Tensor,
-            y: torch.Tensor,
-            log_p_y: torch.Tensor,
-            log_p_y_x: torch.Tensor,
-    ) -> Optional[torch.Tensor]:
-        return -log_p_y_x.mean()
+        return log_ratio
 
     def __repr__(self):
         s = self.__class__.__name__ + '(\n'
-        s += '  ' + '(conditional_y_x): ' + str(self.conditional_y_x).replace('\n', '  \n') + '\n'
+        s += '  ' + '(q_Y_given_X): ' + str(self.q_Y_given_X).replace('\n', '  \n') + '\n'
         s += ')' + '\n'
 
         return s

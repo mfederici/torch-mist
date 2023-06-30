@@ -1,29 +1,52 @@
-from typing import List
+from typing import List, Optional
 
+import torch
 from torch.distributions import Distribution
 from pyro.distributions import ConditionalDistribution
 
-from torch_mist.estimators.generative.ba import BA
+from torch_mist.estimators.generative.base import GenerativeMutualInformationEstimator
+from torch_mist.utils.caching import cached, reset_cache_after_call
 
 
-class DoE(BA):
+class DoE(GenerativeMutualInformationEstimator):
     def __init__(
             self,
-            conditional_y_x: ConditionalDistribution,
-            marginal_y: Distribution,
+            q_Y_given_X: ConditionalDistribution,
+            q_Y: Distribution,
     ):
         super().__init__(
-            conditional_y_x=conditional_y_x,
-            marginal_y=marginal_y,
+            q_Y_given_X=q_Y_given_X,
         )
+        self.q_Y = q_Y
+
+    @cached
+    def approx_log_p_y(self, y: torch.Tensor, x: Optional[torch.Tensor] = None) -> torch.Tensor:
+        log_q_y = self.q_Y.log_prob(y)
+        assert log_q_y.shape == y.shape[:-1]
+        return log_q_y
+
+    @reset_cache_after_call
+    def loss(
+            self,
+            x: torch.Tensor,
+            y: torch.Tensor,
+    ) -> torch.Tensor:
+        log_q_y_given_x = self.approx_log_p_y_given_x(x=x, y=y)
+        log_q_y = self.approx_log_p_y(y=y)
+
+        loss = - log_q_y - log_q_y_given_x
+
+        assert loss.shape == y.shape[:-1]
+
+        return loss.mean()
 
     def __repr__(self):
         s = self.__class__.__name__ + '(\n'
-        s += '  ' + '(conditional_y_x): ' + str(self.conditional_y_x).replace('\n', '  \n') + '\n'
-        s += '  ' + '(marginal_y): ' + str(self.marginal_y).replace('\n', '  \n') + '\n'
+        s += '  ' + '(q_Y_given_X): ' + str(self.q_Y_given_X).replace('\n', '  \n') + '\n'
+        s += '  ' + '(q_Y): ' + str(self.q_Y).replace('\n', '  \n') + '\n'
         s += ')' + '\n'
-
         return s
+
 
 def doe(
         x_dim: int,
@@ -36,7 +59,7 @@ def doe(
 ) -> DoE:
     from torch_mist.distributions.utils import conditional_transformed_normal, transformed_normal
 
-    q_y_x = conditional_transformed_normal(
+    q_Y_given_X = conditional_transformed_normal(
         input_dim=y_dim,
         context_dim=x_dim,
         hidden_dims=hidden_dims,
@@ -44,7 +67,7 @@ def doe(
         n_transforms=n_conditional_transforms,
     )
 
-    q_y = transformed_normal(
+    q_Y = transformed_normal(
         input_dim=y_dim,
         hidden_dims=hidden_dims,
         transform_name=marginal_transform_name,
@@ -52,6 +75,6 @@ def doe(
     )
 
     return DoE(
-        conditional_y_x=q_y_x,
-        marginal_y=q_y,
+        q_Y_given_X=q_Y_given_X,
+        q_Y=q_Y,
     )

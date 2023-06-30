@@ -115,5 +115,5 @@ class TransformedDistributionModule(DistributionModule):
         s = self.__class__.__name__+'('
         s += '\n  (base_dist): '+str(self.base_dist).replace('\n', '\n  ')
         s += '\n  (transforms): '+str(self.transforms).replace('\n', '\n  ')
-        s += '\n'
+        s += '\n)'
         return s

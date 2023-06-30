@@ -1,35 +1,67 @@
+from distutils.dist import Distribution
 from typing import List
 import math
 import torch
 
 from pyro.distributions import ConditionalDistribution
 
-from torch_mist.estimators.generative.base import VariationalProposalMutualInformationEstimator
+from torch_mist.estimators.generative.base import GenerativeMutualInformationEstimator
+from torch_mist.utils.caching import cached, reset_cache_before_call
 
 
-class L1Out(VariationalProposalMutualInformationEstimator):
+class L1Out(GenerativeMutualInformationEstimator):
     def __init__(
             self,
-            conditional_y_x: ConditionalDistribution,
+            q_Y_given_X: ConditionalDistribution,
     ):
-        super().__init__(conditional_y_x)
+        super().__init__(q_Y_given_X=q_Y_given_X)
 
-    def log_prob_y(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        assert torch.equal(x, self._cached_x), 'The input x is not the same as the cached input x'
-        assert torch.equal(y, self._cached_y), 'The input y is not the same as the cached input y'
+    def approx_log_p_y(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        assert x.ndim == y.ndim == 2, 'The input must be 2D tensors'
+        assert x.shape[0] == y.shape[0], 'The batch size of x and y must be the same'
+        N = x.shape[0]
 
+        p_y_given_X = self.q_Y_given_x(x=x)
 
-        N = y.shape[0]
-        assert y.shape[1] == 1, 'The L1Out estimator can only be used with a single y'
-        y_ = y.squeeze(1).unsqueeze(0)
-        log_p_y = self._cached_p_y_X.log_prob(y_)  # [N, N]
+        # Probability of all the other y in the same batch [N, N]
+        log_p_y = p_y_given_X.log_prob(y.unsqueeze(1))
+
+        assert log_p_y.shape[1] == log_p_y.shape[0]
 
         # Remove the diagonal
         log_p_y = log_p_y * (1 - torch.eye(N).to(y.device))
-        log_p_y = log_p_y + torch.nan_to_num(torch.eye(N).to(y.device)*(-float('inf')), 0, float('inf'), -float('inf'))
-        log_p_y = torch.logsumexp(log_p_y, dim=0).unsqueeze(0) - math.log(N-1)
+
+        # Set the diagonal to -inf
+        log_p_y = log_p_y + torch.nan_to_num(
+            torch.eye(N).to(y.device) * (-float('inf')),
+            0, float('inf'), -float('inf')
+        )
+
+        # Compute the expectation using logsumexp. The shape is [N]
+        log_p_y = torch.logsumexp(log_p_y, dim=1) - math.log(N - 1)
         return log_p_y
 
+    def log_ratio(
+            self,
+            x: torch.Tensor,
+            y: torch.Tensor,
+    ) -> torch.Tensor:
+        raise NotImplementedError()
+
+    @reset_cache_before_call
+    def expected_log_ratio(
+            self,
+            x: torch.Tensor,
+            y: torch.Tensor,
+    ) -> torch.Tensor:
+
+        log_p_y_x = self.approx_log_p_y_given_x(x=x, y=y)
+        log_p_y = self.approx_log_p_y(x=x, y=y)
+
+        assert log_p_y_x.ndim == log_p_y.ndim, f'log_p_y_x.ndim={log_p_y_x.ndim}, log_p_y.ndim={log_p_y.ndim}'
+        log_ratio = log_p_y_x - log_p_y
+
+        return log_ratio.mean()
 
 
 def l1out(
@@ -41,7 +73,7 @@ def l1out(
 ) -> L1Out:
     from torch_mist.distributions.utils import conditional_transformed_normal
 
-    q_y_x = conditional_transformed_normal(
+    q_Y_given_X = conditional_transformed_normal(
         input_dim=y_dim,
         context_dim=x_dim,
         hidden_dims=hidden_dims,
@@ -50,5 +82,5 @@ def l1out(
     )
 
     return L1Out(
-        conditional_y_x=q_y_x,
+        q_Y_given_X=q_Y_given_X,
     )

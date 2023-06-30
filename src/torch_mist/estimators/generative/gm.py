@@ -1,96 +1,68 @@
-from typing import Optional, List, Union
+from typing import List, Optional
 
 import torch
 from torch.distributions import Distribution
 
-from torch_mist.estimators.generative.base import GenerativeMutualInformationEstimator
+from torch_mist.distributions.joint import JointDistribution, ConditionalRatioDistribution
+from torch_mist.estimators.generative.doe import DoE
+from torch_mist.utils.caching import cached, reset_cache_after_call
 
 
-class GM(GenerativeMutualInformationEstimator):
+class GM(DoE):
     def __init__(
             self,
-            joint_xy: Distribution,
-            marginal_y: Optional[Distribution] = None,
-            marginal_x: Optional[Distribution] = None,
-            entropy_y: Optional[torch.Tensor] = None,
-            entropy_x: Optional[torch.Tensor] = None,
+            q_XY: JointDistribution,
+            q_Y: Distribution,
+            q_X: Distribution,
     ):
-        super().__init__()
+        q_Y_given_X = ConditionalRatioDistribution(q_XY, q_X)
 
-        self.joint_xy = joint_xy
-        assert (marginal_y is None) ^ (
-                entropy_y is None), 'Either the marginal distribution or the marginal entropy must be provided'
-        assert (marginal_x is None) ^ (
-                entropy_x is None), 'Either the marginal distribution or the marginal entropy must be provided'
-        self.marginal_y = marginal_y
-        self.entropy_y = entropy_y
-        self.marginal_x = marginal_x
-        self.entropy_x = entropy_x
+        super().__init__(q_Y=q_Y, q_Y_given_X=q_Y_given_X)
 
-        self._cached_x = None
-        self._cached_y = None
-        self._cached_entropy_xy = None
-        self._cached_entropy_x = None
+        self.q_XY = q_XY
+        self.q_Y = q_Y
+        self.q_X = q_X
+        self.q_X_given_Y = ConditionalRatioDistribution(q_XY, q_Y)
 
-    def log_prob_y(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        if self.entropy_y is not None:
-            return -torch.FloatTensor(self.entropy_y).unsqueeze(0).unsqueeze(1).to(y.device)
-        else:
-            return self.marginal_y.log_prob(y)
+    @cached
+    def approx_log_p_x(self, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
+        log_q_x = self.q_X.log_prob(x)
+        assert log_q_x.shape == x.shape[:-1]
+        # The shape is [N]
+        return log_q_x
 
-    def log_prob_x(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        if self.entropy_x is not None:
-            return -torch.FloatTensor(self.entropy_x).unsqueeze(0).unsqueeze(1).to(x.device)
-        else:
-            log_p_x = self.marginal_x.log_prob(x)
-            if x.ndim == 2:
-                log_p_x = log_p_x.unsqueeze(1)
-            return log_p_x
+    @cached
+    def approx_log_p_xy(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        # The shape is [...]
+        log_q_xy = self.q_XY.log_prob(x=x, y=y)
+        return log_q_xy
 
-    def log_prob_y_x(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        self._cached_x = x
-        self._cached_y = y
+    def approx_log_p_x_given_y(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        log_q_x_y = self.q_X_given_Y.condition(y=y).log_prob(x=x)
+        return log_q_x_y
 
-        # Compute E[-log r(y|x)]
-        x = x + y * 0
-        y = y + x * 0
-
-        xy = torch.cat([x, y], dim=-1)
-
-        log_r_XY = self.joint_xy.log_prob(xy)
-        log_r_X = self.log_prob_x(x, y)
-        log_r_Y_X = log_r_XY - log_r_X
-
-        # Cache the entropy and the inputs x, y
-        self._cached_entropy_xy = -log_r_XY.mean()
-        self._cached_entropy_x = -log_r_X.mean()
-
-        return log_r_Y_X
-
-    def compute_loss(
+    @reset_cache_after_call
+    def loss(
             self,
             x: torch.Tensor,
             y: torch.Tensor,
-            log_p_y: torch.Tensor,
-            log_p_y_x: torch.Tensor,
-    ):
-        assert torch.equal(x, self._cached_x), 'The input x is not the same as the cached input x'
-        assert torch.equal(y, self._cached_y), 'The input y is not the same as the cached input y'
+    ) -> torch.Tensor:
+        log_q_xy = self.approx_log_p_xy(x=x, y=y)
+        log_q_y = self.approx_log_p_y(y=y)
+        log_q_x = self.approx_log_p_x(x=x)
 
-        entropy_xy = self._cached_entropy_xy
-        entropy_x = self._cached_entropy_x
-        entropy_y = -log_p_y.mean()
+        loss = -log_q_xy - log_q_y - log_q_x
+        assert loss.ndim == y.ndim-1
 
-        # Optimize using maximum likelihood
-        return entropy_y + entropy_x + entropy_xy
+        return loss.mean()
 
     def __repr__(self):
         s = self.__class__.__name__ + '(\n'
-        s += '  ' + '(joint_yx): ' + str(self.joint_xy).replace('\n', '  \n') + '\n'
-        if self.marginal_x is not None:
-            s += '  ' + '(marginal_x): ' + str(self.marginal_x).replace('\n', '  \n') + '\n'
-        if self.marginal_y is not None:
-            s += '  ' + '(marginal_y): ' + str(self.marginal_y).replace('\n', '  \n') + '\n'
+        s += '  (q_XY): ' + str(self.q_XY).replace('\n', '\n  ') + '\n'
+        if self.q_X is not None:
+            s += '  (q_X): ' + str(self.q_X).replace('\n', '\n  ') + '\n'
+        if self.q_Y is not None:
+            s += '  (q_Y): ' + str(self.q_Y).replace('\n', '\n  ') + '\n'
         s += ')' + '\n'
         return s
 
@@ -99,8 +71,6 @@ def gm(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],
-        entropy_x: Optional[Union[torch.Tensor, float]] = None,
-        entropy_y: Optional[Union[torch.Tensor, float]] = None,
         joint_transform_name: str = 'conditional_linear',
         n_joint_transforms: int = 1,
         marginal_transform_name: str = 'linear',
@@ -108,43 +78,33 @@ def gm(
 ) -> GM:
     from torch_mist.distributions.utils import transformed_normal
 
-    joint_xy = transformed_normal(
-        input_dim=x_dim + y_dim,
-        hidden_dims=hidden_dims,
-        transform_name=joint_transform_name,
-        n_transforms=n_joint_transforms,
+    joint_xy = JointDistribution(
+        joint_dist=transformed_normal(
+            input_dim=x_dim + y_dim,
+            hidden_dims=hidden_dims,
+            transform_name=joint_transform_name,
+            n_transforms=n_joint_transforms,
+        ),
+        dims=[x_dim, y_dim],
+        names=['x', 'y'],
     )
 
-    if entropy_x is None:
-        marginal_x = transformed_normal(
-            input_dim=x_dim,
-            hidden_dims=hidden_dims,
-            transform_name=marginal_transform_name,
-            n_transforms=n_marginal_transforms,
-        )
-    else:
-        marginal_x = None
-        if isinstance(entropy_x, float):
-            entropy_x = torch.FloatTensor([entropy_x])
-        entropy_x = entropy_x.squeeze()
+    marginal_x = transformed_normal(
+        input_dim=x_dim,
+        hidden_dims=hidden_dims,
+        transform_name=marginal_transform_name,
+        n_transforms=n_marginal_transforms,
+    )
 
-    if entropy_y is None:
-        marginal_y = transformed_normal(
-            input_dim=y_dim,
-            hidden_dims=hidden_dims,
-            transform_name=marginal_transform_name,
-            n_transforms=n_marginal_transforms,
-        )
-    else:
-        marginal_y = None
-        if isinstance(entropy_y, float):
-            entropy_y = torch.FloatTensor([entropy_y])
-        entropy_y = entropy_y.squeeze()
+    marginal_y = transformed_normal(
+        input_dim=y_dim,
+        hidden_dims=hidden_dims,
+        transform_name=marginal_transform_name,
+        n_transforms=n_marginal_transforms,
+    )
 
     return GM(
-        joint_xy=joint_xy,
-        marginal_x=marginal_x,
-        marginal_y=marginal_y,
-        entropy_x=entropy_x,
-        entropy_y=entropy_y,
+        q_XY=joint_xy,
+        q_X=marginal_x,
+        q_Y=marginal_y,
     )

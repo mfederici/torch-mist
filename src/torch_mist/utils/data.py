@@ -24,14 +24,20 @@ class SampleDataLoader(Iterator[Tuple[torch.Tensor, torch.Tensor]]):
             self._n_samples = self.max_samples
             raise StopIteration
         else:
-            self._n_samples -= self.batch_size
-            x, y = torch.chunk(
-                self.joint_dist.sample(torch.Size([self.batch_size])),
-                2,
-                self.split_dim
-            )
-            x = x.squeeze(self.split_dim)
-            y = y.squeeze(self.split_dim)
+            samples = self.joint_dist.sample(torch.Size([self.batch_size]))
+
+            if isinstance(samples, tuple):
+                x, y = samples
+            else:
+                assert samples.shape[self.split_dim] == 2, f"Expected the shape of split_dimension to be 2, got {samples.shape[self.split_dim]}."
+                self._n_samples -= self.batch_size
+                x, y = torch.chunk(
+                    samples,
+                    2,
+                    self.split_dim
+                )
+                x = x.squeeze(self.split_dim)
+                y = y.squeeze(self.split_dim)
 
             return x, y
 

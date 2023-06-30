@@ -2,45 +2,29 @@ from typing import Optional, List, Union
 
 import torch
 
-from torch.distributions import Distribution
 from pyro.distributions import ConditionalDistribution
 
-from torch_mist.estimators.generative.base import VariationalProposalMutualInformationEstimator
+from torch_mist.estimators.generative.base import GenerativeMutualInformationEstimator
+from torch_mist.utils.caching import cached, reset_cache_before_call, reset_cache_after_call
 
 
-class BA(VariationalProposalMutualInformationEstimator):
+class BA(GenerativeMutualInformationEstimator):
     def __init__(
             self,
-            conditional_y_x: ConditionalDistribution,
-            marginal_y: Optional[Distribution] = None,
+            q_Y_given_X: ConditionalDistribution,
             entropy_y: Optional[torch.Tensor] = None,
     ):
-        super().__init__(conditional_y_x)
-        self.conditional_y_x = conditional_y_x
-        assert (marginal_y is None) ^ (
-                entropy_y is None), 'Either the marginal distribution or the marginal entropy must be provided'
+        super().__init__(q_Y_given_X=q_Y_given_X)
+        if not isinstance(entropy_y, torch.Tensor):
+            entropy_y = torch.tensor(entropy_y)
+        entropy_y = entropy_y.squeeze()
+        assert entropy_y.ndim == 0
+        self.register_buffer('entropy_y', entropy_y)
 
-        self.marginal_y = marginal_y
-        self.entropy_y = entropy_y
-
-    def log_prob_y(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        if self.entropy_y is not None:
-            return -torch.FloatTensor(self.entropy_y).unsqueeze(0).unsqueeze(1).to(y.device)
-        else:
-            log_q_y = self.marginal_y.log_prob(y)
-            assert log_q_y.shape == y.shape[:-1]
-            return log_q_y
-
-    def compute_loss(
-            self,
-            x: torch.Tensor,
-            y: torch.Tensor,
-            log_p_y: torch.Tensor,
-            log_p_y_x: torch.Tensor,
-    ) -> Optional[torch.Tensor]:
-        # Optimize using maximum likelihood
-        return -(log_p_y + log_p_y_x).mean()
-
+    @reset_cache_before_call
+    def expected_log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        entropy_y_given_x = -self.approx_log_p_y_given_x(x=x, y=y).mean()
+        return self.entropy_y-entropy_y_given_x
 
 def ba(
         x_dim: int,
@@ -52,7 +36,7 @@ def ba(
 ) -> BA:
     from torch_mist.distributions.utils import conditional_transformed_normal
 
-    q_y_x = conditional_transformed_normal(
+    q_Y_given_X = conditional_transformed_normal(
         input_dim=y_dim,
         context_dim=x_dim,
         hidden_dims=hidden_dims,
@@ -66,7 +50,7 @@ def ba(
     entropy_y = entropy_y.squeeze()
 
     return BA(
-        conditional_y_x=q_y_x,
+        q_Y_given_X=q_Y_given_X,
         entropy_y=entropy_y,
     )
 

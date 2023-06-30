@@ -36,8 +36,9 @@ class VectorQuantization(QuantizationFunction):
 
     def codebook_lookup(self, x: torch.Tensor) -> torch.Tensor:
         assert x.shape[-1] == self.vectors.shape[-1]
-        if x.ndim == 2:
-            x = x.unsqueeze(1)
+        shape = x.shape[:-1]
+
+        x = x.reshape(-1, 1, x.shape[-1])
 
         # Compute distances between z and vectors
         distances = torch.cdist(x, self.vectors.unsqueeze(0))
@@ -45,7 +46,7 @@ class VectorQuantization(QuantizationFunction):
         _, indices = torch.min(distances, dim=-1)
         # Get the corresponding vector
 
-        return indices
+        return indices.reshape(shape)
 
     @property
     def n_bins(self) -> int:
@@ -70,6 +71,13 @@ class LearnableVectorQuantization(VectorQuantization):
         z = self.net(x)
         assert z.shape[-1] == self.vectors.shape[-1]
         return super().forward(z)
+
+    def __repr__(self):
+        s = f'{self.__class__.__name__}('
+        s += f"\n  (net): "+self.net.__repr__().replace('\n', "\n  ")
+        s += f"\n  (n_bins): {self.vectors.shape[0]}"
+        s += "\n)"
+        return s
 
 
 class FixedQuantization(QuantizationFunction):
@@ -114,14 +122,15 @@ def trained_vector_quantization(
         x_dim: int,
         n_bins: int,
         hidden_dims: List[int],
+        quantization_dim: Optional[int] = None,
         cross_modal: bool = False,
         decoder_transform_params: Optional[Dict[str, Any]] = None,
         beta: float = 0.2,
-        n_train_epochs = 1,
+        n_train_epochs: int = 1,
         optimizer_class=torch.optim.Adam,
         optimizer_params: Optional[Dict[str, Any]] = None,
         y_dim: Optional[int] = None,
-) -> LearnableVectorQuantization:
+) -> QuantizationFunction:
 
     assert not cross_modal or y_dim is not None, "y_dim must be specified if cross_modal is True"
     assert len(hidden_dims) > 0, "hidden_dims must be a non-empty list"
@@ -132,8 +141,8 @@ def trained_vector_quantization(
     from torch_mist.quantization import vqvae
     from tqdm.auto import tqdm
 
-    quantization_dim = hidden_dims[-1]
-    hidden_dims = hidden_dims[:-1]
+    if quantization_dim is None:
+        quantization_dim = 16
 
     model = vqvae(
         x_dim=x_dim,
@@ -154,7 +163,7 @@ def trained_vector_quantization(
             model.loss(*data).backward()
             opt.step()
 
-    return model.encoder
+    return model.quantization
 
 
 

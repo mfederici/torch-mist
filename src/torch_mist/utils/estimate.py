@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from torch.optim import Optimizer
 from torch_mist.estimators import MutualInformationEstimator
-from collections import Iterator
+from collections.abc import Iterator
 from tqdm.auto import tqdm
 from torch.optim import Adam
 
@@ -26,20 +26,21 @@ def optimize_mi_estimator(
     )
 
     log = []
+    iteration = 0
 
     for epoch in range(n_epochs):
-        for iteration, (x, y) in enumerate(tqdm(dataloader)):
+        for x, y in tqdm(dataloader):
             estimation = estimator(x, y)
-
-            loss = estimation.loss
+            loss = estimator.loss(x, y)
 
             log.append(
                 {
-                    'value': estimation.value.item(),
-                    'loss': estimation.loss.item(),
+                    'value': estimation.item(),
+                    'loss': loss.item(),
                     'iteration': iteration,
                 }
             )
+            iteration += 1
 
             opt.zero_grad()
             loss.backward()
@@ -56,7 +57,7 @@ def estimate_mi(
 
     for x, y in dataloader:
         estimation = estimator(x, y)
-        mis.append(estimation.value.item())
+        mis.append(estimation.item())
 
     return np.mean(mis)
 
@@ -69,6 +70,6 @@ def estimate_mi_std(
 
     for x, y in dataloader:
         estimation = estimator(x, y)
-        mis.append(estimation.value.item())
+        mis.append(estimation.item())
 
     return np.mean(mis), np.std(mis)

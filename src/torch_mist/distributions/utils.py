@@ -8,13 +8,12 @@ from torch.distributions import Distribution, Independent
 
 import torch
 from torch import nn
-from torch.distributions import Normal, TransformedDistribution
+from torch.distributions import Normal, Categorical
 
 
 from torch_mist.distributions.transforms import ConditionalTransformedDistributionModule, DistributionModule, \
     TransformedDistributionModule, ConditionalDistributionModule
-from torch_mist.distributions.parametrizations.map import LocScaleMap
-from torch_mist.distributions.conditional import ConditionalCategorical
+from torch_mist.distributions.parametrizations.map import LocScaleMap, LogitsMap
 
 
 def fetch_transform(transform_name: str):
@@ -32,8 +31,18 @@ def fetch_transform(transform_name: str):
     return transform_factory
 
 
+class ConditionalCategoricalModule(ConditionalDistributionModule):
+    def __init__(self, net: nn.Module):
+        super(ConditionalCategoricalModule, self).__init__()
+        self.net = net
+        self.parametrization = LogitsMap()
+
+    def condition(self, x):
+        return Categorical(**self.parametrization(self.net(x)))
+
+
 class NormalModule(Distribution, nn.Module):
-    def __init__(self, loc: torch.Tensor, scale: torch.Tensor):
+    def __init__(self, loc: torch.Tensor, scale: torch.Tensor, learnable: bool = False):
         assert loc.ndim == 1
         nn.Module.__init__(self)
         Distribution.__init__(
@@ -41,19 +50,51 @@ class NormalModule(Distribution, nn.Module):
             event_shape=torch.Size([loc.shape[0]]),
             validate_args=False
         )
-        self.register_buffer('loc', loc)
-        self.register_buffer('log_scale', scale.log())
+        if learnable:
+            self.loc = nn.Parameter(loc)
+            self.log_scale = nn.Parameter(scale.log())
+        else:
+            self.register_buffer('loc', loc)
+            self.register_buffer('log_scale', scale.log())
         self.parametrization = LocScaleMap()
 
     def rsample(self, sample_shape=torch.Size()):
-        return Normal(**self.parametrization([self.loc, self.log_scale])).rsample(sample_shape)
+        params = self.parametrization([self.loc, self.log_scale])
+        return Normal(**params).rsample(sample_shape)
 
     def log_prob(self, value):
-        return Independent(Normal(**self.parametrization([self.loc, self.log_scale])),1).log_prob(value)
+        params = self.parametrization([self.loc, self.log_scale])
+        return Independent(Normal(**params), 1).log_prob(value)
 
     def __repr__(self):
         return "Normal()"
 
+
+class CategoricalModule(Distribution, nn.Module):
+    def __init__(self, logits: torch.tensor, temperature: float = 1.0, learnable: bool = False):
+        nn.Module.__init__(self)
+        Distribution.__init__(
+            self,
+            event_shape=torch.Size([logits.shape[0]]),
+            validate_args=False
+        )
+        if learnable:
+            self.logits = nn.Parameter(logits)
+        else:
+            self.register_buffer('logits', logits)
+        self.parametrization = LogitsMap()
+        self.temperature = temperature
+
+    def rsample(self, sample_shape=torch.Size()):
+        params = self.parametrization([self.logits/self.temperature])
+        return Categorical(**params).rsample(sample_shape)
+
+    def log_prob(self, value):
+        params = self.parametrization([self.logits/self.temperature])
+        return Categorical(**params).log_prob(value)
+
+    def __repr__(self):
+        return "Categorical()"
 
 class ConditionalStandardNormalModule(ConditionalDistributionModule):
     def __init__(self, n_dim: int):
@@ -145,13 +186,4 @@ def conditional_categorical(
     hidden_dims: List[int],
 ):
     net = DenseNN(input_dim=context_dim, hidden_dims=hidden_dims, param_dims=[n_classes])
-    return ConditionalCategorical(net)
-
-def conditional_mutivariate_categorical(
-    n_classes: int,
-    output_dim: int,
-    context_dim: int,
-    hidden_dims: List[int],
-):
-    net = DenseNN(input_dim=context_dim, hidden_dims=hidden_dims, param_dims=[n_classes] * output_dim)
-    return ConditionalCategorical(net)
+    return ConditionalCategoricalModule(net)

@@ -54,12 +54,6 @@ class ParameterMap:
 
         return mapped_parameters
 
-    def extra_repr(self):
-        return ""
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self.extra_repr()})"
-
 
 class DeltaMap(ParameterMap):
     """
@@ -117,16 +111,3 @@ class LogitsMap(ParameterMap):
     def map_parameters(self, parameter_list: List[torch.Tensor]) -> Dict[str, torch.Tensor]:
         logits = parameter_list[0]
         return {"logits": logits}
-
-
-class TemperatureLogitsMap(ParameterMap):
-    supported_distributions: List[Type[Distribution]] = [
-        Categorical,
-        OneHotCategorical,
-    ]
-    n_parameters: int = 2
-
-    def map_parameters(self, parameter_list: List[torch.Tensor]) -> Dict[str, torch.Tensor]:
-        temperature = parameter_list[0]
-        logits = parameter_list[1]
-        return {"temperature": temperature, "logits": logits}

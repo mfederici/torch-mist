@@ -4,7 +4,7 @@ import torch
 from pyro.distributions import ConditionalDistribution
 from torch import nn
 
-from torch_mist.quantization import LearnableVectorQuantization
+from torch_mist.quantization import LearnableVectorQuantization, QuantizationFunction
 
 INITIAL_PATIENCE = 10.0
 
@@ -32,23 +32,20 @@ class VQVAE(nn.Module):
         self.register_buffer('assignments', initial_assignments)
         self.min_assignment = 0.1/n_bins
 
+    @property
+    def quantization(self) -> QuantizationFunction:
+        return self.encoder
+
     def loss(self, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
         assert not self.cross_modal or y is not None, "y must be provided if cross_modal is True"
 
         z = self.encoder.net(x)
         indices = self.encoder.codebook_lookup(z)
 
-        if z.ndim == 2:
-            z = z.unsqueeze(1)
         quantized = self.encoder.vectors[indices]
         z_q = z + (quantized - z).detach()
 
         assert z_q.shape == z.shape == quantized.shape, f"{z_q.shape} != {z.shape} != {quantized.shape}"
-
-        if x.ndim <= 3:
-            x = x.unsqueeze(1)
-        if y.ndim <= 3:
-            y = y.unsqueeze(1)
 
         if self.cross_modal:
             reconstruction_loss = -self.decoder.condition(z_q).log_prob(y)
@@ -69,14 +66,12 @@ class VQVAE(nn.Module):
 
             if self.training:
                 self.assignments = self.gamma * self.assignments + (1 - self.gamma) * assignments
-
             # assignments = self.assignments
 
             # Compute the mean vector for each assignment [n_bins, z_dim]
             N = flat_indices.shape[0]
-            mean_vector = (one_hot.unsqueeze(-1) * z).sum(0)
+            mean_vector = (one_hot.unsqueeze(-1) * z.unsqueeze(-2)).sum(0)
             mean_vector = mean_vector / (assignments.unsqueeze(-1) * N)
-
 
             not_assigned = [i.item() for i in torch.arange(self.encoder.n_bins)[self.assignments * N < self.min_assignment].long()]
             while len(not_assigned) > 0:
