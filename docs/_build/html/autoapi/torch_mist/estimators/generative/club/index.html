@@ -22,7 +22,7 @@
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
-    <link rel="next" title="torch_mist.estimators.generative.doe" href="../doe/index.html" />
+    <link rel="next" title="torch_mist.estimators.generative.discrete" href="../discrete/index.html" />
     <link rel="prev" title="torch_mist.estimators.generative.base" href="../base/index.html" /> 
 </head>
 
@@ -55,6 +55,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist</span></code></a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="../../../index.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="../../../critic/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.critic</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../data/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.data</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../distributions/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.distributions</span></code></a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.estimators</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../nn/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.nn</span></code></a></li>
@@ -123,8 +124,8 @@
 </table>
 <dl class="py class">
 <dt class="sig sig-object py" id="torch_mist.estimators.generative.club.CLUB">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.estimators.generative.club.</span></span><span class="sig-name descname"><span class="pre">CLUB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conditional_y_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pyro.distributions.ConditionalDistribution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/estimators/generative/club.html#CLUB"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.estimators.generative.club.CLUB" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="../base/index.html#torch_mist.estimators.generative.base.VariationalProposalMutualInformationEstimator" title="torch_mist.estimators.generative.base.VariationalProposalMutualInformationEstimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">torch_mist.estimators.generative.base.VariationalProposalMutualInformationEstimator</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.estimators.generative.club.</span></span><span class="sig-name descname"><span class="pre">CLUB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q_Y_given_X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pyro.distributions.ConditionalDistribution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/estimators/generative/club.html#CLUB"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.estimators.generative.club.CLUB" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../l1out/index.html#torch_mist.estimators.generative.l1out.L1Out" title="torch_mist.estimators.generative.l1out.L1Out"><code class="xref py py-obj docutils literal notranslate"><span class="pre">torch_mist.estimators.generative.l1out.L1Out</span></code></a></p>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
 <p>Modules can also contain other Modules, allowing to nest them in
@@ -157,8 +158,8 @@ evaluation mode.</p>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="torch_mist.estimators.generative.club.CLUB.log_prob_y">
-<span class="sig-name descname"><span class="pre">log_prob_y</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="../../../../../_modules/torch_mist/estimators/generative/club.html#CLUB.log_prob_y"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.estimators.generative.club.CLUB.log_prob_y" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="torch_mist.estimators.generative.club.CLUB.approx_log_p_y">
+<span class="sig-name descname"><span class="pre">approx_log_p_y</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="../../../../../_modules/torch_mist/estimators/generative/club.html#CLUB.approx_log_p_y"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.estimators.generative.club.CLUB.approx_log_p_y" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -177,7 +178,7 @@ evaluation mode.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../base/index.html" class="btn btn-neutral float-left" title="torch_mist.estimators.generative.base" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../doe/index.html" class="btn btn-neutral float-right" title="torch_mist.estimators.generative.doe" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../discrete/index.html" class="btn btn-neutral float-right" title="torch_mist.estimators.generative.discrete" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

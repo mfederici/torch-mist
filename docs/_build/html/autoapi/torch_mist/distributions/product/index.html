@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
     <link rel="next" title="torch_mist.distributions.utils" href="../utils/index.html" />
-    <link rel="prev" title="torch_mist.distributions.transforms.split" href="../transforms/split/index.html" /> 
+    <link rel="prev" title="torch_mist.distributions.joint" href="../joint/index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -55,6 +55,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist</span></code></a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="../../critic/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.critic</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../data/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.data</span></code></a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.distributions</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../estimators/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.estimators</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../nn/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.nn</span></code></a></li>
@@ -99,48 +100,13 @@
              
   <section id="module-torch_mist.distributions.product">
 <span id="torch-mist-distributions-product"></span><h1><a class="reference internal" href="#module-torch_mist.distributions.product" title="torch_mist.distributions.product"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.distributions.product</span></code></a><a class="headerlink" href="#module-torch_mist.distributions.product" title="Permalink to this heading"></a></h1>
-<section id="module-contents">
-<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading"></a></h2>
-<section id="classes">
-<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this heading"></a></h3>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#torch_mist.distributions.product.ShuffledBatchDistribution" title="torch_mist.distributions.product.ShuffledBatchDistribution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ShuffledBatchDistribution</span></code></a></p></td>
-<td><p>Distribution is the abstract base class for probability distributions.</p></td>
-</tr>
-</tbody>
-</table>
-<dl class="py class">
-<dt class="sig sig-object py" id="torch_mist.distributions.product.ShuffledBatchDistribution">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.product.</span></span><span class="sig-name descname"><span class="pre">ShuffledBatchDistribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.product.ShuffledBatchDistribution" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.distributions.Distribution</span></code></p>
-<p>Distribution is the abstract base class for probability distributions.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="torch_mist.distributions.product.ShuffledBatchDistribution.rsample">
-<span class="sig-name descname"><span class="pre">rsample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">torch.Size()</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.product.ShuffledBatchDistribution.rsample" title="Permalink to this definition"></a></dt>
-<dd><p>Generates a sample_shape shaped reparameterized sample or sample_shape
-shaped batch of reparameterized samples if the distribution parameters
-are batched.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torch_mist.distributions.product.ShuffledBatchDistribution.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">torch.Size()</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.distributions.product.ShuffledBatchDistribution.sample" title="Permalink to this definition"></a></dt>
-<dd><p>Generates a sample_shape shaped sample or sample_shape shaped batch of
-samples if the distribution parameters are batched.</p>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../transforms/split/index.html" class="btn btn-neutral float-left" title="torch_mist.distributions.transforms.split" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../joint/index.html" class="btn btn-neutral float-left" title="torch_mist.distributions.joint" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="../utils/index.html" class="btn btn-neutral float-right" title="torch_mist.distributions.utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

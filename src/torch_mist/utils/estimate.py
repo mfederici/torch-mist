@@ -4,10 +4,12 @@ import torch
 import numpy as np
 import pandas as pd
 from torch.optim import Optimizer
-from torch_mist.estimators import MutualInformationEstimator
 from collections.abc import Iterator
 from tqdm.auto import tqdm
 from torch.optim import Adam
+
+from torch_mist.estimators.base import MutualInformationEstimator
+
 
 
 def optimize_mi_estimator(
@@ -19,6 +21,10 @@ def optimize_mi_estimator(
 ) -> pd.DataFrame:
 
     opt_params = {"params": estimator.parameters()}
+
+    if optimizer_params is None:
+        optimizer_params = {"lr": 5e-4}
+
     opt_params.update(optimizer_params)
     
     opt = optimizer_class(
@@ -50,19 +56,6 @@ def optimize_mi_estimator(
 
 
 def estimate_mi(
-        estimator: MutualInformationEstimator,
-        dataloader: Iterator[Tuple[torch.Tensor, torch.Tensor]],
-) -> float:
-    mis = []
-
-    for x, y in dataloader:
-        estimation = estimator(x, y)
-        mis.append(estimation.item())
-
-    return np.mean(mis)
-
-
-def estimate_mi_std(
         estimator: MutualInformationEstimator,
         dataloader: Iterator[Tuple[torch.Tensor, torch.Tensor]],
 ) -> Tuple[float, float]:

@@ -3,7 +3,8 @@ from typing import List, Optional, Dict, Any, Callable
 from pyro.nn import DenseNN
 from torch import nn
 
-from torch_mist.critic import JointCritic, SeparableCritic
+from torch_mist.critic.separable import SeparableCritic
+from torch_mist.critic.joint import JointCritic
 
 
 def separable_critic(
@@ -26,7 +27,7 @@ def separable_critic(
     assert len(hidden_dims) > 0
     f_x = DenseNN(
         input_dim=x_dim,
-        hidden_dims=[int(h ** 0.5) for h in hidden_dims],
+        hidden_dims=hidden_dims,
         param_dims=[output_dim],
         nonlinearity=nonlinearity,
     )

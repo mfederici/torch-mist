@@ -113,13 +113,7 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#torch_mist.baselines.LearnableBaseline" title="torch_mist.baselines.LearnableBaseline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LearnableBaseline</span></code></a></p></td>
 <td><p>Base class for all neural network modules.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#torch_mist.baselines.LearnableMLPBaseline" title="torch_mist.baselines.LearnableMLPBaseline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LearnableMLPBaseline</span></code></a></p></td>
-<td><p>Base class for all neural network modules.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#torch_mist.baselines.LearnableJointBaseline" title="torch_mist.baselines.LearnableJointBaseline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LearnableJointBaseline</span></code></a></p></td>
-<td><p>Base class for all neural network modules.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#torch_mist.baselines.LearnableJointMLPBaseline" title="torch_mist.baselines.LearnableJointMLPBaseline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LearnableJointMLPBaseline</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#torch_mist.baselines.LearnableJointBaseline" title="torch_mist.baselines.LearnableJointBaseline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LearnableJointBaseline</span></code></a></p></td>
 <td><p>Base class for all neural network modules.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#torch_mist.baselines.InterpolatedBaseline" title="torch_mist.baselines.InterpolatedBaseline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InterpolatedBaseline</span></code></a></p></td>
@@ -127,6 +121,19 @@
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#torch_mist.baselines.AlphaTUBABaseline" title="torch_mist.baselines.AlphaTUBABaseline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AlphaTUBABaseline</span></code></a></p></td>
 <td><p>Base class for all neural network modules.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#torch_mist.baselines.baseline_nn" title="torch_mist.baselines.baseline_nn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">baseline_nn</span></code></a>() → LearnableBaseline)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#torch_mist.baselines.joint_baseline_nn" title="torch_mist.baselines.joint_baseline_nn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">joint_baseline_nn</span></code></a>() → LearnableJointBaseline)</p></td>
+<td><p></p></td>
 </tr>
 </tbody>
 </table>
@@ -258,7 +265,7 @@ evaluation mode.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="torch_mist.baselines.BatchLogMeanExp">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.baselines.</span></span><span class="sig-name descname"><span class="pre">BatchLogMeanExp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/torch_mist/baselines.html#BatchLogMeanExp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.baselines.BatchLogMeanExp" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.baselines.</span></span><span class="sig-name descname"><span class="pre">BatchLogMeanExp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/torch_mist/baselines.html#BatchLogMeanExp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.baselines.BatchLogMeanExp" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#torch_mist.baselines.Baseline" title="torch_mist.baselines.Baseline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Baseline</span></code></a></p>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -341,43 +348,6 @@ evaluation mode.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="torch_mist.baselines.LearnableMLPBaseline">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.baselines.</span></span><span class="sig-name descname"><span class="pre">LearnableMLPBaseline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonlinearity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">nn.ReLU(True)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/torch_mist/baselines.html#LearnableMLPBaseline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.baselines.LearnableMLPBaseline" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#torch_mist.baselines.LearnableBaseline" title="torch_mist.baselines.LearnableBaseline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LearnableBaseline</span></code></a></p>
-<p>Base class for all neural network modules.</p>
-<p>Your models should also subclass this class.</p>
-<p>Modules can also contain other Modules, allowing to nest them in
-a tree structure. You can assign the submodules as regular attributes:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
-<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
-
-<span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conv2</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>Submodules assigned in this way will be registered, and will have their
-parameters converted too when you call <code class="xref py py-meth docutils literal notranslate"><span class="pre">to()</span></code>, etc.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>As per the example above, an <code class="docutils literal notranslate"><span class="pre">__init__()</span></code> call to the parent class
-must be made before assignment on the child.</p>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Variables<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>training</strong> (<em>bool</em>) – Boolean represents whether this module is in training or
-evaluation mode.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
 <dt class="sig sig-object py" id="torch_mist.baselines.LearnableJointBaseline">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.baselines.</span></span><span class="sig-name descname"><span class="pre">LearnableJointBaseline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.nn.Module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/torch_mist/baselines.html#LearnableJointBaseline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.baselines.LearnableJointBaseline" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#torch_mist.baselines.LearnableBaseline" title="torch_mist.baselines.LearnableBaseline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LearnableBaseline</span></code></a></p>
@@ -417,43 +387,6 @@ evaluation mode.</p>
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="../../../_modules/torch_mist/baselines.html#LearnableJointBaseline.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.baselines.LearnableJointBaseline.forward" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="torch_mist.baselines.LearnableJointMLPBaseline">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.baselines.</span></span><span class="sig-name descname"><span class="pre">LearnableJointMLPBaseline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonlinearity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">nn.ReLU(True)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/torch_mist/baselines.html#LearnableJointMLPBaseline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.baselines.LearnableJointMLPBaseline" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#torch_mist.baselines.LearnableJointBaseline" title="torch_mist.baselines.LearnableJointBaseline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LearnableJointBaseline</span></code></a></p>
-<p>Base class for all neural network modules.</p>
-<p>Your models should also subclass this class.</p>
-<p>Modules can also contain other Modules, allowing to nest them in
-a tree structure. You can assign the submodules as regular attributes:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
-<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
-
-<span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conv2</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>Submodules assigned in this way will be registered, and will have their
-parameters converted too when you call <code class="xref py py-meth docutils literal notranslate"><span class="pre">to()</span></code>, etc.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>As per the example above, an <code class="docutils literal notranslate"><span class="pre">__init__()</span></code> call to the parent class
-must be made before assignment on the child.</p>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Variables<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>training</strong> (<em>bool</em>) – Boolean represents whether this module is in training or
-evaluation mode.</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py class">
@@ -534,6 +467,16 @@ evaluation mode.</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torch_mist.baselines.baseline_nn">
+<span class="sig-prename descclassname"><span class="pre">torch_mist.baselines.</span></span><span class="sig-name descname"><span class="pre">baseline_nn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonlinearity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">nn.ReLU(True)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#torch_mist.baselines.LearnableBaseline" title="torch_mist.baselines.LearnableBaseline"><span class="pre">LearnableBaseline</span></a></span></span><a class="reference internal" href="../../../_modules/torch_mist/baselines.html#baseline_nn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.baselines.baseline_nn" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torch_mist.baselines.joint_baseline_nn">
+<span class="sig-prename descclassname"><span class="pre">torch_mist.baselines.</span></span><span class="sig-name descname"><span class="pre">joint_baseline_nn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonlinearity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">nn.ReLU(True)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#torch_mist.baselines.LearnableJointBaseline" title="torch_mist.baselines.LearnableJointBaseline"><span class="pre">LearnableJointBaseline</span></a></span></span><a class="reference internal" href="../../../_modules/torch_mist/baselines.html#joint_baseline_nn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.baselines.joint_baseline_nn" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 </section>
 </section>

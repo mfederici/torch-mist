@@ -16,7 +16,6 @@ Classes
    torch_mist.distributions.parametrizations.map.DeltaMap
    torch_mist.distributions.parametrizations.map.LocScaleMap
    torch_mist.distributions.parametrizations.map.LogitsMap
-   torch_mist.distributions.parametrizations.map.TemperatureLogitsMap
 
 
 
@@ -65,14 +64,6 @@ Attributes
 
 
    .. py:method:: __call__(parameter_list: Union[torch.Tensor, List[torch.Tensor]]) -> Dict[str, torch.Tensor]
-
-
-   .. py:method:: extra_repr()
-
-
-   .. py:method:: __repr__()
-
-      Return repr(self).
 
 
 
@@ -147,37 +138,6 @@ Attributes
    .. py:attribute:: n_parameters
       :type: int
       :value: 1
-
-      
-
-   .. py:method:: map_parameters(parameter_list: List[torch.Tensor]) -> Dict[str, torch.Tensor]
-
-      Abstract method responsible for defining the mapping from the list of tensors to the parameter dictionary.
-
-      :param parameter_list: The list of parameters for the distribution of interest.
-      :type parameter_list: List[torch.Tensor]
-
-      :returns: The named parameters for the distribution of interest.
-      :rtype: Dict[str, torch.Tensor]
-
-
-
-.. py:class:: TemperatureLogitsMap
-
-
-   Bases: :py:obj:`ParameterMap`
-
-   Mapping from a list of tensors to a dictionary representing the parametrization of a distribution.
-   Abstract class.
-
-   .. py:attribute:: supported_distributions
-      :type: List[Type[torch.distributions.Distribution]]
-
-      
-
-   .. py:attribute:: n_parameters
-      :type: int
-      :value: 2
 
       
 

@@ -1,13 +1,17 @@
-# Mist: A PyTorch Mutual information Estimation toolkit
+# Mist - A PyTorch Mutual information Estimation toolkit
+
+<img src="docs/media/torch-mist-logo.png" alt="alt text" width="200">
+
+
 
 [![PyPI version](https://badge.fury.io/py/torch-mist.svg)](https://badge.fury.io/py/torch-mist)
 [![codecov](https://codecov.io/gh/marcofede/torch-mist/branch/master/graph/badge.svg)](https://codecov.io/gh/mfederici/torch-mist)
 [![Documentation Status](https://readthedocs.org/projects/torch-mist/badge/?version=latest)](https://torch-mist.readthedocs.io/en/latest/?badge=latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-<img src="docs/media/torch-mist-logo.png" alt="alt text" width="200"/>
 
-Mutual Information Estimation toolkit based on pytorch
+
+Mutual Information Estimation toolkit based on pytorch. TO BE RELEASED SOON
 
 ## Installation
 

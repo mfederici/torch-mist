@@ -2,7 +2,8 @@ from typing import List, Dict, Any
 
 import torch
 from torch_mist.estimators.discriminative.base import DiscriminativeMutualInformationEstimator
-from torch_mist.critic import Critic, critic
+from torch_mist.critic.base import Critic
+from torch_mist.critic.utils import critic
 
 
 class NWJ(DiscriminativeMutualInformationEstimator):
@@ -16,18 +17,19 @@ class NWJ(DiscriminativeMutualInformationEstimator):
             mc_samples=mc_samples,
         )
 
-    def _compute_log_ratio(
+    def compute_log_ratio(
             self,
             x: torch.Tensor,
             y: torch.Tensor,
-            y_: torch.Tensor,
             f: torch.Tensor,
             f_: torch.Tensor
     ) -> torch.Tensor:
-        log_ratio = f - f_.exp().mean(1, keepdim=True) + 1
+        # f has shape [N, ...]
+        # f_ has shape [M', N, ...] with M' as the number of mc_samples.
+        log_norm = f_.exp().mean(0) - 1
+        assert log_norm.shape == f.shape
 
-        return log_ratio
-
+        return f-log_norm
 
 def nwj(
         x_dim: int,
@@ -38,16 +40,15 @@ def nwj(
         critic_params: Dict[str, Any] = None,
 ) -> NWJ:
 
-    url_nn = critic(
+    critic_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
         critic_type=critic_type,
         critic_params=critic_params
-
     )
 
     return NWJ(
-        critic=url_nn,
+        critic=critic_nn,
         mc_samples=mc_samples,
     )

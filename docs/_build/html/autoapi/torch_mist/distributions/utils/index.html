@@ -55,6 +55,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist</span></code></a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="../../index.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="../../critic/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.critic</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../data/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.data</span></code></a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.distributions</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../estimators/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.estimators</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../nn/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.nn</span></code></a></li>
@@ -105,7 +106,13 @@
 <h3>Classes<a class="headerlink" href="#classes" title="Permalink to this heading"></a></h3>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#torch_mist.distributions.utils.NormalModule" title="torch_mist.distributions.utils.NormalModule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NormalModule</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#torch_mist.distributions.utils.ConditionalCategoricalModule" title="torch_mist.distributions.utils.ConditionalCategoricalModule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConditionalCategoricalModule</span></code></a></p></td>
+<td><p>Helper class that provides a standard way to create an ABC using</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#torch_mist.distributions.utils.NormalModule" title="torch_mist.distributions.utils.NormalModule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NormalModule</span></code></a></p></td>
+<td><p>Distribution is the abstract base class for probability distributions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#torch_mist.distributions.utils.CategoricalModule" title="torch_mist.distributions.utils.CategoricalModule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CategoricalModule</span></code></a></p></td>
 <td><p>Distribution is the abstract base class for probability distributions.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#torch_mist.distributions.utils.ConditionalStandardNormalModule" title="torch_mist.distributions.utils.ConditionalStandardNormalModule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConditionalStandardNormalModule</span></code></a></p></td>
@@ -130,9 +137,6 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#torch_mist.distributions.utils.conditional_categorical" title="torch_mist.distributions.utils.conditional_categorical"><code class="xref py py-obj docutils literal notranslate"><span class="pre">conditional_categorical</span></code></a>(n_classes, context_dim, ...)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#torch_mist.distributions.utils.conditional_mutivariate_categorical" title="torch_mist.distributions.utils.conditional_mutivariate_categorical"><code class="xref py py-obj docutils literal notranslate"><span class="pre">conditional_mutivariate_categorical</span></code></a>(n_classes, ...)</p></td>
-<td><p></p></td>
-</tr>
 </tbody>
 </table>
 <dl class="py function">
@@ -141,8 +145,26 @@
 <dd></dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="torch_mist.distributions.utils.ConditionalCategoricalModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.utils.</span></span><span class="sig-name descname"><span class="pre">ConditionalCategoricalModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.nn.Module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/distributions/utils.html#ConditionalCategoricalModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.utils.ConditionalCategoricalModule" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../transforms/index.html#torch_mist.distributions.transforms.ConditionalDistributionModule" title="torch_mist.distributions.transforms.ConditionalDistributionModule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">torch_mist.distributions.transforms.ConditionalDistributionModule</span></code></a></p>
+<p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="torch_mist.distributions.utils.ConditionalCategoricalModule.condition">
+<span class="sig-name descname"><span class="pre">condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/distributions/utils.html#ConditionalCategoricalModule.condition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.utils.ConditionalCategoricalModule.condition" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.distributions.Distribution</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="torch_mist.distributions.utils.NormalModule">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.utils.</span></span><span class="sig-name descname"><span class="pre">NormalModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/distributions/utils.html#NormalModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.utils.NormalModule" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.utils.</span></span><span class="sig-name descname"><span class="pre">NormalModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learnable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/distributions/utils.html#NormalModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.utils.NormalModule" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.distributions.Distribution</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.nn.Module</span></code></p>
 <p>Distribution is the abstract base class for probability distributions.</p>
 <dl class="py method">
@@ -168,6 +190,39 @@ are batched.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="torch_mist.distributions.utils.NormalModule.__repr__">
 <span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/distributions/utils.html#NormalModule.__repr__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.utils.NormalModule.__repr__" title="Permalink to this definition"></a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torch_mist.distributions.utils.CategoricalModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.utils.</span></span><span class="sig-name descname"><span class="pre">CategoricalModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learnable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/distributions/utils.html#CategoricalModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.utils.CategoricalModule" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.distributions.Distribution</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.nn.Module</span></code></p>
+<p>Distribution is the abstract base class for probability distributions.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="torch_mist.distributions.utils.CategoricalModule.rsample">
+<span class="sig-name descname"><span class="pre">rsample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">torch.Size()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/distributions/utils.html#CategoricalModule.rsample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.utils.CategoricalModule.rsample" title="Permalink to this definition"></a></dt>
+<dd><p>Generates a sample_shape shaped reparameterized sample or sample_shape
+shaped batch of reparameterized samples if the distribution parameters
+are batched.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torch_mist.distributions.utils.CategoricalModule.log_prob">
+<span class="sig-name descname"><span class="pre">log_prob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/distributions/utils.html#CategoricalModule.log_prob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.utils.CategoricalModule.log_prob" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the log of the probability density/mass function evaluated at
+<cite>value</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>Tensor</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torch_mist.distributions.utils.CategoricalModule.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/distributions/utils.html#CategoricalModule.__repr__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.utils.CategoricalModule.__repr__" title="Permalink to this definition"></a></dt>
 <dd><p>Return repr(self).</p>
 </dd></dl>
 
@@ -204,11 +259,6 @@ inheritance.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="torch_mist.distributions.utils.conditional_categorical">
 <span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.utils.</span></span><span class="sig-name descname"><span class="pre">conditional_categorical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/distributions/utils.html#conditional_categorical"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.utils.conditional_categorical" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="torch_mist.distributions.utils.conditional_mutivariate_categorical">
-<span class="sig-prename descclassname"><span class="pre">torch_mist.distributions.utils.</span></span><span class="sig-name descname"><span class="pre">conditional_mutivariate_categorical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/distributions/utils.html#conditional_mutivariate_categorical"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.distributions.utils.conditional_mutivariate_categorical" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </section>

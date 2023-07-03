@@ -22,12 +22,18 @@ class JointCritic(Critic):
 
     def forward(self, x, y) -> torch.Tensor:
         if x.ndim < y.ndim:
-            x = x.unsqueeze(1)
+            x = x.unsqueeze(0)
 
-        # hack to expand to the same shape without specifying the number of repeats
-        x = x + y * 0
-        y = y + x * 0
+        assert x.ndim == y.ndim, f'x.ndim={x.ndim}, y.ndim={y.ndim}'
+        n_dims = x.ndim
 
+        # Find the maximum shape
+        max_shape = [max(x.shape[i], y.shape[i]) for i in range(n_dims - 1)]
+        # Expand x and y to the maximum shape
+        x = x.expand(max_shape + [-1])
+        y = y.expand(max_shape + [-1])
+
+        # Concatenate x and y in order
         xy = torch.cat([x, y], -1)
 
         return self.joint_net(xy).squeeze(-1)

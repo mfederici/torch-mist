@@ -1,7 +1,8 @@
 from typing import List, Dict, Any
 
 from torch_mist.baselines import BatchLogMeanExp, ExponentialMovingAverage
-from torch_mist.critic import Critic, critic
+from torch_mist.critic.base import Critic
+from torch_mist.critic.utils import critic
 from torch_mist.estimators.discriminative.tuba import TUBA
 
 
@@ -15,7 +16,7 @@ class MINE(TUBA):
         super().__init__(
             critic=critic,
             mc_samples=mc_samples,
-            baseline=BatchLogMeanExp(dim=2),
+            baseline=BatchLogMeanExp('all'),
             grad_baseline=ExponentialMovingAverage(gamma=gamma),
         )
 

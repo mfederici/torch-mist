@@ -4,7 +4,7 @@ import torch
 from pyro.distributions import ConditionalDistribution
 from torch import nn
 
-from torch_mist.quantization import LearnableVectorQuantization, QuantizationFunction
+from torch_mist.quantization.functions import LearnableVectorQuantization, QuantizationFunction
 
 INITIAL_PATIENCE = 10.0
 

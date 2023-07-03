@@ -1,4 +1,5 @@
 from typing import Callable, TypeVar
+import inspect
 
 import torch
 T = TypeVar("T")
@@ -27,7 +28,13 @@ def cached(method: Callable[..., T]) -> Callable[..., T]:
         self._cache = {key: None for key in self._cache.keys()}
 
     def cached_method(self, *args, **kwargs):
-        assert len(args) == 0, f"Cached method {method.__name__} accept only named parameters"
+        # transform args in kwargs
+        keys = inspect.signature(method).parameters.keys()
+        unused_keys = [key for key in keys if key not in kwargs]
+        if 'self' in unused_keys:
+            unused_keys.remove('self')
+        new_kwargs = {unused_keys[i]: arg for i, arg in enumerate(args)}
+        kwargs = {**kwargs, **new_kwargs}
 
         if not hasattr(self, '_cache'):
             self._cache = {}
@@ -40,8 +47,10 @@ def cached(method: Callable[..., T]) -> Callable[..., T]:
         key = method.__name__
         if key not in self._cache or not _is_cache_valid(self, key, **kwargs):
             value = method(self, **kwargs)
+            # print(f"Cache miss for {key}")
             self._cache[key] = (kwargs, value)
         else:
+            # print(f"Cache hit for {key}")
             value = self._cache[key][1]
         return value
 

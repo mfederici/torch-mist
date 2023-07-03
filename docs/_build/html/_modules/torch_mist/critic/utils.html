@@ -81,7 +81,8 @@
 <span class="kn">from</span> <span class="nn">pyro.nn</span> <span class="kn">import</span> <span class="n">DenseNN</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
 
-<span class="kn">from</span> <span class="nn">torch_mist.critic</span> <span class="kn">import</span> <span class="n">JointCritic</span><span class="p">,</span> <span class="n">SeparableCritic</span>
+<span class="kn">from</span> <span class="nn">torch_mist.critic.separable</span> <span class="kn">import</span> <span class="n">SeparableCritic</span>
+<span class="kn">from</span> <span class="nn">torch_mist.critic.joint</span> <span class="kn">import</span> <span class="n">JointCritic</span>
 
 
 <div class="viewcode-block" id="separable_critic"><a class="viewcode-back" href="../../../autoapi/torch_mist/critic/utils/index.html#torch_mist.critic.separable_critic">[docs]</a><span class="k">def</span> <span class="nf">separable_critic</span><span class="p">(</span>
@@ -104,7 +105,7 @@
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">hidden_dims</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
     <span class="n">f_x</span> <span class="o">=</span> <span class="n">DenseNN</span><span class="p">(</span>
         <span class="n">input_dim</span><span class="o">=</span><span class="n">x_dim</span><span class="p">,</span>
-        <span class="n">hidden_dims</span><span class="o">=</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">h</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hidden_dims</span><span class="p">],</span>
+        <span class="n">hidden_dims</span><span class="o">=</span><span class="n">hidden_dims</span><span class="p">,</span>
         <span class="n">param_dims</span><span class="o">=</span><span class="p">[</span><span class="n">output_dim</span><span class="p">],</span>
         <span class="n">nonlinearity</span><span class="o">=</span><span class="n">nonlinearity</span><span class="p">,</span>
     <span class="p">)</span>

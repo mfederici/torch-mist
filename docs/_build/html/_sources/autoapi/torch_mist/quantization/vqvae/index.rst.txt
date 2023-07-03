@@ -38,7 +38,7 @@ Attributes
 
    
 
-.. py:class:: VQVAE(encoder: torch_mist.quantization.LearnableVectorQuantization, decoder: pyro.distributions.ConditionalDistribution, beta: float = 0.25, gamma: float = 0.99, cross_modal: bool = False)
+.. py:class:: VQVAE(encoder: torch_mist.quantization.functions.LearnableVectorQuantization, decoder: pyro.distributions.ConditionalDistribution, beta: float = 0.25, gamma: float = 0.99, cross_modal: bool = False)
 
 
    Bases: :py:obj:`torch.nn.Module`
@@ -73,6 +73,10 @@ Attributes
    :ivar training: Boolean represents whether this module is in training or
                    evaluation mode.
    :vartype training: bool
+
+   .. py:property:: quantization
+      :type: torch_mist.quantization.functions.QuantizationFunction
+
 
    .. py:method:: loss(x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
 

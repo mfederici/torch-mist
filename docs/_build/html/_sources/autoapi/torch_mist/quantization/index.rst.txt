@@ -256,14 +256,19 @@ Functions
    .. py:method:: forward(x: torch.Tensor) -> torch.Tensor
 
 
+   .. py:method:: __repr__()
+
+      Return repr(self).
+
+
 
 .. py:function:: learnable_vector_quantization(input_dim: int, quantization_dim: int, hidden_dims: List[int], n_bins: int) -> LearnableVectorQuantization
 
 
-.. py:function:: trained_vector_quantization(dataloader: Iterator, x_dim: int, n_bins: int, hidden_dims: List[int], cross_modal: bool = False, decoder_transform_params: Optional[Dict[str, Any]] = None, beta: float = 0.2, n_train_epochs=1, optimizer_class=torch.optim.Adam, optimizer_params: Optional[Dict[str, Any]] = None, y_dim: Optional[int] = None) -> LearnableVectorQuantization
+.. py:function:: trained_vector_quantization(dataloader: Iterator, x_dim: int, n_bins: int, hidden_dims: List[int], quantization_dim: Optional[int] = None, cross_modal: bool = False, decoder_transform_params: Optional[Dict[str, Any]] = None, beta: float = 0.2, n_train_epochs: int = 1, optimizer_class=torch.optim.Adam, optimizer_params: Optional[Dict[str, Any]] = None, y_dim: Optional[int] = None) -> QuantizationFunction
 
 
-.. py:class:: VQVAE(encoder: torch_mist.quantization.LearnableVectorQuantization, decoder: pyro.distributions.ConditionalDistribution, beta: float = 0.25, gamma: float = 0.99, cross_modal: bool = False)
+.. py:class:: VQVAE(encoder: torch_mist.quantization.functions.LearnableVectorQuantization, decoder: pyro.distributions.ConditionalDistribution, beta: float = 0.25, gamma: float = 0.99, cross_modal: bool = False)
 
 
    Bases: :py:obj:`torch.nn.Module`
@@ -298,6 +303,10 @@ Functions
    :ivar training: Boolean represents whether this module is in training or
                    evaluation mode.
    :vartype training: bool
+
+   .. py:property:: quantization
+      :type: torch_mist.quantization.functions.QuantizationFunction
+
 
    .. py:method:: loss(x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
 

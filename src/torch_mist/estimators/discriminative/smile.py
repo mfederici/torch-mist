@@ -2,48 +2,45 @@ from typing import List, Dict, Any, Optional
 
 import torch
 
-from torch_mist.critic import Critic, critic
+from torch_mist.baselines import BatchLogMeanExp
+from torch_mist.critic.base import Critic
+from torch_mist.critic.utils import critic
 from torch_mist.estimators.discriminative.js import JS
-from torch_mist.estimators.discriminative.mine import MINE
+from torch_mist.estimators.discriminative.tuba import TUBA
 
 
-class SMILE(MINE, JS):
+class SMILE(TUBA):
     def __init__(
             self,
             critic: Critic,
             mc_samples: int = 1,
             tau: float = 5.0,
     ):
-        MINE.__init__(
-            self,
+        super().__init__(
             critic=critic,
             mc_samples=mc_samples,
+            baseline=BatchLogMeanExp('all'),
         )
         self.tau = tau
 
-    def _compute_log_ratio(
+    def compute_log_ratio(
             self,
             x: torch.Tensor,
             y: torch.Tensor,
             f: torch.Tensor,
-            y_: torch.Tensor,
-            f_: torch.Tensor
+            f_: torch.Tensor,
     ) -> torch.Tensor:
-        return MINE._compute_log_ratio(
-            self,
-            x=x, y=y, f=f, y_=y_,
-            f_=torch.clamp(f_, -self.tau, self.tau)
+        return super().compute_log_ratio(
+            x=x, y=y, f=f,
+            f_=torch.clamp(f_, min=-self.tau, max=self.tau)
         )
 
-    def _compute_log_ratio_grad(
+    def loss(
             self,
             x: torch.Tensor,
             y: torch.Tensor,
-            f: torch.Tensor,
-            y_: torch.Tensor,
-            f_: torch.Tensor
     ) -> Optional[torch.Tensor]:
-        return JS._compute_log_ratio_grad(self, x=x, y=y, f=f, y_=y_, f_=f_)
+        return JS.loss(self, x, y)
 
 
 def smile(
@@ -55,7 +52,7 @@ def smile(
         tau: float = 5.0,
         critic_params: Dict[str, Any] = None,
 ) -> SMILE:
-    url_nn = critic(
+    critic_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
@@ -64,7 +61,7 @@ def smile(
     )
 
     return SMILE(
-        critic=url_nn,
+        critic=critic_nn,
         mc_samples=mc_samples,
         tau=tau,
     )

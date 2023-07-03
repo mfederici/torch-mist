@@ -1,0 +1,70 @@
+:py:mod:`torch_mist.estimators.discriminative.nwj`
+==================================================
+
+.. py:module:: torch_mist.estimators.discriminative.nwj
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.estimators.discriminative.nwj.NWJ
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.estimators.discriminative.nwj.nwj
+
+
+
+.. py:class:: NWJ(critic: torch_mist.critic.base.Critic, mc_samples: int = 1)
+
+
+   Bases: :py:obj:`torch_mist.estimators.discriminative.base.DiscriminativeMutualInformationEstimator`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+   .. py:method:: compute_log_ratio(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
+
+
+
+.. py:function:: nwj(x_dim: int, y_dim: int, hidden_dims: List[int], mc_samples: int = 1, critic_type: str = 'joint', critic_params: Dict[str, Any] = None) -> NWJ
+
+

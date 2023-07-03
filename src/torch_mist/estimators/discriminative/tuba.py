@@ -3,7 +3,8 @@ from typing import List, Dict, Any, Optional
 import torch
 
 from torch_mist.baselines import Baseline, baseline_nn
-from torch_mist.critic import Critic, critic
+from torch_mist.critic.base import Critic
+from torch_mist.critic.utils import critic
 from torch_mist.estimators.discriminative.nwj import NWJ
 
 
@@ -24,52 +25,48 @@ class TUBA(NWJ):
         self.baseline = baseline
         self.grad_baseline = grad_baseline
 
-    def _compute_log_ratio(
+    def compute_log_ratio(
             self,
             x: torch.Tensor,
             y: torch.Tensor,
             f: torch.Tensor,
-            y_: torch.Tensor,
-            f_: torch.Tensor
+            f_: torch.Tensor,
     ) -> torch.Tensor:
 
-        value_b = self.baseline.forward(f_, x, y)
-        if value_b.ndim == 1:
-            value_b = value_b.unsqueeze(1)
-        assert value_b.ndim == f_.ndim
+        b = self.baseline(f_, x, y)
+        assert b.ndim == f.ndim, f"Baseline output has shape {b.shape} but should have shape {f.shape}"
 
-        return super()._compute_log_ratio(
+        return super().compute_log_ratio(
             x=x,
             y=y,
-            f=f - value_b,
-            y_=y_,
-            f_=f_ - value_b
+            f=f - b,
+            f_=f_ - b.unsqueeze(0)
         )
 
-    def _compute_log_ratio_grad(
+    def loss(
             self,
             x: torch.Tensor,
             y: torch.Tensor,
-            f: torch.Tensor,
-            y_: torch.Tensor,
-            f_: torch.Tensor
     ) -> Optional[torch.Tensor]:
-
         if self.grad_baseline is None:
-            return None
+            return super().loss(x, y)
+
+        # Evaluate the unnormalized_log_ratio f(x,y) on the samples from p(x)p(y|x), with shape [N]
+        f = self.critic_on_positives(x, y)
+        assert f.shape == y.shape[:-1]
+
+        # Evaluate the unnormalized_log_ratio f(x,y) on the samples from p(x)r(y|x), with shape [N, M']
+        f_ = self.critic_on_negatives(x, y)
 
         grad_b = self.grad_baseline.forward(f_, x, y)
-        if grad_b.ndim == 1:
-            grad_b = grad_b.unsqueeze(1)
-        assert grad_b.ndim == f_.ndim
+        assert grad_b.shape == f.shape
 
-        return super()._compute_log_ratio_grad(
+        return -super().compute_log_ratio(
             x=x,
             y=y,
             f=f - grad_b,
-            y_=y_,
-            f_=f_ - grad_b
-        )
+            f_=f_ - grad_b.unsqueeze(0)
+        ).mean()
 
     def __repr__(self):
         s = self.__class__.__name__ + '(\n'

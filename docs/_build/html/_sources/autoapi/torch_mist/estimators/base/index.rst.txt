@@ -12,40 +12,12 @@ Classes
 
 .. autoapisummary::
 
-   torch_mist.estimators.base.Estimation
-   torch_mist.estimators.base.LogRatioEstimator
    torch_mist.estimators.base.MutualInformationEstimator
 
 
 
 
-.. py:class:: Estimation
-
-
-   .. py:property:: shape
-
-
-   .. py:attribute:: value
-      :type: torch.Tensor
-
-      
-
-   .. py:attribute:: loss
-      :type: torch.Tensor
-
-      
-
-   .. py:method:: __add__(other)
-
-
-   .. py:method:: __sub__(other)
-
-
-   .. py:method:: apply(fn)
-
-
-
-.. py:class:: LogRatioEstimator(*args, **kwargs)
+.. py:class:: MutualInformationEstimator(*args, **kwargs)
 
 
    Bases: :py:obj:`torch.nn.Module`
@@ -81,74 +53,24 @@ Classes
                    evaluation mode.
    :vartype training: bool
 
-   .. py:method:: log_ratio(*args, **kwargs) -> Estimation
+   .. py:method:: log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
       :abstractmethod:
 
 
-   .. py:method:: forward(*args, **kwargs) -> Estimation
+   .. py:method:: expected_log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
+   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+      :abstractmethod:
 
-.. py:class:: MutualInformationEstimator(*args, **kwargs)
 
-
-   Bases: :py:obj:`LogRatioEstimator`
-
-   Base class for all neural network modules.
-
-   Your models should also subclass this class.
-
-   Modules can also contain other Modules, allowing to nest them in
-   a tree structure. You can assign the submodules as regular attributes::
-
-       import torch.nn as nn
-       import torch.nn.functional as F
-
-       class Model(nn.Module):
-           def __init__(self):
-               super().__init__()
-               self.conv1 = nn.Conv2d(1, 20, 5)
-               self.conv2 = nn.Conv2d(20, 20, 5)
-
-           def forward(self, x):
-               x = F.relu(self.conv1(x))
-               return F.relu(self.conv2(x))
-
-   Submodules assigned in this way will be registered, and will have their
-   parameters converted too when you call :meth:`to`, etc.
-
-   .. note::
-       As per the example above, an ``__init__()`` call to the parent class
-       must be made before assignment on the child.
-
-   :ivar training: Boolean represents whether this module is in training or
-                   evaluation mode.
-   :vartype training: bool
-
-   .. py:attribute:: lower_bound
-      :type: bool
-
-      
-
-   .. py:attribute:: upper_bound
-      :type: bool
-
-      
-
-   .. py:method:: forward(x: torch.Tensor, y: torch.Tensor) -> Estimation
+   .. py:method:: forward(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
       Compute an estimation for I(x,y).
       :param x: a tensor with shape [N, D] in which x[i] is sampled from p(x)
-      :param y: a tensor with shape [N, D] or [N, M, D] in which y[i,j] is sampled from p(y|x[i])
+      :param y: a tensor with shape [N, D] in which y[i] is sampled from p(y|x[i])
 
-      :returns:
-
-                an object with the following attributes:
-                            'value': the estimation for I(x,y)
-                            'loss': a quantity to differentiate to maximize mutual information
-                                w.r.t proposal, encoder(s) and ratio estimator
-                            ...
-                            other quantities that are computed by components
+      :returns: the expected (weighted) log ratio
       :rtype: estimation
 
 

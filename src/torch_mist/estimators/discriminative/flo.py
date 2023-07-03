@@ -1,10 +1,10 @@
 from typing import List, Dict, Any, Optional
 
 import torch
-import torch.nn.functional as F
 
-from torch_mist.baselines import LearnableJointBaseline
-from torch_mist.critic import Critic, critic
+from torch_mist.baselines import LearnableJointBaseline, joint_baseline_nn
+from torch_mist.critic.base import Critic
+from torch_mist.critic.utils import critic
 from torch_mist.estimators.discriminative.base import DiscriminativeMutualInformationEstimator
 
 
@@ -21,23 +21,19 @@ class FLO(DiscriminativeMutualInformationEstimator):
         )
         self.baseline = baseline
 
-    def _compute_log_ratio(
+    def compute_log_ratio(
             self,
             x: torch.Tensor,
             y: torch.Tensor,
             f: torch.Tensor,
-            y_: torch.Tensor,
             f_: torch.Tensor,
     ) -> torch.Tensor:
-        b = self.baseline(f_, x, y)
+        b = self.baseline(x=x, y=y, f_=f_)
+        assert b.ndim == f.ndim
 
-        if b.ndim == 1:
-            b = b.unsqueeze(1)
-        assert b.ndim == f_.ndim
+        M = f_.shape[0]
 
-        M = f_.shape[1]
-
-        log_ratio = -(b + (torch.logsumexp(f_, 1).unsqueeze(1) - f - b).exp() / M) + 1
+        log_ratio = -(b + (torch.logsumexp(f_, 0) - f - b).exp() / M) + 1
 
         return log_ratio
 

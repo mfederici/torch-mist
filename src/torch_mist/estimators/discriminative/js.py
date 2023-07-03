@@ -2,8 +2,10 @@ from typing import List, Dict, Any, Optional
 
 import torch
 import torch.nn.functional as F
-from torch_mist.critic import Critic, critic
+from torch_mist.critic.base import Critic
+from torch_mist.critic.utils import critic
 from torch_mist.estimators.discriminative.nwj import NWJ
+from torch_mist.utils.caching import reset_cache_after_call
 
 
 class JS(NWJ):
@@ -17,16 +19,16 @@ class JS(NWJ):
             mc_samples=mc_samples,
         )
 
-    def _compute_log_ratio_grad(
+    @reset_cache_after_call
+    def loss(
             self,
             x: torch.Tensor,
             y: torch.Tensor,
-            f: torch.Tensor,
-            y_: torch.Tensor,
-            f_: torch.Tensor
     ) -> Optional[torch.Tensor]:
-        ratio_grad = F.softplus(-f).mean(1) + F.softplus(f_).mean(1)
-        return ratio_grad
+        f = self.critic_on_positives(x=x, y=y)
+        f_ = self.critic_on_negatives(x=x, y=y)
+        loss = F.softplus(-f).mean() + F.softplus(f_).mean()
+        return loss
 
 
 def js(

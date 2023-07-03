@@ -37,11 +37,13 @@ class SeparableCritic(Critic):
         f_y = self.f_y(y)
 
         if f_x.ndim < f_y.ndim:
-            f_x = f_x.unsqueeze(1)
+            f_x = f_x.unsqueeze(0)
+
+        assert f_x.ndim == f_y.ndim, f'f_x.ndim={f_x.ndim}, f_y.ndim={f_y.ndim}'
 
         # hack to expand to the same shape without specifying the number of repeats
         f_x = f_x + f_y * 0
         f_y = f_y + f_x * 0
 
-        K = torch.einsum('acb, acb -> ac', f_x, f_y)
+        K = torch.einsum('...b, ...b -> ...', f_x, f_y)
         return K / self.temperature

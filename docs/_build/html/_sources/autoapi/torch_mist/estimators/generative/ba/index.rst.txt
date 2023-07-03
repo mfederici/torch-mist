@@ -25,10 +25,10 @@ Functions
 
 
 
-.. py:class:: BA(conditional_y_x: pyro.distributions.ConditionalDistribution, marginal_y: Optional[torch.distributions.Distribution] = None, entropy_y: Optional[torch.Tensor] = None)
+.. py:class:: BA(q_Y_given_X: pyro.distributions.ConditionalDistribution, entropy_y: Optional[torch.Tensor] = None)
 
 
-   Bases: :py:obj:`torch_mist.estimators.generative.base.VariationalProposalMutualInformationEstimator`
+   Bases: :py:obj:`torch_mist.estimators.generative.base.GenerativeMutualInformationEstimator`
 
    Base class for all neural network modules.
 
@@ -61,10 +61,7 @@ Functions
                    evaluation mode.
    :vartype training: bool
 
-   .. py:method:: log_prob_y(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
-
-
-   .. py:method:: compute_loss(x: torch.Tensor, y: torch.Tensor, log_p_y: torch.Tensor, log_p_y_x: torch.Tensor) -> Optional[torch.Tensor]
+   .. py:method:: expected_log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
 

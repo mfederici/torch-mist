@@ -10,7 +10,28 @@ Submodules
    :titlesonly:
    :maxdepth: 1
 
+   caching/index.rst
    data/index.rst
    estimate/index.rst
+
+
+Package Contents
+----------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.utils.estimate_mi
+   torch_mist.utils.optimize_mi_estimator
+
+
+
+.. py:function:: estimate_mi(estimator: torch_mist.estimators.base.MutualInformationEstimator, dataloader: collections.abc.Iterator[Tuple[torch.Tensor, torch.Tensor]]) -> Tuple[float, float]
+
+
+.. py:function:: optimize_mi_estimator(estimator: torch_mist.estimators.base.MutualInformationEstimator, dataloader: collections.abc.Iterator[Tuple[torch.Tensor, torch.Tensor]], n_epochs: int = 1, optimizer_class: Type[torch.optim.Optimizer] = Adam, optimizer_params: Optional[Dict[str, Any]] = None) -> pandas.DataFrame
 
 

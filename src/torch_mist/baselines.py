@@ -1,7 +1,8 @@
 import math
 from abc import abstractmethod
-from typing import Optional, List, Any, Callable
+from typing import Optional, List, Any, Callable, Union
 
+import numpy as np
 import torch
 from torch import nn
 
@@ -43,23 +44,31 @@ class ExponentialMovingAverage(Baseline):
                 ema = self.ema
 
         ma = ema.log()
-
-        return ma.unsqueeze(0).repeat(f_.shape[0])
+        for _ in range(x.ndim - 1):
+            ma = ma.unsqueeze(0)
+        ma = ma.expand_as(x[..., 0])
+        return ma
 
 
 class BatchLogMeanExp(Baseline):
-    def __init__(self, dim=1):
+    def __init__(self, dims: str):
+        assert dims in ['first', 'all']
         super(BatchLogMeanExp, self).__init__()
-        self.dim = dim
+        self.dims = dims
 
     def forward(self, f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
-        N, M = f_.shape[0], f_.shape[1]
+        # log 1/M \sum e^f_ = logsumexp(f_) - log M
+        if self.dims == 'all':
+            f_ = f_.view(-1)
 
-        # log 1/M \sum_{j=1}^M f_[i,j] = logsumexp(f_, 1) - log M
-        b = torch.logsumexp(f_, 1).unsqueeze(1) - math.log(M)
+        M = f_.shape[0]
+        b = torch.logsumexp(f_, 0) - math.log(M)
 
-        if self.dim == 2:
-            b = torch.logsumexp(b, 0).unsqueeze(0) - math.log(N)
+        if self.dims == 'all':
+            for _ in range(x.ndim - 1):
+                b = b.unsqueeze(0)
+            b = b.expand_as(x[..., 0])
+
         return b
 
 
@@ -69,12 +78,19 @@ class LearnableBaseline(Baseline):
         self.net = net
 
     def forward(self, f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
-        return self.net(x)
+        return self.net(x).squeeze(-1)
 
 
 class LearnableJointBaseline(LearnableBaseline):
     def forward(self, f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
-        x = x.unsqueeze(1)+y*0
+        n_dims = x.ndim
+        # Find the maximum shape
+        max_shape = [max(x.shape[i], y.shape[i]) for i in range(n_dims - 1)]
+        # Expand x and y to the maximum shape
+        x = x.expand(max_shape + [-1])
+        y = y.expand(max_shape + [-1])
+
+        assert x.shape[:-1] == y.shape[:-1]
         xy = torch.cat([x, y], -1)
         return self.net(xy).squeeze(-1)
 

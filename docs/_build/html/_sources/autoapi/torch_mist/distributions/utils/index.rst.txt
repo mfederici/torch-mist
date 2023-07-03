@@ -12,7 +12,9 @@ Classes
 
 .. autoapisummary::
 
+   torch_mist.distributions.utils.ConditionalCategoricalModule
    torch_mist.distributions.utils.NormalModule
+   torch_mist.distributions.utils.CategoricalModule
    torch_mist.distributions.utils.ConditionalStandardNormalModule
 
 
@@ -26,14 +28,56 @@ Functions
    torch_mist.distributions.utils.conditional_transformed_normal
    torch_mist.distributions.utils.transformed_normal
    torch_mist.distributions.utils.conditional_categorical
-   torch_mist.distributions.utils.conditional_mutivariate_categorical
 
 
 
 .. py:function:: fetch_transform(transform_name: str)
 
 
-.. py:class:: NormalModule(loc: torch.Tensor, scale: torch.Tensor)
+.. py:class:: ConditionalCategoricalModule(net: torch.nn.Module)
+
+
+   Bases: :py:obj:`torch_mist.distributions.transforms.ConditionalDistributionModule`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: condition(x)
+
+      :rtype: torch.distributions.Distribution
+
+
+
+.. py:class:: NormalModule(loc: torch.Tensor, scale: torch.Tensor, learnable: bool = False)
+
+
+   Bases: :py:obj:`torch.distributions.Distribution`, :py:obj:`torch.nn.Module`
+
+   Distribution is the abstract base class for probability distributions.
+
+   .. py:method:: rsample(sample_shape=torch.Size())
+
+      Generates a sample_shape shaped reparameterized sample or sample_shape
+      shaped batch of reparameterized samples if the distribution parameters
+      are batched.
+
+
+   .. py:method:: log_prob(value)
+
+      Returns the log of the probability density/mass function evaluated at
+      `value`.
+
+      :param value:
+      :type value: Tensor
+
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
+
+
+
+.. py:class:: CategoricalModule(logits: torch.tensor, temperature: float = 1.0, learnable: bool = False)
 
 
    Bases: :py:obj:`torch.distributions.Distribution`, :py:obj:`torch.nn.Module`
@@ -83,8 +127,5 @@ Functions
 
 
 .. py:function:: conditional_categorical(n_classes: int, context_dim: int, hidden_dims: List[int])
-
-
-.. py:function:: conditional_mutivariate_categorical(n_classes: int, output_dim: int, context_dim: int, hidden_dims: List[int])
 
 

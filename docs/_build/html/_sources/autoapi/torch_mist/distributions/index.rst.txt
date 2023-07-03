@@ -10,7 +10,6 @@ Subpackages
    :titlesonly:
    :maxdepth: 3
 
-   conditional/index.rst
    parametrizations/index.rst
    transforms/index.rst
 
@@ -21,6 +20,7 @@ Submodules
    :titlesonly:
    :maxdepth: 1
 
+   joint/index.rst
    product/index.rst
    utils/index.rst
 

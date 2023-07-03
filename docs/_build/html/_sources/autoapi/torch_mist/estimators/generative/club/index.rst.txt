@@ -25,10 +25,10 @@ Functions
 
 
 
-.. py:class:: CLUB(conditional_y_x: pyro.distributions.ConditionalDistribution, sample: str = 'all')
+.. py:class:: CLUB(q_Y_given_X: pyro.distributions.ConditionalDistribution, sample: str = 'all')
 
 
-   Bases: :py:obj:`torch_mist.estimators.generative.base.VariationalProposalMutualInformationEstimator`
+   Bases: :py:obj:`torch_mist.estimators.generative.l1out.L1Out`
 
    Base class for all neural network modules.
 
@@ -61,7 +61,7 @@ Functions
                    evaluation mode.
    :vartype training: bool
 
-   .. py:method:: log_prob_y(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+   .. py:method:: approx_log_p_y(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
 

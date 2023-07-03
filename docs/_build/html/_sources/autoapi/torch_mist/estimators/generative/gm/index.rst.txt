@@ -25,10 +25,10 @@ Functions
 
 
 
-.. py:class:: GM(joint_xy: torch.distributions.Distribution, marginal_y: Optional[torch.distributions.Distribution] = None, marginal_x: Optional[torch.distributions.Distribution] = None, entropy_y: Optional[torch.Tensor] = None, entropy_x: Optional[torch.Tensor] = None)
+.. py:class:: GM(q_XY: torch_mist.distributions.joint.JointDistribution, q_Y: torch.distributions.Distribution, q_X: torch.distributions.Distribution)
 
 
-   Bases: :py:obj:`torch_mist.estimators.generative.base.GenerativeMutualInformationEstimator`
+   Bases: :py:obj:`torch_mist.estimators.generative.doe.DoE`
 
    Base class for all neural network modules.
 
@@ -61,16 +61,16 @@ Functions
                    evaluation mode.
    :vartype training: bool
 
-   .. py:method:: log_prob_y(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+   .. py:method:: approx_log_p_x(x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
 
 
-   .. py:method:: log_prob_x(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+   .. py:method:: approx_log_p_xy(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: log_prob_y_x(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+   .. py:method:: approx_log_p_x_given_y(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: compute_loss(x: torch.Tensor, y: torch.Tensor, log_p_y: torch.Tensor, log_p_y_x: torch.Tensor)
+   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
    .. py:method:: __repr__()
@@ -79,6 +79,6 @@ Functions
 
 
 
-.. py:function:: gm(x_dim: int, y_dim: int, hidden_dims: List[int], entropy_x: Optional[Union[torch.Tensor, float]] = None, entropy_y: Optional[Union[torch.Tensor, float]] = None, joint_transform_name: str = 'conditional_linear', n_joint_transforms: int = 1, marginal_transform_name: str = 'linear', n_marginal_transforms: int = 1) -> GM
+.. py:function:: gm(x_dim: int, y_dim: int, hidden_dims: List[int], joint_transform_name: str = 'conditional_linear', n_joint_transforms: int = 1, marginal_transform_name: str = 'linear', n_marginal_transforms: int = 1) -> GM
 
 

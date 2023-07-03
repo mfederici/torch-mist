@@ -1,7 +1,8 @@
 from typing import List, Dict, Any
 
 from torch_mist.baselines import Baseline, baseline_nn, ConstantBaseline, InterpolatedBaseline, BatchLogMeanExp
-from torch_mist.critic import Critic, critic
+from torch_mist.critic.base import Critic
+from torch_mist.critic.utils import critic
 from torch_mist.estimators.discriminative.tuba import TUBA
 
 
@@ -9,12 +10,12 @@ class AlphaTUBA(TUBA):
     def __init__(
             self,
             critic: Critic,
-            baseline: Baseline = ConstantBaseline(1.0),
+            baseline: Baseline,
             alpha: float = 0.5,
             mc_samples: int = -1,
     ):
         alpha_baseline = InterpolatedBaseline(
-            baseline_1=BatchLogMeanExp(dim=1),
+            baseline_1=BatchLogMeanExp('first'),
             baseline_2=baseline,
             alpha=alpha
         )

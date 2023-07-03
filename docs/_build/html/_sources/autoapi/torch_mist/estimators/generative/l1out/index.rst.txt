@@ -25,10 +25,10 @@ Functions
 
 
 
-.. py:class:: L1Out(conditional_y_x: pyro.distributions.ConditionalDistribution)
+.. py:class:: L1Out(q_Y_given_X: pyro.distributions.ConditionalDistribution)
 
 
-   Bases: :py:obj:`torch_mist.estimators.generative.base.VariationalProposalMutualInformationEstimator`
+   Bases: :py:obj:`torch_mist.estimators.generative.base.GenerativeMutualInformationEstimator`
 
    Base class for all neural network modules.
 
@@ -61,7 +61,14 @@ Functions
                    evaluation mode.
    :vartype training: bool
 
-   .. py:method:: log_prob_y(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+   .. py:method:: approx_log_p_y(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+      :abstractmethod:
+
+
+   .. py:method:: expected_log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
 

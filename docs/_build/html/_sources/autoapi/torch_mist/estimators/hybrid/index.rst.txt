@@ -17,7 +17,7 @@ Classes
 
 
 
-.. py:class:: HybridMutualInformationEstimator(generative_estimator: Optional[torch_mist.estimators.generative.VariationalProposalMutualInformationEstimator] = None, discriminative_estimator: Optional[torch_mist.estimators.discriminative.DiscriminativeMutualInformationEstimator] = None)
+.. py:class:: HybridMutualInformationEstimator(generative_estimator: Optional[torch_mist.estimators.generative.base.VariationalMutualInformationEstimator] = None, discriminative_estimator: Optional[torch_mist.estimators.discriminative.base.DiscriminativeMutualInformationEstimator] = None)
 
 
    Bases: :py:obj:`torch_mist.estimators.base.MutualInformationEstimator`

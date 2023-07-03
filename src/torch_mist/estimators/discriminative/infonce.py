@@ -2,9 +2,10 @@ from typing import List, Dict, Any
 
 import torch
 import math
-from torch_mist.critic import critic, SeparableCritic
+from torch_mist.critic.utils import critic
+from torch_mist.critic.separable import SeparableCritic
 from torch_mist.estimators.discriminative.base import DiscriminativeMutualInformationEstimator
-
+from torch_mist.utils.caching import cached
 
 
 class InfoNCE(DiscriminativeMutualInformationEstimator):
@@ -19,23 +20,12 @@ class InfoNCE(DiscriminativeMutualInformationEstimator):
             mc_samples=0,  # 0 signifies the whole batch is used as negative samples
         )
 
-    def _compute_log_ratio(
-            self,
-            x: torch.Tensor,
-            y: torch.Tensor,
-            y_: torch.Tensor,
-            f: torch.Tensor,
-            f_: torch.Tensor
-    ) -> torch.Tensor:
-        N, M = f_.shape[0], f_.shape[1]
-
-        # Compute the estimation for the normalization constant
-        # log 1/M \sum_{j=1}^M f_[i,j] = logsumexp(f_,1).mean(0) - log M
-        log_Z_value = (torch.logsumexp(f_, 1) - math.log(M)).unsqueeze(1)
-
-        log_ratio = f - log_Z_value
-
-        return log_ratio
+    @cached
+    def compute_log_ratio(self, x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, f_: torch.tensor):
+        # f has shape [N, ...]
+        # f_ has shape [N, N, ...]
+        log_norm = f_.logsumexp(0) - math.log(f_.shape[0])
+        return f-log_norm
 
 
 def infonce(

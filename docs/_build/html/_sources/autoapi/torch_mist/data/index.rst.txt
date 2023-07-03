@@ -1,0 +1,15 @@
+:py:mod:`torch_mist.data`
+=========================
+
+.. py:module:: torch_mist.data
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   multimixture/index.rst
+
+

@@ -25,10 +25,10 @@ Functions
 
 
 
-.. py:class:: DoE(conditional_y_x: pyro.distributions.ConditionalDistribution, marginal_y: torch.distributions.Distribution)
+.. py:class:: DoE(q_Y_given_X: pyro.distributions.ConditionalDistribution, q_Y: torch.distributions.Distribution)
 
 
-   Bases: :py:obj:`torch_mist.estimators.generative.ba.BA`
+   Bases: :py:obj:`torch_mist.estimators.generative.base.GenerativeMutualInformationEstimator`
 
    Base class for all neural network modules.
 
@@ -60,6 +60,12 @@ Functions
    :ivar training: Boolean represents whether this module is in training or
                    evaluation mode.
    :vartype training: bool
+
+   .. py:method:: approx_log_p_y(y: torch.Tensor, x: Optional[torch.Tensor] = None) -> torch.Tensor
+
+
+   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
 
    .. py:method:: __repr__()
 

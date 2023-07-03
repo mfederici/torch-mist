@@ -3,9 +3,9 @@ from typing import Optional
 import torch
 from torch import nn
 
-from torch_mist.estimators.generative import GM
 from torch_mist.estimators.base import MutualInformationEstimator
-from torch_mist.quantization import QuantizationFunction
+from torch_mist.estimators.generative.gm import GM
+from torch_mist.quantization.functions import QuantizationFunction
 from torch_mist.utils.caching import cached, reset_cache_after_call, reset_cache_before_call
 
 

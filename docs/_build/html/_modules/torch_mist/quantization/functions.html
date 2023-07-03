@@ -114,8 +114,9 @@
 
 <div class="viewcode-block" id="VectorQuantization.codebook_lookup"><a class="viewcode-back" href="../../../autoapi/torch_mist/quantization/index.html#torch_mist.quantization.functions.VectorQuantization.codebook_lookup">[docs]</a>    <span class="k">def</span> <span class="nf">codebook_lookup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">vectors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
         <span class="c1"># Compute distances between z and vectors</span>
         <span class="n">distances</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vectors</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
@@ -123,7 +124,7 @@
         <span class="n">_</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
         <span class="c1"># Get the corresponding vector</span>
 
-        <span class="k">return</span> <span class="n">indices</span></div>
+        <span class="k">return</span> <span class="n">indices</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">n_bins</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -147,7 +148,14 @@
 <div class="viewcode-block" id="LearnableVectorQuantization.forward"><a class="viewcode-back" href="../../../autoapi/torch_mist/quantization/index.html#torch_mist.quantization.functions.LearnableVectorQuantization.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">net</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">vectors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">z</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">z</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LearnableVectorQuantization.__repr__"><a class="viewcode-back" href="../../../autoapi/torch_mist/quantization/index.html#torch_mist.quantization.functions.LearnableVectorQuantization.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">(&#39;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  (net): &quot;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">net</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  &quot;</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  (n_bins): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">vectors</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">)&quot;</span>
+        <span class="k">return</span> <span class="n">s</span></div></div>
 
 
 <div class="viewcode-block" id="FixedQuantization"><a class="viewcode-back" href="../../../autoapi/torch_mist/quantization/index.html#torch_mist.quantization.functions.FixedQuantization">[docs]</a><span class="k">class</span> <span class="nc">FixedQuantization</span><span class="p">(</span><span class="n">QuantizationFunction</span><span class="p">):</span>
@@ -192,14 +200,15 @@
         <span class="n">x_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">n_bins</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">hidden_dims</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">quantization_dim</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">cross_modal</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">decoder_transform_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
-        <span class="n">n_train_epochs</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">n_train_epochs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">optimizer_class</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">,</span>
         <span class="n">optimizer_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">y_dim</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LearnableVectorQuantization</span><span class="p">:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">QuantizationFunction</span><span class="p">:</span>
 
     <span class="k">assert</span> <span class="ow">not</span> <span class="n">cross_modal</span> <span class="ow">or</span> <span class="n">y_dim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;y_dim must be specified if cross_modal is True&quot;</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">hidden_dims</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;hidden_dims must be a non-empty list&quot;</span>
@@ -210,8 +219,8 @@
     <span class="kn">from</span> <span class="nn">torch_mist.quantization</span> <span class="kn">import</span> <span class="n">vqvae</span>
     <span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
-    <span class="n">quantization_dim</span> <span class="o">=</span> <span class="n">hidden_dims</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">hidden_dims</span> <span class="o">=</span> <span class="n">hidden_dims</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">quantization_dim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">quantization_dim</span> <span class="o">=</span> <span class="mi">16</span>
 
     <span class="n">model</span> <span class="o">=</span> <span class="n">vqvae</span><span class="p">(</span>
         <span class="n">x_dim</span><span class="o">=</span><span class="n">x_dim</span><span class="p">,</span>
@@ -232,7 +241,7 @@
             <span class="n">model</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
             <span class="n">opt</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 
-    <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">encoder</span></div>
+    <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">quantization</span></div>
 
 
 

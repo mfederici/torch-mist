@@ -76,62 +76,80 @@
            <div itemprop="articleBody">
              
   <h1>Source code for torch_mist.estimators.generative.pq</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">pyro.distributions</span> <span class="kn">import</span> <span class="n">ConditionalDistribution</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
-<span class="kn">from</span> <span class="nn">torch.distributions</span> <span class="kn">import</span> <span class="n">Categorical</span>
+<span class="kn">from</span> <span class="nn">torch.distributions</span> <span class="kn">import</span> <span class="n">Categorical</span><span class="p">,</span> <span class="n">Distribution</span>
 
-<span class="kn">from</span> <span class="nn">torch_mist.estimators.generative.base</span> <span class="kn">import</span> <span class="n">GenerativeMutualInformationEstimator</span>
-<span class="kn">from</span> <span class="nn">torch_mist.estimators.base</span> <span class="kn">import</span> <span class="n">Estimation</span>
-<span class="kn">from</span> <span class="nn">torch_mist.quantization</span> <span class="kn">import</span> <span class="n">QuantizationFunction</span>
+<span class="kn">from</span> <span class="nn">torch_mist.distributions.utils</span> <span class="kn">import</span> <span class="n">CategoricalModule</span>
+<span class="kn">from</span> <span class="nn">torch_mist.estimators.generative.doe</span> <span class="kn">import</span> <span class="n">DoE</span>
+<span class="kn">from</span> <span class="nn">torch_mist.quantization.functions</span> <span class="kn">import</span> <span class="n">QuantizationFunction</span>
+<span class="kn">from</span> <span class="nn">torch_mist.utils.caching</span> <span class="kn">import</span> <span class="n">cached</span><span class="p">,</span> <span class="n">reset_cache_after_call</span>
 
 
-<div class="viewcode-block" id="PQ"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.generative.PQ">[docs]</a><span class="k">class</span> <span class="nc">PQ</span><span class="p">(</span><span class="n">GenerativeMutualInformationEstimator</span><span class="p">):</span>
+<div class="viewcode-block" id="PQ"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.generative.PQ">[docs]</a><span class="k">class</span> <span class="nc">PQ</span><span class="p">(</span><span class="n">DoE</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
-            <span class="n">conditional_qy_x</span><span class="p">:</span> <span class="n">ConditionalDistribution</span><span class="p">,</span>
+            <span class="n">q_qY_given_X</span><span class="p">:</span> <span class="n">ConditionalDistribution</span><span class="p">,</span>
             <span class="n">quantization</span><span class="p">:</span> <span class="n">QuantizationFunction</span><span class="p">,</span>
             <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">quantization</span> <span class="o">=</span> <span class="n">quantization</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">qy_logits</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">quantization</span><span class="o">.</span><span class="n">n_bins</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">conditional_qy_x</span> <span class="o">=</span> <span class="n">conditional_qy_x</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">=</span> <span class="n">temperature</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">q_Y_given_X</span><span class="o">=</span><span class="n">q_qY_given_X</span><span class="p">,</span> 
+            <span class="n">q_Y</span><span class="o">=</span><span class="n">CategoricalModule</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">quantization</span><span class="o">.</span><span class="n">n_bins</span><span class="p">),</span> <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span> <span class="n">learnable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quantization</span><span class="o">=</span><span class="n">quantization</span>
 
-<div class="viewcode-block" id="PQ.log_ratio"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.generative.PQ.log_ratio">[docs]</a>    <span class="k">def</span> <span class="nf">log_ratio</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-            <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Estimation</span><span class="p">:</span>
-        <span class="c1"># probabilities for the categorical distribution over q(y), shape [N, M, BINS]</span>
-        <span class="n">p_qy_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantization</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">quantize_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantization</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
 
-        <span class="n">r_qy_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conditional_qy_x</span><span class="o">.</span><span class="n">condition</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r_qy_x</span><span class="p">,</span> <span class="n">Categorical</span><span class="p">)</span>
-        <span class="c1"># log-probabilities for the categorical distribution r(q(y)|x), shape [N, 1, BINS]</span>
-        <span class="n">log_r_qy_x</span> <span class="o">=</span> <span class="n">r_qy_x</span><span class="o">.</span><span class="n">logits</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="n">r_qy_x</span><span class="o">.</span><span class="n">logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">q_Y_given_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Distribution</span><span class="p">:</span>
+        <span class="n">q_qY_given_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_Y_given_X</span><span class="o">.</span><span class="n">condition</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">q_qY_given_x</span><span class="p">,</span> <span class="n">Categorical</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">q_qY_given_x</span>
 
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">approx_log_p_y_given_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="c1"># probabilities for the categorical distribution over q(y), shape [N, N_BINS]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantize_y</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
 
-        <span class="c1"># log-probabilities for the marginal categorical distribution r(q(y)), shape [1, 1, BINS]</span>
-        <span class="n">log_r_qy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qy_logits</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qy_logits</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">log_r_qy</span> <span class="o">=</span> <span class="n">log_r_qy</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">q_qy_given_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_Y_given_x</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
 
-        <span class="c1"># log-ratio, shape [N, M]</span>
-        <span class="n">log_ratio</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p_qy_y</span> <span class="o">*</span> <span class="p">(</span><span class="n">log_r_qy_x</span> <span class="o">-</span> <span class="n">log_r_qy</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">q_qy_given_x</span><span class="p">,</span> <span class="n">Categorical</span><span class="p">)</span>
+        <span class="c1"># log-probabilities for the categorical distribution r(q(y)|x), shape [N, N_BINS]</span>
+        <span class="n">log_q_qy_x</span> <span class="o">=</span> <span class="n">q_qy_given_x</span><span class="o">.</span><span class="n">logits</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="n">q_qy_given_x</span><span class="o">.</span><span class="n">logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p_qy_y</span> <span class="o">*</span> <span class="n">log_r_qy_x</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-        <span class="n">loss</span> <span class="o">+=</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p_qy_y</span> <span class="o">*</span> <span class="n">log_r_qy</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">log_q_qy_x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;log_r_qy_x.shape=</span><span class="si">{</span><span class="n">log_q_qy_x</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">&#39;</span>
 
-        <span class="k">return</span> <span class="n">Estimation</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">log_ratio</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">)</span></div></div>
+        <span class="c1"># E_q(Q(y)|y)[log q(Q(y)|x)]</span>
+        <span class="n">log_q_qy_given_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y</span> <span class="o">*</span> <span class="n">log_q_qy_x</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">log_q_qy_given_x</span>
+
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">approx_log_p_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="c1"># probabilities for the categorical distribution over q(y), shape [N, BINS]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantize_y</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+
+        <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_Y</span><span class="o">.</span><span class="n">logits</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">q_Y</span><span class="o">.</span><span class="n">temperature</span>
+
+        <span class="c1"># log-probabilities for the marginal categorical distribution q(q(y)), shape [1, N_BINS]</span>
+        <span class="n">log_q_qy</span> <span class="o">=</span> <span class="n">logits</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="n">log_q_qy</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+            <span class="n">log_q_qy</span> <span class="o">=</span> <span class="n">log_q_qy</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">log_q_qy</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;log_q_qy.shape=</span><span class="si">{</span><span class="n">log_q_qy</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">&#39;</span>
+
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y</span> <span class="o">*</span> <span class="n">log_q_qy</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="pq"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.generative.pq">[docs]</a><span class="k">def</span> <span class="nf">pq</span><span class="p">(</span>
         <span class="n">x_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">quantization</span><span class="p">:</span> <span class="n">QuantizationFunction</span><span class="p">,</span>
         <span class="n">hidden_dims</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">quantization</span><span class="p">:</span> <span class="n">QuantizationFunction</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PQ</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">torch_mist.distributions.utils</span> <span class="kn">import</span> <span class="n">conditional_categorical</span>
 
@@ -142,7 +160,7 @@
     <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">PQ</span><span class="p">(</span>
-        <span class="n">conditional_qy_x</span><span class="o">=</span><span class="n">q_y_x</span><span class="p">,</span>
+        <span class="n">q_qY_given_X</span><span class="o">=</span><span class="n">q_y_x</span><span class="p">,</span>
         <span class="n">quantization</span><span class="o">=</span><span class="n">quantization</span><span class="p">,</span>
     <span class="p">)</span></div>
 </pre></div>

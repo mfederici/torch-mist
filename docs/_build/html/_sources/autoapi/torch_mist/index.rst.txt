@@ -11,6 +11,7 @@ Subpackages
    :maxdepth: 3
 
    critic/index.rst
+   data/index.rst
    distributions/index.rst
    estimators/index.rst
    nn/index.rst

@@ -76,99 +76,71 @@
            <div itemprop="articleBody">
              
   <h1>Source code for torch_mist.estimators.generative.gm</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torch.distributions</span> <span class="kn">import</span> <span class="n">Distribution</span>
 
-<span class="kn">from</span> <span class="nn">torch_mist.estimators.generative.base</span> <span class="kn">import</span> <span class="n">GenerativeMutualInformationEstimator</span>
+<span class="kn">from</span> <span class="nn">torch_mist.distributions.joint</span> <span class="kn">import</span> <span class="n">JointDistribution</span><span class="p">,</span> <span class="n">ConditionalRatioDistribution</span>
+<span class="kn">from</span> <span class="nn">torch_mist.estimators.generative.doe</span> <span class="kn">import</span> <span class="n">DoE</span>
+<span class="kn">from</span> <span class="nn">torch_mist.utils.caching</span> <span class="kn">import</span> <span class="n">cached</span><span class="p">,</span> <span class="n">reset_cache_after_call</span>
 
 
-<div class="viewcode-block" id="GM"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.generative.gm.GM">[docs]</a><span class="k">class</span> <span class="nc">GM</span><span class="p">(</span><span class="n">GenerativeMutualInformationEstimator</span><span class="p">):</span>
+<div class="viewcode-block" id="GM"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.generative.gm.GM">[docs]</a><span class="k">class</span> <span class="nc">GM</span><span class="p">(</span><span class="n">DoE</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
-            <span class="n">joint_xy</span><span class="p">:</span> <span class="n">Distribution</span><span class="p">,</span>
-            <span class="n">marginal_y</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Distribution</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">marginal_x</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Distribution</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">entropy_y</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">entropy_x</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">q_XY</span><span class="p">:</span> <span class="n">JointDistribution</span><span class="p">,</span>
+            <span class="n">q_Y</span><span class="p">:</span> <span class="n">Distribution</span><span class="p">,</span>
+            <span class="n">q_X</span><span class="p">:</span> <span class="n">Distribution</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">q_Y_given_X</span> <span class="o">=</span> <span class="n">ConditionalRatioDistribution</span><span class="p">(</span><span class="n">q_XY</span><span class="p">,</span> <span class="n">q_X</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">joint_xy</span> <span class="o">=</span> <span class="n">joint_xy</span>
-        <span class="k">assert</span> <span class="p">(</span><span class="n">marginal_y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span>
-                <span class="n">entropy_y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">),</span> <span class="s1">&#39;Either the marginal distribution or the marginal entropy must be provided&#39;</span>
-        <span class="k">assert</span> <span class="p">(</span><span class="n">marginal_x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span>
-                <span class="n">entropy_x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">),</span> <span class="s1">&#39;Either the marginal distribution or the marginal entropy must be provided&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">marginal_y</span> <span class="o">=</span> <span class="n">marginal_y</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">entropy_y</span> <span class="o">=</span> <span class="n">entropy_y</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">marginal_x</span> <span class="o">=</span> <span class="n">marginal_x</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">entropy_x</span> <span class="o">=</span> <span class="n">entropy_x</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">q_Y</span><span class="o">=</span><span class="n">q_Y</span><span class="p">,</span> <span class="n">q_Y_given_X</span><span class="o">=</span><span class="n">q_Y_given_X</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_x</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_y</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_entropy_xy</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_entropy_x</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_XY</span> <span class="o">=</span> <span class="n">q_XY</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_Y</span> <span class="o">=</span> <span class="n">q_Y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_X</span> <span class="o">=</span> <span class="n">q_X</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_X_given_Y</span> <span class="o">=</span> <span class="n">ConditionalRatioDistribution</span><span class="p">(</span><span class="n">q_XY</span><span class="p">,</span> <span class="n">q_Y</span><span class="p">)</span>
 
-<div class="viewcode-block" id="GM.log_prob_y"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.generative.gm.GM.log_prob_y">[docs]</a>    <span class="k">def</span> <span class="nf">log_prob_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">entropy_y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">entropy_y</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">marginal_y</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">y</span><span class="p">)</span></div>
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">approx_log_p_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">log_q_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_X</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">log_q_x</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># The shape is [N]</span>
+        <span class="k">return</span> <span class="n">log_q_x</span>
 
-<div class="viewcode-block" id="GM.log_prob_x"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.generative.gm.GM.log_prob_x">[docs]</a>    <span class="k">def</span> <span class="nf">log_prob_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">entropy_x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">entropy_x</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">log_p_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">marginal_x</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-                <span class="n">log_p_x</span> <span class="o">=</span> <span class="n">log_p_x</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">log_p_x</span></div>
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">approx_log_p_xy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="c1"># The shape is [...]</span>
+        <span class="n">log_q_xy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_XY</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">log_q_xy</span>
 
-<div class="viewcode-block" id="GM.log_prob_y_x"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.generative.gm.GM.log_prob_y_x">[docs]</a>    <span class="k">def</span> <span class="nf">log_prob_y_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_x</span> <span class="o">=</span> <span class="n">x</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_y</span> <span class="o">=</span> <span class="n">y</span>
+<div class="viewcode-block" id="GM.approx_log_p_x_given_y"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.generative.gm.GM.approx_log_p_x_given_y">[docs]</a>    <span class="k">def</span> <span class="nf">approx_log_p_x_given_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">log_q_x_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_X_given_Y</span><span class="o">.</span><span class="n">condition</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">log_q_x_y</span></div>
 
-        <span class="c1"># Compute E[-log r(y|x)]</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="mi">0</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">0</span>
-
-        <span class="n">xy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="n">log_r_XY</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">joint_xy</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">xy</span><span class="p">)</span>
-        <span class="n">log_r_X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_prob_x</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-        <span class="n">log_r_Y_X</span> <span class="o">=</span> <span class="n">log_r_XY</span> <span class="o">-</span> <span class="n">log_r_X</span>
-
-        <span class="c1"># Cache the entropy and the inputs x, y</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_entropy_xy</span> <span class="o">=</span> <span class="o">-</span><span class="n">log_r_XY</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_entropy_x</span> <span class="o">=</span> <span class="o">-</span><span class="n">log_r_X</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-
-        <span class="k">return</span> <span class="n">log_r_Y_X</span></div>
-
-<div class="viewcode-block" id="GM.compute_loss"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.generative.gm.GM.compute_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span>
+    <span class="nd">@reset_cache_after_call</span>
+    <span class="k">def</span> <span class="nf">loss</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
             <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-            <span class="n">log_p_y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-            <span class="n">log_p_y_x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="k">assert</span> <span class="n">torch</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_x</span><span class="p">),</span> <span class="s1">&#39;The input x is not the same as the cached input x&#39;</span>
-        <span class="k">assert</span> <span class="n">torch</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_y</span><span class="p">),</span> <span class="s1">&#39;The input y is not the same as the cached input y&#39;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">log_q_xy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">approx_log_p_xy</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">log_q_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">approx_log_p_y</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">log_q_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">approx_log_p_x</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
 
-        <span class="n">entropy_xy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_entropy_xy</span>
-        <span class="n">entropy_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_entropy_x</span>
-        <span class="n">entropy_y</span> <span class="o">=</span> <span class="o">-</span><span class="n">log_p_y</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">log_q_xy</span> <span class="o">-</span> <span class="n">log_q_y</span> <span class="o">-</span> <span class="n">log_q_x</span>
+        <span class="k">assert</span> <span class="n">loss</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span><span class="o">-</span><span class="mi">1</span>
 
-        <span class="c1"># Optimize using maximum likelihood</span>
-        <span class="k">return</span> <span class="n">entropy_y</span> <span class="o">+</span> <span class="n">entropy_x</span> <span class="o">+</span> <span class="n">entropy_xy</span></div>
+        <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 
 <div class="viewcode-block" id="GM.__repr__"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.generative.gm.GM.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s1">&#39;(</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;  &#39;</span> <span class="o">+</span> <span class="s1">&#39;(joint_yx): &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">joint_xy</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;  </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">marginal_x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;  &#39;</span> <span class="o">+</span> <span class="s1">&#39;(marginal_x): &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">marginal_x</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;  </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">marginal_y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;  &#39;</span> <span class="o">+</span> <span class="s1">&#39;(marginal_y): &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">marginal_y</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;  </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;  (q_XY): &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">q_XY</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">  &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_X</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;  (q_X): &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">q_X</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">  &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_Y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;  (q_Y): &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">q_Y</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">  &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
         <span class="k">return</span> <span class="n">s</span></div></div>
 
@@ -177,8 +149,6 @@
         <span class="n">x_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">y_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">hidden_dims</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
-        <span class="n">entropy_x</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">entropy_y</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">joint_transform_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;conditional_linear&#39;</span><span class="p">,</span>
         <span class="n">n_joint_transforms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">marginal_transform_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span>
@@ -186,45 +156,35 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GM</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">torch_mist.distributions.utils</span> <span class="kn">import</span> <span class="n">transformed_normal</span>
 
-    <span class="n">joint_xy</span> <span class="o">=</span> <span class="n">transformed_normal</span><span class="p">(</span>
-        <span class="n">input_dim</span><span class="o">=</span><span class="n">x_dim</span> <span class="o">+</span> <span class="n">y_dim</span><span class="p">,</span>
-        <span class="n">hidden_dims</span><span class="o">=</span><span class="n">hidden_dims</span><span class="p">,</span>
-        <span class="n">transform_name</span><span class="o">=</span><span class="n">joint_transform_name</span><span class="p">,</span>
-        <span class="n">n_transforms</span><span class="o">=</span><span class="n">n_joint_transforms</span><span class="p">,</span>
+    <span class="n">joint_xy</span> <span class="o">=</span> <span class="n">JointDistribution</span><span class="p">(</span>
+        <span class="n">joint_dist</span><span class="o">=</span><span class="n">transformed_normal</span><span class="p">(</span>
+            <span class="n">input_dim</span><span class="o">=</span><span class="n">x_dim</span> <span class="o">+</span> <span class="n">y_dim</span><span class="p">,</span>
+            <span class="n">hidden_dims</span><span class="o">=</span><span class="n">hidden_dims</span><span class="p">,</span>
+            <span class="n">transform_name</span><span class="o">=</span><span class="n">joint_transform_name</span><span class="p">,</span>
+            <span class="n">n_transforms</span><span class="o">=</span><span class="n">n_joint_transforms</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="n">x_dim</span><span class="p">,</span> <span class="n">y_dim</span><span class="p">],</span>
+        <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">],</span>
     <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">entropy_x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">marginal_x</span> <span class="o">=</span> <span class="n">transformed_normal</span><span class="p">(</span>
-            <span class="n">input_dim</span><span class="o">=</span><span class="n">x_dim</span><span class="p">,</span>
-            <span class="n">hidden_dims</span><span class="o">=</span><span class="n">hidden_dims</span><span class="p">,</span>
-            <span class="n">transform_name</span><span class="o">=</span><span class="n">marginal_transform_name</span><span class="p">,</span>
-            <span class="n">n_transforms</span><span class="o">=</span><span class="n">n_marginal_transforms</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">marginal_x</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entropy_x</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
-            <span class="n">entropy_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">([</span><span class="n">entropy_x</span><span class="p">])</span>
-        <span class="n">entropy_x</span> <span class="o">=</span> <span class="n">entropy_x</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+    <span class="n">marginal_x</span> <span class="o">=</span> <span class="n">transformed_normal</span><span class="p">(</span>
+        <span class="n">input_dim</span><span class="o">=</span><span class="n">x_dim</span><span class="p">,</span>
+        <span class="n">hidden_dims</span><span class="o">=</span><span class="n">hidden_dims</span><span class="p">,</span>
+        <span class="n">transform_name</span><span class="o">=</span><span class="n">marginal_transform_name</span><span class="p">,</span>
+        <span class="n">n_transforms</span><span class="o">=</span><span class="n">n_marginal_transforms</span><span class="p">,</span>
+    <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">entropy_y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">marginal_y</span> <span class="o">=</span> <span class="n">transformed_normal</span><span class="p">(</span>
-            <span class="n">input_dim</span><span class="o">=</span><span class="n">y_dim</span><span class="p">,</span>
-            <span class="n">hidden_dims</span><span class="o">=</span><span class="n">hidden_dims</span><span class="p">,</span>
-            <span class="n">transform_name</span><span class="o">=</span><span class="n">marginal_transform_name</span><span class="p">,</span>
-            <span class="n">n_transforms</span><span class="o">=</span><span class="n">n_marginal_transforms</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">marginal_y</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entropy_y</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
-            <span class="n">entropy_y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">([</span><span class="n">entropy_y</span><span class="p">])</span>
-        <span class="n">entropy_y</span> <span class="o">=</span> <span class="n">entropy_y</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+    <span class="n">marginal_y</span> <span class="o">=</span> <span class="n">transformed_normal</span><span class="p">(</span>
+        <span class="n">input_dim</span><span class="o">=</span><span class="n">y_dim</span><span class="p">,</span>
+        <span class="n">hidden_dims</span><span class="o">=</span><span class="n">hidden_dims</span><span class="p">,</span>
+        <span class="n">transform_name</span><span class="o">=</span><span class="n">marginal_transform_name</span><span class="p">,</span>
+        <span class="n">n_transforms</span><span class="o">=</span><span class="n">n_marginal_transforms</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">GM</span><span class="p">(</span>
-        <span class="n">joint_xy</span><span class="o">=</span><span class="n">joint_xy</span><span class="p">,</span>
-        <span class="n">marginal_x</span><span class="o">=</span><span class="n">marginal_x</span><span class="p">,</span>
-        <span class="n">marginal_y</span><span class="o">=</span><span class="n">marginal_y</span><span class="p">,</span>
-        <span class="n">entropy_x</span><span class="o">=</span><span class="n">entropy_x</span><span class="p">,</span>
-        <span class="n">entropy_y</span><span class="o">=</span><span class="n">entropy_y</span><span class="p">,</span>
+        <span class="n">q_XY</span><span class="o">=</span><span class="n">joint_xy</span><span class="p">,</span>
+        <span class="n">q_X</span><span class="o">=</span><span class="n">marginal_x</span><span class="p">,</span>
+        <span class="n">q_Y</span><span class="o">=</span><span class="n">marginal_y</span><span class="p">,</span>
     <span class="p">)</span></div>
 </pre></div>
 
