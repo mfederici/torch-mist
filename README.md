@@ -71,23 +71,23 @@ Please refer to the [documentation](https://torch-mist.readthedocs.io/en/latest/
 ### Implemented estimators
 The basic estimators implemented in this package are summarized in the following table:
 
-| Estimator                                    | Type                  | Models                                   |
-|----------------------------------------------|-----------------------|------------------------------------------|
-| NWJ [[1]](#references)                       | Discriminative        | $f_\xi(x,y)$                             |
-| MINE  [[2]](#references)                     | Discriminative        | $f_\xi(x,y)$                             |
-| InfoNCE [[3]](#references)                   | Discriminative        | $f_\xi(x,y)$                             |
-| TUBA  [[4]](#references)                     | Discriminative        | $f_\xi(x,y)$,$b_\xi(x)$                  | 
-| AlphaTUBA [[4]](#references)                 | Discriminative        | $f_\xi(x,y)$,$b_\xi(x)$                  |
-| JS [[5]](#references)                        | Discriminative        | $f_\xi(x,y)$                             |
-| SMILE [[6]](#references)                     | Discriminative        | $f_\xi(x,y)$                             |
-| FLO [[7]](#references)                       | Discriminative        | $f_\xi(x,y)$,$b_\xi(x,y)$                | 
-| BA [[8]](#references)                        | Generative            | $q_\theta(y\|x)$                         |          
-| DoE [[9]](#references)                       | Generative            | $q_\theta(y\|x)$, $r_\psi(y)$            | 
-| GM [[6]](#references)                        | Generative            | $q_\theta(x,y)$, $r_\psi(x)$,$r_\psi(y)$ |
-| L1OUT [[4]](#references) [[10]](#references) | Generative            | $q_\theta(y\|x)$                         |                  
-| CLUB [[10]] (#references)                    | Generative            | $q_\theta(y\|x)$                         |
-| Discrete [[]](#references)                   | Generative (Discrete) | $Q(x)$, $Q(y)$                           |
-| PQ [[11]](#references)                       | Generative (Discrete) | $Q(y)$, $q(Q(y)\|x)$                     |
+| Estimator                                     | Type                  | Models                                    |
+|-----------------------------------------------|-----------------------|-------------------------------------------|
+| NWJ [[1]](#references)                        | Discriminative        | $f_\xi(x,y)$                              |
+| MINE  [[2]](#references)                      | Discriminative        | $f_\xi(x,y)$                              |
+| InfoNCE [[3]](#references)                    | Discriminative        | $f_\xi(x,y)$                              |
+| TUBA  [[4]](#references)                      | Discriminative        | $f_\xi(x,y)$, $b_\xi(x)$                  | 
+| AlphaTUBA [[4]](#references)                  | Discriminative        | $f_\xi(x,y)$, $b_\xi(x)$                  |
+| JS [[5]](#references)                         | Discriminative        | $f_\xi(x,y)$                              |
+| SMILE [[6]](#references)                      | Discriminative        | $f_\xi(x,y)$                              |
+| FLO [[7]](#references)                        | Discriminative        | $f_\xi(x,y)$, $b_\xi(x,y)$                | 
+| BA [[8]](#references)                         | Generative            | $q_\theta(y\|x)$                          |          
+| DoE [[9]](#references)                        | Generative            | $q_\theta(y\|x)$, $r_\psi(y)$             | 
+| GM [[6]](#references)                         | Generative            | $q_\theta(x,y)$, $r_\psi(x)$, $r_\psi(y)$ |
+| L1OUT [[4]](#references) [[10]](#references)  | Generative            | $q_\theta(y\|x)$                          |                  
+| CLUB [[10]](#references)                      | Generative            | $q_\theta(y\|x)$                          |
+| Discrete [[]](#references)                    | Generative (Discrete) | $Q(x)$, $Q(y)$                            |
+| PQ [[11]](#references)                        | Generative (Discrete) | $Q(y)$, $q_\theta(Q(y)\|x)$               |
 
 ### Hybrid estimators
 The `torch_mist` package allows to combine Generative and Discriminative estimators in a single hybrid estimators as proposed in [[11]](#references)[[12]](#references).
