@@ -69,7 +69,7 @@ jobs:
       - run: poetry run pip uninstall torch -y
       - run: poetry run pip install torch --index-url https://download.pytorch.org/whl/cpu
 
-      - run: pytest --cov
+      - run: poetry run pytest --cov=./ --cov-report=xml
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
