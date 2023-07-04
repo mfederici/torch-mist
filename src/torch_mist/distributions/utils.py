@@ -96,6 +96,7 @@ class CategoricalModule(Distribution, nn.Module):
     def __repr__(self):
         return "Categorical()"
 
+
 class ConditionalStandardNormalModule(ConditionalDistributionModule):
     def __init__(self, n_dim: int):
         super().__init__()
@@ -109,6 +110,9 @@ class ConditionalStandardNormalModule(ConditionalDistributionModule):
         for _ in range(extra_dims):
             loc = loc.unsqueeze(0)
             log_scale = log_scale.unsqueeze(0)
+
+        loc = loc.expand(*context.shape[:-1], -1)
+        log_scale = log_scale.expand(*context.shape[:-1], -1)
 
         return Independent(Normal(**self.parametrization([loc, log_scale])), 1)
 

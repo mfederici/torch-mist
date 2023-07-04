@@ -6,7 +6,7 @@ import torch
 from pyro.distributions import ConditionalDistribution
 
 from torch_mist.estimators.generative.base import GenerativeMutualInformationEstimator
-from torch_mist.utils.caching import cached, reset_cache_before_call
+from torch_mist.utils.caching import cached, reset_cache_before_call, reset_cache_after_call
 
 
 class L1Out(GenerativeMutualInformationEstimator):
@@ -48,7 +48,7 @@ class L1Out(GenerativeMutualInformationEstimator):
     ) -> torch.Tensor:
         raise NotImplementedError()
 
-    @reset_cache_before_call
+    @reset_cache_after_call
     def expected_log_ratio(
             self,
             x: torch.Tensor,

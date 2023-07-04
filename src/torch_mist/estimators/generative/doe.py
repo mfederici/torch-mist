@@ -5,7 +5,7 @@ from torch.distributions import Distribution
 from pyro.distributions import ConditionalDistribution
 
 from torch_mist.estimators.generative.base import GenerativeMutualInformationEstimator
-from torch_mist.utils.caching import cached, reset_cache_after_call
+from torch_mist.utils.caching import cached, reset_cache_before_call
 
 
 class DoE(GenerativeMutualInformationEstimator):
@@ -25,14 +25,14 @@ class DoE(GenerativeMutualInformationEstimator):
         assert log_q_y.shape == y.shape[:-1]
         return log_q_y
 
-    @reset_cache_after_call
+    @reset_cache_before_call
     def loss(
             self,
             x: torch.Tensor,
             y: torch.Tensor,
     ) -> torch.Tensor:
         log_q_y_given_x = self.approx_log_p_y_given_x(x=x, y=y)
-        log_q_y = self.approx_log_p_y(y=y)
+        log_q_y = self.approx_log_p_y(x=x, y=y)
 
         loss = - log_q_y - log_q_y_given_x
 

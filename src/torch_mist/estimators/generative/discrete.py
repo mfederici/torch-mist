@@ -104,12 +104,12 @@ class DiscreteMutualInformationEstimator(MutualInformationEstimator):
     def approx_log_p_y_given_x(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         return self.approx_log_p_xy(x=x, y=y)-self.approx_log_p_x(x=x)
 
-    @reset_cache_after_call
+    @reset_cache_before_call
     def loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         loss = -self.approx_log_p_xy(x=x, y=y)
         return loss.mean()
 
-    @reset_cache_before_call
+    @reset_cache_after_call
     def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         return GM.log_ratio(self, x=x, y=y)
 

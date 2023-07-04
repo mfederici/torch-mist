@@ -5,7 +5,7 @@ import torch
 from pyro.distributions import ConditionalDistribution
 
 from torch_mist.estimators.generative.base import GenerativeMutualInformationEstimator
-from torch_mist.utils.caching import cached, reset_cache_before_call, reset_cache_after_call
+from torch_mist.utils.caching import reset_cache_after_call
 
 
 class BA(GenerativeMutualInformationEstimator):
@@ -21,7 +21,7 @@ class BA(GenerativeMutualInformationEstimator):
         assert entropy_y.ndim == 0
         self.register_buffer('entropy_y', entropy_y)
 
-    @reset_cache_before_call
+    @reset_cache_after_call
     def expected_log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         entropy_y_given_x = -self.approx_log_p_y_given_x(x=x, y=y).mean()
         return self.entropy_y-entropy_y_given_x

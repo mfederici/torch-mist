@@ -1,38 +1,12 @@
-from abc import abstractmethod, abstractproperty
-from typing import Tuple, Optional, Dict, Union, Any, Callable, List
-from dataclasses import dataclass
+from abc import abstractmethod
 
 import torch
 import torch.nn as nn
-from pyro.distributions import ConditionalDistribution
-from torch.distributions import Distribution
 
 
 # The implementations in this work are loosely based on
 # 1) "On Variational Lower bounds of mutual information" https://arxiv.org/pdf/1905.06922.pdf
 # 2) "Undertanding the Limitations of Variational Mutual Information Estimators https://arxiv.org/abs/1910.06222
-
-# @dataclass
-# class Estimation:
-#     value: torch.Tensor
-#     loss: torch.Tensor
-#
-#     def __add__(self, other):
-#         return Estimation(self.value + other.value, self.loss + other.loss)
-#
-#     def __sub__(self, other):
-#         return Estimation(self.value - other.value, self.loss - other.loss)
-#
-#     def apply(self, fn):
-#         return Estimation(fn(self.value), fn(self.loss))
-#
-#     @property
-#     def shape(self):
-#         if isinstance(self.value, float):
-#             return torch.Size([])
-#         else:
-#             return self.value.shape
-#
 
 
 class MutualInformationEstimator(nn.Module):

@@ -34,7 +34,7 @@ class GenerativeMutualInformationEstimator(MutualInformationEstimator):
         assert log_q_y_given_x.ndim == y.ndim - 1, f'log_p_Y_X.shape={log_q_y_given_x.shape}, y.shape={y.shape}'
         return log_q_y_given_x
 
-    @reset_cache_after_call
+    @reset_cache_before_call
     def loss(
             self,
             x: torch.Tensor,
@@ -47,7 +47,6 @@ class GenerativeMutualInformationEstimator(MutualInformationEstimator):
     def approx_log_p_y(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         raise NotImplementedError()
 
-    @reset_cache_before_call
     def log_ratio(
             self,
             x: torch.Tensor,

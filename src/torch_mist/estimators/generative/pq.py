@@ -7,7 +7,7 @@ from torch.distributions import Categorical, Distribution
 from torch_mist.distributions.utils import CategoricalModule
 from torch_mist.estimators.generative.doe import DoE
 from torch_mist.quantization.functions import QuantizationFunction
-from torch_mist.utils.caching import cached, reset_cache_after_call
+from torch_mist.utils.caching import cached
 
 
 class PQ(DoE):

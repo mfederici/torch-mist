@@ -5,7 +5,7 @@ from torch.distributions import Distribution
 
 from torch_mist.distributions.joint import JointDistribution, ConditionalRatioDistribution
 from torch_mist.estimators.generative.doe import DoE
-from torch_mist.utils.caching import cached, reset_cache_after_call
+from torch_mist.utils.caching import cached, reset_cache_after_call, reset_cache_before_call
 
 
 class GM(DoE):
@@ -41,7 +41,7 @@ class GM(DoE):
         log_q_x_y = self.q_X_given_Y.condition(y=y).log_prob(x=x)
         return log_q_x_y
 
-    @reset_cache_after_call
+    @reset_cache_before_call
     def loss(
             self,
             x: torch.Tensor,

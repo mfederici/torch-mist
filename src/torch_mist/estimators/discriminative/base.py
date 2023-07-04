@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from copy import deepcopy
 from typing import Optional, Union
 
 import torch
@@ -63,11 +64,10 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
         # Sample from the proposal distribution r(y|x) [M',N, ..., Y_DIM] with M' as the number of mc_samples
         if isinstance(self.proposal, ConditionalDistribution):
             y_ = self.proposal.condition(x).sample(sample_shape=torch.Size([n_samples]))
-            assert y_.shape[:-1] == torch.Size([x.shape[:-1], n_samples])
         else:
             y_ = self.proposal.sample(sample_shape=torch.Size([n_samples]))
             # The shape of the samples from the proposal distribution is [M', N, ..., Y_DIM]
-            assert y_.ndim == x.ndim+1 and y_.shape[0] == n_samples
+        assert y_.ndim == x.ndim+1 and y_.shape[0] == n_samples
         return y_
 
     @cached
@@ -134,10 +134,9 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
 
         return log_ratio
 
-    @reset_cache_after_call
+    @reset_cache_before_call
     def loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         return -self.expected_log_ratio(x=x, y=y)
-
 
     def __repr__(self):
         s = self.__class__.__name__ + '(\n'
@@ -146,3 +145,7 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
         s += ')'
 
         return s
+
+
+
+

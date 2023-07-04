@@ -30,7 +30,7 @@ def mine(
         gamma: float = 0.9,
         critic_params: Dict[str, Any] = None,
 ) -> MINE:
-    url_nn = critic(
+    critic_nn = critic(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
@@ -39,7 +39,7 @@ def mine(
     )
 
     return MINE(
-        critic=url_nn,
+        critic=critic_nn,
         mc_samples=mc_samples,
         gamma=gamma,
     )

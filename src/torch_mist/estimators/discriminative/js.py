@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch_mist.critic.base import Critic
 from torch_mist.critic.utils import critic
 from torch_mist.estimators.discriminative.nwj import NWJ
-from torch_mist.utils.caching import reset_cache_after_call
+from torch_mist.utils.caching import reset_cache_after_call, reset_cache_before_call
 
 
 class JS(NWJ):
@@ -19,7 +19,7 @@ class JS(NWJ):
             mc_samples=mc_samples,
         )
 
-    @reset_cache_after_call
+    @reset_cache_before_call
     def loss(
             self,
             x: torch.Tensor,
