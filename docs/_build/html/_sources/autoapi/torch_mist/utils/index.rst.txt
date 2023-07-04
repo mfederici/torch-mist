@@ -29,9 +29,9 @@ Functions
 
 
 
-.. py:function:: estimate_mi(estimator: torch_mist.estimators.base.MutualInformationEstimator, dataloader: collections.abc.Iterator[Tuple[torch.Tensor, torch.Tensor]]) -> Tuple[float, float]
+.. py:function:: estimate_mi(estimator: torch_mist.estimators.base.MutualInformationEstimator, dataloader: collections.abc.Iterator[Tuple[torch.Tensor, torch.Tensor]], device: torch.device = torch.device('cpu')) -> Tuple[float, float]
 
 
-.. py:function:: optimize_mi_estimator(estimator: torch_mist.estimators.base.MutualInformationEstimator, dataloader: collections.abc.Iterator[Tuple[torch.Tensor, torch.Tensor]], n_epochs: int = 1, optimizer_class: Type[torch.optim.Optimizer] = Adam, optimizer_params: Optional[Dict[str, Any]] = None) -> pandas.DataFrame
+.. py:function:: optimize_mi_estimator(estimator: torch_mist.estimators.base.MutualInformationEstimator, dataloader: collections.abc.Iterator[Tuple[torch.Tensor, torch.Tensor]], device: torch.device = torch.device('cpu'), epochs: int = 1, optimizer_class: Type[torch.optim.Optimizer] = Adam, optimizer_params: Optional[Dict[str, Any]] = None, verbose: bool = False, return_log: bool = True) -> Optional[pandas.DataFrame]
 
 

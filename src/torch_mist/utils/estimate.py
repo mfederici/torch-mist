@@ -14,11 +14,13 @@ from torch_mist.estimators.base import MutualInformationEstimator
 def optimize_mi_estimator(
         estimator: MutualInformationEstimator,
         dataloader: Iterator[Tuple[torch.Tensor, torch.Tensor]],
-        n_epochs: int = 1,
+        device: torch.device = torch.device('cpu'),
+        epochs: int = 1,
         optimizer_class: Type[Optimizer] = Adam,
         optimizer_params: Optional[Dict[str, Any]] = None,
-        fast_training: bool = False,
-) -> pd.DataFrame:
+        verbose: bool = False,
+        return_log: bool = True,
+) -> Optional[pd.DataFrame]:
 
     opt_params = {"params": estimator.parameters()}
 
@@ -34,36 +36,46 @@ def optimize_mi_estimator(
     log = []
 
     estimator.train()
+    estimator = estimator.to(device)
 
-    for epoch in range(n_epochs):
-        for x, y in tqdm(dataloader):
+    dl = tqdm(dataloader) if verbose else dataloader
+    for epoch in range(epochs):
+        for x, y in dl:
+            x = x.to(device)
+            y = y.to(device)
+
             loss = estimator.loss(x, y)
-            entry = {
-                'loss': loss.item(),
-                'iteration': len(log),
-            }
 
-            if not fast_training:
+            if return_log:
                 estimation = estimator(x, y)
-                entry['value'] = estimation.item()
-            log.append(entry)
+                log.append({
+                    'loss': loss.item(),
+                    'iteration': len(log),
+                    'value': estimation.item(),
+                })
 
             opt.zero_grad()
             loss.backward()
             opt.step()
 
-    return pd.DataFrame(log)
+    if return_log:
+        return pd.DataFrame(log)
 
 
 def estimate_mi(
         estimator: MutualInformationEstimator,
         dataloader: Iterator[Tuple[torch.Tensor, torch.Tensor]],
+        device: torch.device = torch.device('cpu'),
 ) -> Tuple[float, float]:
     mis = []
 
     estimator.eval()
+    estimator = estimator.to(device)
 
     for x, y in dataloader:
+        x = x.to(device)
+        y = y.to(device)
+
         estimation = estimator(x, y)
         mis.append(estimation.item())
 

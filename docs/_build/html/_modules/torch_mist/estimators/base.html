@@ -76,41 +76,15 @@
            <div itemprop="articleBody">
              
   <h1>Source code for torch_mist.estimators.base</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">abstractproperty</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span>
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span></span><span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
-<span class="kn">from</span> <span class="nn">pyro.distributions</span> <span class="kn">import</span> <span class="n">ConditionalDistribution</span>
-<span class="kn">from</span> <span class="nn">torch.distributions</span> <span class="kn">import</span> <span class="n">Distribution</span>
 
 
 <span class="c1"># The implementations in this work are loosely based on</span>
 <span class="c1"># 1) &quot;On Variational Lower bounds of mutual information&quot; https://arxiv.org/pdf/1905.06922.pdf</span>
 <span class="c1"># 2) &quot;Undertanding the Limitations of Variational Mutual Information Estimators https://arxiv.org/abs/1910.06222</span>
-
-<span class="c1"># @dataclass</span>
-<span class="c1"># class Estimation:</span>
-<span class="c1">#     value: torch.Tensor</span>
-<span class="c1">#     loss: torch.Tensor</span>
-<span class="c1">#</span>
-<span class="c1">#     def __add__(self, other):</span>
-<span class="c1">#         return Estimation(self.value + other.value, self.loss + other.loss)</span>
-<span class="c1">#</span>
-<span class="c1">#     def __sub__(self, other):</span>
-<span class="c1">#         return Estimation(self.value - other.value, self.loss - other.loss)</span>
-<span class="c1">#</span>
-<span class="c1">#     def apply(self, fn):</span>
-<span class="c1">#         return Estimation(fn(self.value), fn(self.loss))</span>
-<span class="c1">#</span>
-<span class="c1">#     @property</span>
-<span class="c1">#     def shape(self):</span>
-<span class="c1">#         if isinstance(self.value, float):</span>
-<span class="c1">#             return torch.Size([])</span>
-<span class="c1">#         else:</span>
-<span class="c1">#             return self.value.shape</span>
-<span class="c1">#</span>
 
 
 <div class="viewcode-block" id="MutualInformationEstimator"><a class="viewcode-back" href="../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.base.MutualInformationEstimator">[docs]</a><span class="k">class</span> <span class="nc">MutualInformationEstimator</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>

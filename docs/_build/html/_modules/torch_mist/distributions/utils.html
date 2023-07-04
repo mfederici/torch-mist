@@ -174,6 +174,7 @@
 <div class="viewcode-block" id="CategoricalModule.__repr__"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.CategoricalModule.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;Categorical()&quot;</span></div></div>
 
+
 <div class="viewcode-block" id="ConditionalStandardNormalModule"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.ConditionalStandardNormalModule">[docs]</a><span class="k">class</span> <span class="nc">ConditionalStandardNormalModule</span><span class="p">(</span><span class="n">ConditionalDistributionModule</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -187,6 +188,9 @@
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">extra_dims</span><span class="p">):</span>
             <span class="n">loc</span> <span class="o">=</span> <span class="n">loc</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">log_scale</span> <span class="o">=</span> <span class="n">log_scale</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">loc</span> <span class="o">=</span> <span class="n">loc</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="o">*</span><span class="n">context</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">log_scale</span> <span class="o">=</span> <span class="n">log_scale</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="o">*</span><span class="n">context</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">Independent</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">parametrization</span><span class="p">([</span><span class="n">loc</span><span class="p">,</span> <span class="n">log_scale</span><span class="p">])),</span> <span class="mi">1</span><span class="p">)</span></div></div>
 

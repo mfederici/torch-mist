@@ -79,23 +79,154 @@
              
   <section id="mist-a-pytorch-mutual-information-estimation-toolkit">
 <h1>Mist - A PyTorch Mutual information Estimation toolkit<a class="headerlink" href="#mist-a-pytorch-mutual-information-estimation-toolkit" title="Permalink to this heading"></a></h1>
-<img src="docs/media/torch-mist-logo.png" alt="alt text" width="200">
+<img src="docs/logo.png" alt="alt text" width="200">
 <p><a class="reference external" href="https://badge.fury.io/py/torch-mist"><img alt="PyPI version" src="https://badge.fury.io/py/torch-mist.svg" /></a>
-<a class="reference external" href="https://codecov.io/gh/mfederici/torch-mist"><img alt="codecov" src="https://codecov.io/gh/marcofede/torch-mist/branch/master/graph/badge.svg" /></a>
+<a class="reference external" href="https://codecov.io/gh/mfederici/torch-mist"><img alt="codecov" src="https://codecov.io/gh/mfederici/torch-mist/badge.svg" /></a>
 <a class="reference external" href="https://torch-mist.readthedocs.io/en/latest/?badge=latest"><img alt="Documentation Status" src="https://readthedocs.org/projects/torch-mist/badge/?version=latest" /></a>
-<a class="reference external" href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" /></a></p>
+<a class="reference external" href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg" /></a></p>
 <p>Mutual Information Estimation toolkit based on pytorch. TO BE RELEASED SOON</p>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<p>The package can be installed via pip as follows:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>torch_mist
 </pre></div>
 </div>
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
-<ul class="simple">
-<li><p>TODO</p></li>
-</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">torch_mist</span></code> package provides the basic functionalities for sample-based continuous mutual information estimation using modern
+neural network architectures.</p>
+<p>Here we provide a simple example of how to use the package to estimate mutual information between pairs
+of observations using the MINE estimator <span class="xref myst">[2]</span>.</p>
+<p>First, we need to import and instantiate the estimator from the package:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch_mist.estimators</span> <span class="kn">import</span> <span class="n">mine</span>
+
+<span class="c1"># Defining the estimator</span>
+<span class="n">estimator</span> <span class="o">=</span> <span class="n">mine</span><span class="p">(</span>
+    <span class="n">x_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                    <span class="c1"># dimension of x</span>
+    <span class="n">y_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                    <span class="c1"># dimension of y   </span>
+    <span class="n">hidden_dims</span><span class="o">=</span><span class="p">[</span><span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span>   <span class="c1"># hidden dimensions of the neural networks</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>then we can train the estimator:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch_mist.utils</span> <span class="kn">import</span> <span class="n">optimize_mi_estimator</span>
+
+
+<span class="n">train_log</span> <span class="o">=</span> <span class="n">optimize_mi_estimator</span><span class="p">(</span>
+    <span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span>        <span class="c1"># the estimator to train</span>
+    <span class="n">dataloader</span><span class="o">=</span><span class="n">dataloader</span><span class="p">,</span>      <span class="c1"># the dataloader returning pairs of x and y</span>
+    <span class="n">epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>                  <span class="c1"># the number of epochs</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span>               <span class="c1"># the device to use</span>
+    <span class="n">return_log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>            <span class="c1"># whether to return the training log</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Lastly, we can use the trained estimator to estimate the mutual information between pairs of observations:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch_mist.utils</span> <span class="kn">import</span> <span class="n">estimate_mi</span>
+<span class="n">value</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">estimate_mi</span><span class="p">(</span>
+    <span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span>        <span class="c1"># the estimator to use</span>
+    <span class="n">dataloader</span><span class="o">=</span><span class="n">dataloader</span><span class="p">,</span>      <span class="c1"># the dataloader returning pairs of x and y</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span>               <span class="c1"># the device to use</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Estimated MI: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> +- </span><span class="si">{</span><span class="n">std</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Please refer to the <a class="reference external" href="https://torch-mist.readthedocs.io/en/latest/">documentation</a> for a detailed description of the package and its usage.</p>
+<section id="implemented-estimators">
+<h3>Implemented estimators<a class="headerlink" href="#implemented-estimators" title="Permalink to this heading"></a></h3>
+<p>The basic estimators implemented in this package are summarized in the following table:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Estimator</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Models</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>NWJ <span class="xref myst">[1]</span></p></td>
+<td><p>Discriminative</p></td>
+<td><p>$f_\xi(x,y)$</p></td>
+</tr>
+<tr class="row-odd"><td><p>MINE  <span class="xref myst">[2]</span></p></td>
+<td><p>Discriminative</p></td>
+<td><p>$f_\xi(x,y)$</p></td>
+</tr>
+<tr class="row-even"><td><p>InfoNCE <span class="xref myst">[3]</span></p></td>
+<td><p>Discriminative</p></td>
+<td><p>$f_\xi(x,y)$</p></td>
+</tr>
+<tr class="row-odd"><td><p>TUBA  <span class="xref myst">[4]</span></p></td>
+<td><p>Discriminative</p></td>
+<td><p>$f_\xi(x,y)$,$b_\xi(x)$</p></td>
+</tr>
+<tr class="row-even"><td><p>AlphaTUBA <span class="xref myst">[4]</span></p></td>
+<td><p>Discriminative</p></td>
+<td><p>$f_\xi(x,y)$,$b_\xi(x)$</p></td>
+</tr>
+<tr class="row-odd"><td><p>JS <span class="xref myst">[5]</span></p></td>
+<td><p>Discriminative</p></td>
+<td><p>$f_\xi(x,y)$</p></td>
+</tr>
+<tr class="row-even"><td><p>SMILE <span class="xref myst">[6]</span></p></td>
+<td><p>Discriminative</p></td>
+<td><p>$f_\xi(x,y)$</p></td>
+</tr>
+<tr class="row-odd"><td><p>FLO <span class="xref myst">[7]</span></p></td>
+<td><p>Discriminative</p></td>
+<td><p>$f_\xi(x,y)$,$b_\xi(x,y)$</p></td>
+</tr>
+<tr class="row-even"><td><p>BA <span class="xref myst">[8]</span></p></td>
+<td><p>Generative</p></td>
+<td><p>$q_\theta(y|x)$</p></td>
+</tr>
+<tr class="row-odd"><td><p>DoE <span class="xref myst">[9]</span></p></td>
+<td><p>Generative</p></td>
+<td><p>$q_\theta(y|x)$, $r_\psi(y)$</p></td>
+</tr>
+<tr class="row-even"><td><p>GM <span class="xref myst">[6]</span></p></td>
+<td><p>Generative</p></td>
+<td><p>$q_\theta(x,y)$, $r_\psi(x)$,$r_\psi(y)$</p></td>
+</tr>
+<tr class="row-odd"><td><p>L1OUT <span class="xref myst">[4]</span> <span class="xref myst">[10]</span></p></td>
+<td><p>Generative</p></td>
+<td><p>$q_\theta(y|x)$</p></td>
+</tr>
+<tr class="row-even"><td><p>CLUB [[10]] (#references)</p></td>
+<td><p>Generative</p></td>
+<td><p>$q_\theta(y|x)$</p></td>
+</tr>
+<tr class="row-odd"><td><p>Discrete <span class="xref myst">[]</span></p></td>
+<td><p>Generative (Discrete)</p></td>
+<td><p>$Q(x)$, $Q(y)$</p></td>
+</tr>
+<tr class="row-even"><td><p>PQ <span class="xref myst">[11]</span></p></td>
+<td><p>Generative (Discrete)</p></td>
+<td><p>$Q(y)$, $q(Q(y)|x)$</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="hybrid-estimators">
+<h3>Hybrid estimators<a class="headerlink" href="#hybrid-estimators" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">torch_mist</span></code> package allows to combine Generative and Discriminative estimators in a single hybrid estimators as proposed in <span class="xref myst">[11]</span><span class="xref myst">[12]</span>.</p>
+</section>
+<section id="references">
+<h3>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h3>
+<p><a class="reference external" href="https://arxiv.org/abs/0809.0853">[1] </a> Nguyen, XuanLong, Martin J. Wainwright, and Michael I. Jordan. “Estimating divergence functionals and the likelihood ratio by convex risk minimization.” IEEE Transactions on Information Theory 56.11 (2010): 5847-5861.</p>
+<p><a class="reference external" href="https://arxiv.org/abs/1801.04062">[2]</a> Belghazi, Mohamed Ishmael, et al. “Mutual information neural estimation.” International conference on machine learning. PMLR, 2018.</p>
+<p><a class="reference external" href="https://arxiv.org/abs/1807.03748">[3]</a> Oord, Aaron van den, Yazhe Li, and Oriol Vinyals. “Representation learning with contrastive predictive coding.” arXiv preprint arXiv:1807.03748 (2018).</p>
+<p><a class="reference external" href="https://arxiv.org/abs/1905.06922">[4]</a>  Poole, Ben, et al. “On variational bounds of mutual information.” International Conference on Machine Learning. PMLR, 2019.</p>
+<p><a class="reference external" href="https://arxiv.org/abs/1808.06670">[5]</a> Hjelm, R. Devon, et al. “Learning deep representations by mutual information estimation and maximization.” arXiv preprint arXiv:1808.06670 (2018).</p>
+<p><a class="reference external" href="https://arxiv.org/abs/1910.06222">[6]</a> Song, Jiaming, and Stefano Ermon. “Understanding the limitations of variational mutual information estimators.” arXiv preprint arXiv:1910.06222 (2019).</p>
+<p><a class="reference external" href="https://arxiv.org/abs/2107.01131">[7]</a> Guo, Qing, et al. “Tight mutual information estimation with contrastive fenchel-legendre optimization.” Advances in Neural Information Processing Systems 35 (2022): 28319-28334.</p>
+<p><a class="reference external" href="https://aivalley.com/Papers/MI_NIPS_final.pdf">[8]</a> Barber, David, and Felix Agakov. “The im algorithm: a variational approach to information maximization.” Advances in neural information processing systems 16.320 (2004): 201.</p>
+<p><a class="reference external" href="https://arxiv.org/abs/1811.04251">[9]</a> McAllester, David, and Karl Stratos. “Formal limitations on the measurement of mutual information.” International Conference on Artificial Intelligence and Statistics. PMLR, 2020.</p>
+<p><a class="reference external" href="https://arxiv.org/abs/2006.12013">[10]</a> Cheng, Pengyu, et al. “Club: A contrastive log-ratio upper bound of mutual information.” International conference on machine learning. PMLR, 2020.</p>
+<p><a class="reference external" href="https://arxiv.org/abs/2306.00608">[11]</a> Federici, Marco, David Ruhe, and Patrick Forré. “On the Effectiveness of Hybrid Mutual Information Estimation.” arXiv preprint arXiv:2306.00608 (2023).</p>
+<p><a class="reference external" href="https://arxiv.org/abs/2303.06992">[12]</a> Brekelmans, Rob, et al. “Improving mutual information estimation with annealed and energy-based bounds.” arXiv preprint arXiv:2303.06992 (2023).</p>
+</section>
 </section>
 <section id="contributing">
 <h2>Contributing<a class="headerlink" href="#contributing" title="Permalink to this heading"></a></h2>
