@@ -65,7 +65,7 @@ Please refer to the [documentation](https://torch-mist.readthedocs.io/en/latest/
 
 
 
-### Implemented estimators
+### Estimators
 The basic estimators implemented in this package are summarized in the following table:
 
 | Estimator                                     | Type                  | Models                                    |
@@ -100,7 +100,7 @@ Marginal distributions may have learnable parameters $\psi$ that are usually par
 Joint distributions may have learnable parameters $\theta$ that are usually parametrized by a normalizing flow.
 - $Q(x)$ and $Q(y)$ are `quantization` functions that map observations to a finite set of discrete values.
 
-### Hybrid estimators
+#### Hybrid estimators
 The `torch_mist` package allows to combine Generative and Discriminative estimators in a single hybrid estimators as proposed in [[11]](#references)[[12]](#references).
 
 

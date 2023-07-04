@@ -1,11 +1,11 @@
-from typing import Tuple
-from collections.abc import Iterator
+from typing import Tuple, Dict
+from collections import Iterator
 
 import torch
 from torch.distributions import Distribution
 
 
-class SampleDataLoader(Iterator[Tuple[torch.Tensor, torch.Tensor]]):
+class SampleDataLoader(Iterator[Dict[str, torch.Tensor]]):
     def __init__(
             self,
             joint_dist: Distribution,
@@ -19,27 +19,24 @@ class SampleDataLoader(Iterator[Tuple[torch.Tensor, torch.Tensor]]):
         self.max_samples = max_samples
         self._n_samples = max_samples
 
-    def __next__(self) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __next__(self) -> Dict[str, torch.Tensor]:
         if self._n_samples <= 0:
             self._n_samples = self.max_samples
             raise StopIteration
         else:
-            samples = self.joint_dist.sample(torch.Size([self.batch_size]))
+            n_samples = min(self.batch_size, self._n_samples)
+
+            samples = self.joint_dist.sample(torch.Size([n_samples]))
 
             if isinstance(samples, tuple):
-                x, y = samples
-            else:
-                assert samples.shape[self.split_dim] == 2, f"Expected the shape of split_dimension to be 2, got {samples.shape[self.split_dim]}."
-                self._n_samples -= self.batch_size
-                x, y = torch.chunk(
-                    samples,
-                    2,
-                    self.split_dim
-                )
-                x = x.squeeze(self.split_dim)
-                y = y.squeeze(self.split_dim)
+                assert len(samples) == 2
+                samples = {'x': samples[0], 'y': samples[1]}
 
-            return x, y
+            self._n_samples -= n_samples
+
+            assert isinstance(samples, dict)
+
+            return samples
 
     def __len__(self):
         return self.max_samples // self.batch_size

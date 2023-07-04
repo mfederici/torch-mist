@@ -4,16 +4,33 @@ import torch
 import numpy as np
 import pandas as pd
 from torch.optim import Optimizer
-from collections.abc import Iterator
 from tqdm.auto import tqdm
 from torch.optim import Adam
 
 from torch_mist.estimators.base import MutualInformationEstimator
 
 
+def _unfold_samples(samples):
+    if isinstance(samples, tuple):
+        if not len(samples) == 2:
+            raise Exception("Dataloaders that iterate over tuples must have 2 elements")
+        x, y = samples
+    elif isinstance(samples, dict):
+        if not ('x' in samples) or not ('y' in samples):
+            raise Exception("Dataloaders that iterate over dictionaries must have the keys 'x' and 'y'")
+        x = samples['x']
+        y = samples['y']
+    else:
+        raise NotImplementedError(
+            "The dataloader must iterate over pairs or dictionaries containing 'x' and 'y'"
+        )
+
+    return x, y
+
+
 def optimize_mi_estimator(
         estimator: MutualInformationEstimator,
-        dataloader: Iterator[Tuple[torch.Tensor, torch.Tensor]],
+        dataloader: Any,
         device: torch.device = torch.device('cpu'),
         epochs: int = 1,
         optimizer_class: Type[Optimizer] = Adam,
@@ -40,7 +57,9 @@ def optimize_mi_estimator(
 
     dl = tqdm(dataloader) if verbose else dataloader
     for epoch in range(epochs):
-        for x, y in dl:
+        for samples in dl:
+            x, y = _unfold_samples(samples)
+
             x = x.to(device)
             y = y.to(device)
 
@@ -64,7 +83,7 @@ def optimize_mi_estimator(
 
 def estimate_mi(
         estimator: MutualInformationEstimator,
-        dataloader: Iterator[Tuple[torch.Tensor, torch.Tensor]],
+        dataloader: Any,
         device: torch.device = torch.device('cpu'),
 ) -> Tuple[float, float]:
     mis = []
@@ -72,7 +91,9 @@ def estimate_mi(
     estimator.eval()
     estimator = estimator.to(device)
 
-    for x, y in dataloader:
+    for samples in dataloader:
+        x, y = _unfold_samples(samples)
+
         x = x.to(device)
         y = y.to(device)
 
