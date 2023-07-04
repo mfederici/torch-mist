@@ -11,6 +11,8 @@ from torch_mist.quantization import FixedQuantization, trained_vector_quantizati
 from torch_mist.utils.data import SampleDataLoader
 from torch_mist.utils.estimate import optimize_mi_estimator, estimate_mi
 
+from torch_mist.distributions.joint import JointDistribution
+
 x_dim = y_dim = 1
 batch_size = 64
 n_bins = 32
@@ -37,6 +39,7 @@ def _make_data():
     true_mi = (MultivariateNormal(mean, torch.eye(2)).entropy() - p_xy.entropy())
     entropy_y = Normal(0, 1).entropy()
 
+    p_xy = JointDistribution(p_xy, dims=[1, 1], labels=['x', 'y'])
     trainloader = SampleDataLoader(
         p_xy,
         batch_size=batch_size,

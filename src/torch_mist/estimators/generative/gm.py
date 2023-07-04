@@ -86,7 +86,7 @@ def gm(
             n_transforms=n_joint_transforms,
         ),
         dims=[x_dim, y_dim],
-        names=['x', 'y'],
+        labels=['x', 'y'],
     )
 
     marginal_x = transformed_normal(

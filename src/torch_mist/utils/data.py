@@ -1,14 +1,16 @@
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Union
 from collections import Iterator
 
 import torch
 from torch.distributions import Distribution
 
+from torch_mist.distributions.joint import JointDistribution
+
 
 class SampleDataLoader(Iterator[Dict[str, torch.Tensor]]):
     def __init__(
             self,
-            joint_dist: Distribution,
+            joint_dist: Union[Distribution, JointDistribution],
             batch_size: int,
             max_samples: int = 100000,
             split_dim: int = -1,

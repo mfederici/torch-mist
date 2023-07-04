@@ -10,21 +10,21 @@ from torch_mist.distributions.transforms import ConditionalDistributionModule
 
 
 class JointDistribution(nn.Module):
-    def __init__(self, joint_dist: Distribution, dims: List[int], names: List[str]):
+    def __init__(self, joint_dist: Distribution, dims: List[int], labels: List[str]):
         super().__init__()
         self.joint_dist = joint_dist
         self.dims = dims
-        self.names = names
+        self.labels = labels
 
     def log_prob(self, *args, **kwargs) -> torch.Tensor:
         # Add the args to kwargs
-        unused_names = [name for name in self.names if not (name in kwargs)]
+        unused_names = [name for name in self.labels if not (name in kwargs)]
         new_kwargs = {unused_names[i]: arg for i, arg in enumerate(args)}
 
         kwargs = {**kwargs, **new_kwargs}
 
         # Expand args to the same shape if needed
-        assert len(kwargs) == len(self.dims), f"passed: {kwargs.keys()} != required: {self.names}"
+        assert len(kwargs) == len(self.dims), f"passed: {kwargs.keys()} != required: {self.labels}"
 
         args = list(kwargs.values())
         n_dims = args[0].ndim
@@ -34,7 +34,7 @@ class JointDistribution(nn.Module):
         kwargs = {name: value.expand(max_shape + [-1]) for name, value in kwargs.items()}
 
         # Concatenate all the arguments in order
-        args = torch.cat([kwargs[name] for name in self.names], dim=-1)
+        args = torch.cat([kwargs[name] for name in self.labels], dim=-1)
 
         # Compute the log prob
         log_prob = self.joint_dist.log_prob(args)
@@ -44,12 +44,12 @@ class JointDistribution(nn.Module):
     def sample(self, sample_shape: torch.Size = torch.Size()) -> Dict[str, torch.Tensor]:
         sample = self.joint_dist.sample(sample_shape)
         sample = torch.split(sample, self.dims, dim=-1)
-        return {name: value.squeeze(-1) for name, value in zip(self.names, sample)}
+        return {name: value.squeeze(-1) for name, value in zip(self.labels, sample)}
 
     def rsample(self, sample_shape: torch.Size = torch.Size()) -> Dict[str, torch.Tensor]:
         rsample = self.joint_dist.rsample(sample_shape)
         rsample = torch.split(rsample, self.dims, dim=-1)
-        return {name: value.squeeze(-1) for name, value in zip(self.names, rsample)}
+        return {name: value.squeeze(-1) for name, value in zip(self.labels, rsample)}
 
 
 class ConditionedRatioDistribution(Distribution):
@@ -79,7 +79,7 @@ class ConditionalRatioDistribution(ConditionalDistributionModule):
 
     def condition(self, *args, **kwargs) -> ConditionedRatioDistribution:
         # Add the args to kwargs
-        unused_names = [name for name in self.joint.names if not (name in kwargs)]
+        unused_names = [name for name in self.joint.labels if not (name in kwargs)]
         new_kwargs = {unused_names[i]: arg for i, arg in enumerate(args)}
 
         kwargs = {**kwargs, **new_kwargs}
