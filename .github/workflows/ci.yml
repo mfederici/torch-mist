@@ -65,6 +65,10 @@ jobs:
       # they'll be installed and working.
       - run: poetry install --no-interaction
 
+      # Replace torch with torch-cpu
+      - run: poetry run pip uninstall torch -y
+      - run: poetry run pip install torch --index-url https://download.pytorch.org/whl/cpu
+
       - run: poetry run pytest --cov
 
       - name: Upload coverage reports to Codecov

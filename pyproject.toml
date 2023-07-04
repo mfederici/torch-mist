@@ -7,10 +7,10 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 pyro-ppl = "^1.8.5"
-numpy = "^1.25.0"
-torch = "^2.0.1"
+numpy = "^1.24.0"
+torch = "^2.0.0"
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"
