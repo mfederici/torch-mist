@@ -1,14 +1,11 @@
 # Mist - A PyTorch Mutual information Estimation toolkit
 
-<img src="docs/logo.png" alt="alt text" width="200">
-
-
-
 [![PyPI version](https://badge.fury.io/py/torch-mist.svg)](https://badge.fury.io/py/torch-mist)
 [![codecov](https://codecov.io/gh/mfederici/torch-mist/badge.svg)](https://codecov.io/gh/mfederici/torch-mist)
 [![Documentation Status](https://readthedocs.org/projects/torch-mist/badge/?version=latest)](https://torch-mist.readthedocs.io/en/latest/?badge=latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
+<img src="docs/logo.png" onerror="this.onerror=null" width="200">
 
 
 Mutual Information Estimation toolkit based on pytorch. TO BE RELEASED SOON
@@ -73,21 +70,35 @@ The basic estimators implemented in this package are summarized in the following
 
 | Estimator                                     | Type                  | Models                                    |
 |-----------------------------------------------|-----------------------|-------------------------------------------|
-| NWJ [[1]](#references)                        | Discriminative        | $f_\xi(x,y)$                              |
-| MINE  [[2]](#references)                      | Discriminative        | $f_\xi(x,y)$                              |
-| InfoNCE [[3]](#references)                    | Discriminative        | $f_\xi(x,y)$                              |
-| TUBA  [[4]](#references)                      | Discriminative        | $f_\xi(x,y)$, $b_\xi(x)$                  | 
-| AlphaTUBA [[4]](#references)                  | Discriminative        | $f_\xi(x,y)$, $b_\xi(x)$                  |
-| JS [[5]](#references)                         | Discriminative        | $f_\xi(x,y)$                              |
-| SMILE [[6]](#references)                      | Discriminative        | $f_\xi(x,y)$                              |
-| FLO [[7]](#references)                        | Discriminative        | $f_\xi(x,y)$, $b_\xi(x,y)$                | 
+| NWJ [[1]](#references)                        | Discriminative        | $f_\phi(x,y)$                              |
+| MINE  [[2]](#references)                      | Discriminative        | $f_\phi(x,y)$                              |
+| InfoNCE [[3]](#references)                    | Discriminative        | $f_\phi(x,y)$                              |
+| TUBA  [[4]](#references)                      | Discriminative        | $f_\phi(x,y)$, $b_\xi(x)$                  | 
+| AlphaTUBA [[4]](#references)                  | Discriminative        | $f_\phi(x,y)$, $b_\xi(x)$                  |
+| JS [[5]](#references)                         | Discriminative        | $f_\phi(x,y)$                              |
+| SMILE [[6]](#references)                      | Discriminative        | $f_\phi(x,y)$                              |
+| FLO [[7]](#references)                        | Discriminative        | $f_\phi(x,y)$, $b_\xi(x,y)$               | 
 | BA [[8]](#references)                         | Generative            | $q_\theta(y\|x)$                          |          
-| DoE [[9]](#references)                        | Generative            | $q_\theta(y\|x)$, $r_\psi(y)$             | 
-| GM [[6]](#references)                         | Generative            | $q_\theta(x,y)$, $r_\psi(x)$, $r_\psi(y)$ |
+| DoE [[9]](#references)                        | Generative            | $q_\theta(y\|x)$, $q_\psi(y)$             | 
+| GM [[6]](#references)                         | Generative            | $q_\theta(x,y)$, $q_\psi(x)$, $r_\psi(y)$ |
 | L1OUT [[4]](#references) [[10]](#references)  | Generative            | $q_\theta(y\|x)$                          |                  
 | CLUB [[10]](#references)                      | Generative            | $q_\theta(y\|x)$                          |
 | Discrete [[]](#references)                    | Generative (Discrete) | $Q(x)$, $Q(y)$                            |
 | PQ [[11]](#references)                        | Generative (Discrete) | $Q(y)$, $q_\theta(Q(y)\|x)$               |
+
+in which:
+- $f_\phi(x,y)$ is a `critic` neural network with parameters $\phi, which maps pairs of observations to a scalar value.
+Critics can be either `joint` or `separable` depending on whether they parametrize function of both $x$ and $y$ directly, 
+or through the product of separate projection heads ( $f_\phi(x,y)=h_\phi(x)^T h_\phi(y)$ ) respectively.
+- $b_\xi(x)$ is a `baseline` neural network with parameters $\xi$, which maps observations (or paris of observations) to a scalar value.
+When the baseline is a function of both $x$ and $y$ it is referred to as a `joint_baseline`.
+- $q_\theta(y\|x)$ is a conditional variational distribution `q_Y_given_X` used to approximate $p(y\|x)$ with parameters $\theta$.
+Conditional distributions may have learnable parameters $\theta$ that are usually parametrized by a (conditional) normalizing flow.
+- $q_\psi(y)$ is a marginal variational distribution `q_Y` used to approximate $p(y)$ with parameters $\psi$.
+Marginal distributions may have learnable parameters $\psi$ that are usually parametrized by a normalizing flow.
+- $q_\theta(x,y)$ is a joint variational distribution `q_XY` used to approximate $p(x,y)$ with parameters $\theta$.
+Joint distributions may have learnable parameters $\theta$ that are usually parametrized by a normalizing flow.
+- $Q(x)$ and $Q(y)$ are `quantization` functions that map observations to a finite set of discrete values.
 
 ### Hybrid estimators
 The `torch_mist` package allows to combine Generative and Discriminative estimators in a single hybrid estimators as proposed in [[11]](#references)[[12]](#references).
