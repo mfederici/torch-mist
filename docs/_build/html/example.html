@@ -239,12 +239,12 @@
 <span class="p">)</span>
 
 <span class="c1"># We also specify the number of Monte Carlo samples to use for the estimation of the normalization constant</span>
-<span class="n">mc_samples</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">neg_samples</span> <span class="o">=</span> <span class="mi">16</span>
 
 <span class="c1"># Then we pass it to the Jensen-Shannon estimator</span>
 <span class="n">mi_estimator</span> <span class="o">=</span> <span class="n">JS</span><span class="p">(</span>
     <span class="n">critic</span><span class="o">=</span><span class="n">critic</span><span class="p">,</span>
-    <span class="n">mc_samples</span><span class="o">=</span><span class="n">mc_samples</span>
+    <span class="n">neg_samples</span><span class="o">=</span><span class="n">neg_samples</span>
 <span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">mi_estimator</span><span class="p">)</span>
@@ -262,7 +262,7 @@
       (4): Linear(in_features=64, out_features=1, bias=True)
     )
   )
-  (mc_samples): 16
+  (neg_samples): 16
 )
 </pre></div>
 </div>
@@ -383,7 +383,7 @@ True: 0.830
     <span class="n">x_dim</span><span class="o">=</span><span class="n">x_dim</span><span class="p">,</span>
     <span class="n">y_dim</span><span class="o">=</span><span class="n">y_dim</span><span class="p">,</span>
     <span class="n">hidden_dims</span><span class="o">=</span><span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">],</span>
-    <span class="n">mc_samples</span><span class="o">=</span><span class="n">mc_samples</span>
+    <span class="n">neg_samples</span><span class="o">=</span><span class="n">neg_samples</span>
 <span class="p">)</span>
 
 <span class="n">mi_estimator</span>
@@ -402,7 +402,7 @@ True: 0.830
       (f): ReLU(inplace=True)
     )
   )
-  (mc_samples): 16
+  (neg_samples): 16
 )
 </pre></div>
 </div>
