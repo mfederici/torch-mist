@@ -68,43 +68,55 @@ class GM(DoE):
 
 
 def gm(
-        x_dim: int,
-        y_dim: int,
-        hidden_dims: List[int],
-        joint_transform_name: str = 'conditional_linear',
+        x_dim: Optional[int] = None,
+        y_dim: Optional[int] = None,
+        hidden_dims: List[int] = None,
+        q_XY: Optional[JointDistribution] = None,
+        q_Y: Optional[Distribution] = None,
+        q_X: Optional[Distribution] = None,
+        joint_transform_name: str = 'affine_autoregressive',
         n_joint_transforms: int = 1,
         marginal_transform_name: str = 'linear',
         n_marginal_transforms: int = 1,
 ) -> GM:
     from torch_mist.distributions.utils import transformed_normal
 
-    joint_xy = JointDistribution(
-        joint_dist=transformed_normal(
-            input_dim=x_dim + y_dim,
+    if q_XY is None:
+        if x_dim is None or y_dim is None or hidden_dims is None:
+            raise ValueError('x_dim, y_dim, and hidden_dims must be provided if q_XY is not provided')
+        q_XY = JointDistribution(
+            joint_dist=transformed_normal(
+                input_dim=x_dim + y_dim,
+                hidden_dims=hidden_dims,
+                transform_name=joint_transform_name,
+                n_transforms=n_joint_transforms,
+            ),
+            dims=[x_dim, y_dim],
+            labels=['x', 'y'],
+        )
+
+    if q_X is None:
+        if x_dim is None or hidden_dims is None:
+            raise ValueError('x_dim and hidden_dims must be provided if q_X is not provided')
+        q_X = transformed_normal(
+            input_dim=x_dim,
             hidden_dims=hidden_dims,
-            transform_name=joint_transform_name,
-            n_transforms=n_joint_transforms,
-        ),
-        dims=[x_dim, y_dim],
-        labels=['x', 'y'],
-    )
+            transform_name=marginal_transform_name,
+            n_transforms=n_marginal_transforms,
+        )
 
-    marginal_x = transformed_normal(
-        input_dim=x_dim,
-        hidden_dims=hidden_dims,
-        transform_name=marginal_transform_name,
-        n_transforms=n_marginal_transforms,
-    )
-
-    marginal_y = transformed_normal(
-        input_dim=y_dim,
-        hidden_dims=hidden_dims,
-        transform_name=marginal_transform_name,
-        n_transforms=n_marginal_transforms,
-    )
+    if q_Y is None:
+        if y_dim is None or hidden_dims is None:
+            raise ValueError('y_dim and hidden_dims must be provided if q_Y is not provided')
+        q_Y = transformed_normal(
+            input_dim=y_dim,
+            hidden_dims=hidden_dims,
+            transform_name=marginal_transform_name,
+            n_transforms=n_marginal_transforms,
+        )
 
     return GM(
-        q_XY=joint_xy,
-        q_X=marginal_x,
-        q_Y=marginal_y,
+        q_XY=q_XY,
+        q_X=q_X,
+        q_Y=q_Y,
     )

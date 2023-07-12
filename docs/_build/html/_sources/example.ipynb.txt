@@ -3,7 +3,7 @@
   {
    "cell_type": "markdown",
    "source": [
-    "# Example usage\n",
+    "# Simple example\n",
     "\n",
     "To use `torch_mist` in a project:"
    ],

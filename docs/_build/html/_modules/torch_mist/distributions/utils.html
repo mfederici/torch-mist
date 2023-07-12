@@ -44,7 +44,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../example.html">Example usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../example.html">Simple example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../conduct.html">Code of Conduct</a></li>
@@ -110,13 +110,14 @@
 
 
 <div class="viewcode-block" id="ConditionalCategoricalModule"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.ConditionalCategoricalModule">[docs]</a><span class="k">class</span> <span class="nc">ConditionalCategoricalModule</span><span class="p">(</span><span class="n">ConditionalDistributionModule</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">net</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">net</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span><span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">ConditionalCategoricalModule</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">net</span> <span class="o">=</span> <span class="n">net</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">=</span> <span class="n">temperature</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parametrization</span> <span class="o">=</span> <span class="n">LogitsMap</span><span class="p">()</span>
 
 <div class="viewcode-block" id="ConditionalCategoricalModule.condition"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.ConditionalCategoricalModule.condition">[docs]</a>    <span class="k">def</span> <span class="nf">condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">Categorical</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">parametrization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span></div></div>
+        <span class="k">return</span> <span class="n">Categorical</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">parametrization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">temperature</span><span class="p">))</span></div></div>
 
 
 <div class="viewcode-block" id="NormalModule"><a class="viewcode-back" href="../../../autoapi/torch_mist/distributions/utils/index.html#torch_mist.distributions.utils.NormalModule">[docs]</a><span class="k">class</span> <span class="nc">NormalModule</span><span class="p">(</span><span class="n">Distribution</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
@@ -266,9 +267,10 @@
     <span class="n">n_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">context_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">hidden_dims</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="n">net</span> <span class="o">=</span> <span class="n">DenseNN</span><span class="p">(</span><span class="n">input_dim</span><span class="o">=</span><span class="n">context_dim</span><span class="p">,</span> <span class="n">hidden_dims</span><span class="o">=</span><span class="n">hidden_dims</span><span class="p">,</span> <span class="n">param_dims</span><span class="o">=</span><span class="p">[</span><span class="n">n_classes</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">ConditionalCategoricalModule</span><span class="p">(</span><span class="n">net</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">ConditionalCategoricalModule</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

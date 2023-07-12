@@ -22,6 +22,7 @@ Submodules
 
    base/index.rst
    hybrid/index.rst
+   utils/index.rst
 
 
 Package Contents
@@ -41,6 +42,7 @@ Classes
    torch_mist.estimators.CLUB
    torch_mist.estimators.PQ
    torch_mist.estimators.DiscreteMutualInformationEstimator
+   torch_mist.estimators.DiscriminativeMutualInformationEstimator
    torch_mist.estimators.NWJ
    torch_mist.estimators.MINE
    torch_mist.estimators.InfoNCE
@@ -49,6 +51,7 @@ Classes
    torch_mist.estimators.SMILE
    torch_mist.estimators.AlphaTUBA
    torch_mist.estimators.FLO
+   torch_mist.estimators.HybridMutualInformationEstimator
 
 
 
@@ -116,6 +119,9 @@ Functions
 
 
    .. py:method:: expected_log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: unnormalized_log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
    .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
@@ -231,7 +237,7 @@ Functions
 
 
 
-.. py:function:: ba(x_dim: int, y_dim: int, hidden_dims: List[int], entropy_y: Union[float, torch.Tensor], transform_name: str = 'conditional_linear', n_transforms: int = 1) -> BA
+.. py:function:: ba(entropy_y: Union[float, torch.Tensor], x_dim: Optional[int] = None, y_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_Y_given_X: Optional[pyro.distributions.ConditionalDistribution] = None, transform_name: str = 'conditional_linear', n_transforms: int = 1) -> BA
 
 
 .. py:class:: DoE(q_Y_given_X: pyro.distributions.ConditionalDistribution, q_Y: torch.distributions.Distribution)
@@ -282,7 +288,7 @@ Functions
 
 
 
-.. py:function:: doe(x_dim: int, y_dim: int, hidden_dims: List[int], conditional_transform_name: str = 'conditional_linear', n_conditional_transforms: int = 1, marginal_transform_name: str = 'linear', n_marginal_transforms: int = 1) -> DoE
+.. py:function:: doe(x_dim: Optional[int] = None, y_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_Y_given_X: Optional[pyro.distributions.ConditionalDistribution] = None, q_Y: Optional[torch.distributions.Distribution] = None, conditional_transform_name: str = 'conditional_linear', n_conditional_transforms: int = 1, marginal_transform_name: str = 'linear', n_marginal_transforms: int = 1) -> DoE
 
 
 .. py:class:: GM(q_XY: torch_mist.distributions.joint.JointDistribution, q_Y: torch.distributions.Distribution, q_X: torch.distributions.Distribution)
@@ -339,7 +345,7 @@ Functions
 
 
 
-.. py:function:: gm(x_dim: int, y_dim: int, hidden_dims: List[int], joint_transform_name: str = 'conditional_linear', n_joint_transforms: int = 1, marginal_transform_name: str = 'linear', n_marginal_transforms: int = 1) -> GM
+.. py:function:: gm(x_dim: Optional[int] = None, y_dim: Optional[int] = None, hidden_dims: List[int] = None, q_XY: Optional[torch_mist.distributions.joint.JointDistribution] = None, q_Y: Optional[torch.distributions.Distribution] = None, q_X: Optional[torch.distributions.Distribution] = None, joint_transform_name: str = 'affine_autoregressive', n_joint_transforms: int = 1, marginal_transform_name: str = 'linear', n_marginal_transforms: int = 1) -> GM
 
 
 .. py:class:: L1Out(q_Y_given_X: pyro.distributions.ConditionalDistribution)
@@ -389,7 +395,7 @@ Functions
 
 
 
-.. py:function:: l1out(x_dim: int, y_dim: int, hidden_dims: List[int], transform_name: str = 'conditional_linear', n_transforms: int = 1) -> L1Out
+.. py:function:: l1out(x_dim: Optional[int] = None, y_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_Y_given_X: Optional[pyro.distributions.ConditionalDistribution] = None, transform_name: str = 'conditional_linear', n_transforms: int = 1) -> L1Out
 
 
 .. py:class:: CLUB(q_Y_given_X: pyro.distributions.ConditionalDistribution, sample: str = 'all')
@@ -432,13 +438,13 @@ Functions
 
 
 
-.. py:function:: club(x_dim: int, y_dim: int, hidden_dims: List[int], transform_name: str = 'conditional_linear', n_transforms: int = 1) -> CLUB
+.. py:function:: club(x_dim: Optional[int] = None, y_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_Y_given_X: Optional[pyro.distributions.ConditionalDistribution] = None, transform_name: str = 'conditional_linear', n_transforms: int = 1) -> CLUB
 
 
-.. py:class:: PQ(q_qY_given_X: pyro.distributions.ConditionalDistribution, quantization: torch_mist.quantization.functions.QuantizationFunction, temperature: float = 0.1)
+.. py:class:: PQ(q_QX_given_Y: pyro.distributions.ConditionalDistribution, Q_x: torch_mist.quantization.functions.QuantizationFunction, temperature: float = 1.0)
 
 
-   Bases: :py:obj:`torch_mist.estimators.generative.doe.DoE`
+   Bases: :py:obj:`torch_mist.estimators.generative.base.GenerativeMutualInformationEstimator`
 
    Base class for all neural network modules.
 
@@ -471,23 +477,110 @@ Functions
                    evaluation mode.
    :vartype training: bool
 
+   .. py:method:: quantize_x(x: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: q_QX_given_y(y: torch.Tensor) -> torch.distributions.Distribution
+
+
+   .. py:method:: approx_log_p_qx_given_y(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: approx_log_p_qx(x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
+
+
+   .. py:method:: log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
+
+
+
+.. py:function:: pq(Q_x: torch_mist.quantization.functions.QuantizationFunction, x_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_QX_given_Y: Optional[pyro.distributions.ConditionalDistribution] = None, temperature: float = 0.1) -> PQ
+
+
+.. py:class:: DiscreteMutualInformationEstimator(Q_x: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, Q_y: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, temperature: float = 1.0)
+
+
+   Bases: :py:obj:`torch_mist.estimators.generative.base.GenerativeMutualInformationEstimator`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+   .. py:property:: logits
+      :type: torch.Tensor
+
+
+   .. py:method:: quantize_x(x: torch.Tensor) -> torch.Tensor
+
+
    .. py:method:: quantize_y(y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: q_Y_given_x(x: torch.Tensor) -> torch.distributions.Distribution
+   .. py:method:: approx_log_p_qxqy(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: approx_log_p_y_given_x(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+   .. py:method:: approx_log_p_qx(x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
 
 
-   .. py:method:: approx_log_p_y(y: torch.Tensor, x: Optional[torch.Tensor] = None) -> torch.Tensor
+   .. py:method:: approx_log_p_qy(y: torch.Tensor, x: Optional[torch.Tensor] = None) -> torch.Tensor
+
+
+   .. py:method:: log_p_qx_given_qy(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: approx_log_p_qy_given_qx(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
 
 
 
-.. py:function:: pq(x_dim: int, hidden_dims: List[int], quantization: torch_mist.quantization.functions.QuantizationFunction) -> PQ
+.. py:function:: discrete(Q_x: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, Q_y: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, temperature: float = 0.1) -> DiscreteMutualInformationEstimator
 
 
-.. py:class:: DiscreteMutualInformationEstimator(quantization_x: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, quantization_y: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, temperature: float = 0.1)
+.. py:class:: DiscriminativeMutualInformationEstimator(critic: torch_mist.critic.base.Critic, neg_samples: int = 1, proposal: Optional[Union[torch.distributions.Distribution, pyro.distributions.ConditionalDistribution]] = None)
 
 
    Bases: :py:obj:`torch_mist.estimators.base.MutualInformationEstimator`
@@ -523,250 +616,26 @@ Functions
                    evaluation mode.
    :vartype training: bool
 
-   .. py:property:: log_q_qxy
-      :type: torch.Tensor
+   .. py:method:: unnormalized_log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: quantize_x(x: torch.Tensor) -> torch.Tensor
+   .. py:method:: critic_on_positives(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: quantize_y(y: torch.Tensor) -> torch.Tensor
+   .. py:method:: critic_on_negatives(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: approx_log_p_xy(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+   .. py:method:: log_normalization(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: approx_log_p_x(x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
-
-
-   .. py:method:: approx_log_p_y(y: torch.Tensor, x: Optional[torch.Tensor] = None) -> torch.Tensor
-
-
-   .. py:method:: log_p_x_given_y(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
-
-
-   .. py:method:: approx_log_p_y_given_x(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
-
-
-   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+   .. py:method:: compute_log_normalization(x: torch.Tensor, y: torch.Tensor, f_: torch.Tensor)
+      :abstractmethod:
 
 
    .. py:method:: log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-
-.. py:function:: discrete(quantization_x: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, quantization_y: Optional[torch_mist.quantization.functions.QuantizationFunction] = None) -> DiscreteMutualInformationEstimator
-
-
-.. py:class:: NWJ(critic: torch_mist.critic.base.Critic, mc_samples: int = 1)
-
-
-   Bases: :py:obj:`torch_mist.estimators.discriminative.base.DiscriminativeMutualInformationEstimator`
-
-   Base class for all neural network modules.
-
-   Your models should also subclass this class.
-
-   Modules can also contain other Modules, allowing to nest them in
-   a tree structure. You can assign the submodules as regular attributes::
-
-       import torch.nn as nn
-       import torch.nn.functional as F
-
-       class Model(nn.Module):
-           def __init__(self):
-               super().__init__()
-               self.conv1 = nn.Conv2d(1, 20, 5)
-               self.conv2 = nn.Conv2d(20, 20, 5)
-
-           def forward(self, x):
-               x = F.relu(self.conv1(x))
-               return F.relu(self.conv2(x))
-
-   Submodules assigned in this way will be registered, and will have their
-   parameters converted too when you call :meth:`to`, etc.
-
-   .. note::
-       As per the example above, an ``__init__()`` call to the parent class
-       must be made before assignment on the child.
-
-   :ivar training: Boolean represents whether this module is in training or
-                   evaluation mode.
-   :vartype training: bool
-
-   .. py:method:: compute_log_ratio(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
-
-
-
-.. py:function:: nwj(x_dim: int, y_dim: int, hidden_dims: List[int], mc_samples: int = 1, critic_type: str = 'joint', critic_params: Dict[str, Any] = None) -> NWJ
-
-
-.. py:class:: MINE(critic: torch_mist.critic.base.Critic, mc_samples: int = 1, gamma: float = 0.9)
-
-
-   Bases: :py:obj:`torch_mist.estimators.discriminative.tuba.TUBA`
-
-   Base class for all neural network modules.
-
-   Your models should also subclass this class.
-
-   Modules can also contain other Modules, allowing to nest them in
-   a tree structure. You can assign the submodules as regular attributes::
-
-       import torch.nn as nn
-       import torch.nn.functional as F
-
-       class Model(nn.Module):
-           def __init__(self):
-               super().__init__()
-               self.conv1 = nn.Conv2d(1, 20, 5)
-               self.conv2 = nn.Conv2d(20, 20, 5)
-
-           def forward(self, x):
-               x = F.relu(self.conv1(x))
-               return F.relu(self.conv2(x))
-
-   Submodules assigned in this way will be registered, and will have their
-   parameters converted too when you call :meth:`to`, etc.
-
-   .. note::
-       As per the example above, an ``__init__()`` call to the parent class
-       must be made before assignment on the child.
-
-   :ivar training: Boolean represents whether this module is in training or
-                   evaluation mode.
-   :vartype training: bool
-
-
-.. py:function:: mine(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', mc_samples: int = 1, gamma: float = 0.9, critic_params: Dict[str, Any] = None) -> MINE
-
-
-.. py:class:: InfoNCE(critic: torch_mist.critic.separable.SeparableCritic)
-
-
-   Bases: :py:obj:`torch_mist.estimators.discriminative.base.DiscriminativeMutualInformationEstimator`
-
-   Base class for all neural network modules.
-
-   Your models should also subclass this class.
-
-   Modules can also contain other Modules, allowing to nest them in
-   a tree structure. You can assign the submodules as regular attributes::
-
-       import torch.nn as nn
-       import torch.nn.functional as F
-
-       class Model(nn.Module):
-           def __init__(self):
-               super().__init__()
-               self.conv1 = nn.Conv2d(1, 20, 5)
-               self.conv2 = nn.Conv2d(20, 20, 5)
-
-           def forward(self, x):
-               x = F.relu(self.conv1(x))
-               return F.relu(self.conv2(x))
-
-   Submodules assigned in this way will be registered, and will have their
-   parameters converted too when you call :meth:`to`, etc.
-
-   .. note::
-       As per the example above, an ``__init__()`` call to the parent class
-       must be made before assignment on the child.
-
-   :ivar training: Boolean represents whether this module is in training or
-                   evaluation mode.
-   :vartype training: bool
-
-   .. py:method:: compute_log_ratio(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, f_: torch.tensor)
-
-
-
-.. py:function:: infonce(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type='separable', critic_params: Dict[str, Any] = None) -> InfoNCE
-
-
-.. py:class:: JS(critic: torch_mist.critic.base.Critic, mc_samples: int = 1)
-
-
-   Bases: :py:obj:`torch_mist.estimators.discriminative.nwj.NWJ`
-
-   Base class for all neural network modules.
-
-   Your models should also subclass this class.
-
-   Modules can also contain other Modules, allowing to nest them in
-   a tree structure. You can assign the submodules as regular attributes::
-
-       import torch.nn as nn
-       import torch.nn.functional as F
-
-       class Model(nn.Module):
-           def __init__(self):
-               super().__init__()
-               self.conv1 = nn.Conv2d(1, 20, 5)
-               self.conv2 = nn.Conv2d(20, 20, 5)
-
-           def forward(self, x):
-               x = F.relu(self.conv1(x))
-               return F.relu(self.conv2(x))
-
-   Submodules assigned in this way will be registered, and will have their
-   parameters converted too when you call :meth:`to`, etc.
-
-   .. note::
-       As per the example above, an ``__init__()`` call to the parent class
-       must be made before assignment on the child.
-
-   :ivar training: Boolean represents whether this module is in training or
-                   evaluation mode.
-   :vartype training: bool
-
-   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> Optional[torch.Tensor]
-
-
-
-.. py:function:: js(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', mc_samples: int = 1, critic_params: Dict[str, Any] = None) -> JS
-
-
-.. py:class:: TUBA(critic: torch_mist.critic.base.Critic, baseline: torch_mist.baselines.Baseline, grad_baseline: Optional[torch_mist.baselines.Baseline] = None, mc_samples: int = 1)
-
-
-   Bases: :py:obj:`torch_mist.estimators.discriminative.nwj.NWJ`
-
-   Base class for all neural network modules.
-
-   Your models should also subclass this class.
-
-   Modules can also contain other Modules, allowing to nest them in
-   a tree structure. You can assign the submodules as regular attributes::
-
-       import torch.nn as nn
-       import torch.nn.functional as F
-
-       class Model(nn.Module):
-           def __init__(self):
-               super().__init__()
-               self.conv1 = nn.Conv2d(1, 20, 5)
-               self.conv2 = nn.Conv2d(20, 20, 5)
-
-           def forward(self, x):
-               x = F.relu(self.conv1(x))
-               return F.relu(self.conv2(x))
-
-   Submodules assigned in this way will be registered, and will have their
-   parameters converted too when you call :meth:`to`, etc.
-
-   .. note::
-       As per the example above, an ``__init__()`` call to the parent class
-       must be made before assignment on the child.
-
-   :ivar training: Boolean represents whether this module is in training or
-                   evaluation mode.
-   :vartype training: bool
-
-   .. py:method:: compute_log_ratio(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
-
-
-   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> Optional[torch.Tensor]
+   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
    .. py:method:: __repr__()
@@ -775,10 +644,7 @@ Functions
 
 
 
-.. py:function:: tuba(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', mc_samples: int = 1, critic_params: Dict[str, Any] = None, baseline_params: Dict[str, Any] = None) -> TUBA
-
-
-.. py:class:: SMILE(critic: torch_mist.critic.base.Critic, mc_samples: int = 1, tau: float = 5.0)
+.. py:class:: NWJ(critic: torch_mist.critic.base.Critic, neg_samples: int = 1)
 
 
    Bases: :py:obj:`torch_mist.estimators.discriminative.tuba.TUBA`
@@ -814,57 +680,137 @@ Functions
                    evaluation mode.
    :vartype training: bool
 
-   .. py:method:: compute_log_ratio(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
 
+.. py:function:: nwj(x_dim: int, y_dim: int, hidden_dims: List[int], neg_samples: int = 1, critic_type: str = 'joint', critic_params: Dict[str, Any] = None) -> NWJ
+
+
+.. py:class:: MINE(critic: torch_mist.critic.base.Critic, neg_samples: int = 1, gamma: float = 0.9)
+
+
+   Bases: :py:obj:`torch_mist.estimators.discriminative.tuba.TUBA`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+
+.. py:function:: mine(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', neg_samples: int = 1, gamma: float = 0.9, critic_params: Dict[str, Any] = None) -> MINE
+
+
+.. py:class:: InfoNCE(critic: torch_mist.critic.separable.SeparableCritic)
+
+
+   Bases: :py:obj:`torch_mist.estimators.discriminative.tuba.TUBA`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+   .. py:method:: compute_log_normalization(x: torch.Tensor, y: torch.Tensor, f_: torch.tensor)
+
+
+
+.. py:function:: infonce(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type='separable', critic_params: Dict[str, Any] = None) -> InfoNCE
+
+
+.. py:class:: JS(critic: torch_mist.critic.base.Critic, neg_samples: int = 1)
+
+
+   Bases: :py:obj:`torch_mist.estimators.discriminative.tuba.TUBA`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
 
    .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> Optional[torch.Tensor]
 
 
 
-.. py:function:: smile(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', mc_samples: int = 1, tau: float = 5.0, critic_params: Dict[str, Any] = None) -> SMILE
+.. py:function:: js(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', neg_samples: int = 1, critic_params: Dict[str, Any] = None) -> JS
 
 
-.. py:class:: AlphaTUBA(critic: torch_mist.critic.base.Critic, baseline: torch_mist.baselines.Baseline, alpha: float = 0.5, mc_samples: int = -1)
-
-
-   Bases: :py:obj:`torch_mist.estimators.discriminative.tuba.TUBA`
-
-   Base class for all neural network modules.
-
-   Your models should also subclass this class.
-
-   Modules can also contain other Modules, allowing to nest them in
-   a tree structure. You can assign the submodules as regular attributes::
-
-       import torch.nn as nn
-       import torch.nn.functional as F
-
-       class Model(nn.Module):
-           def __init__(self):
-               super().__init__()
-               self.conv1 = nn.Conv2d(1, 20, 5)
-               self.conv2 = nn.Conv2d(20, 20, 5)
-
-           def forward(self, x):
-               x = F.relu(self.conv1(x))
-               return F.relu(self.conv2(x))
-
-   Submodules assigned in this way will be registered, and will have their
-   parameters converted too when you call :meth:`to`, etc.
-
-   .. note::
-       As per the example above, an ``__init__()`` call to the parent class
-       must be made before assignment on the child.
-
-   :ivar training: Boolean represents whether this module is in training or
-                   evaluation mode.
-   :vartype training: bool
-
-
-.. py:function:: alpha_tuba(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', alpha: float = 0.01, learnable_baseline: bool = True, mc_samples=-1, critic_params: Dict[str, Any] = None, baseline_params: Dict[str, Any] = None) -> AlphaTUBA
-
-
-.. py:class:: FLO(critic: torch_mist.critic.base.Critic, baseline: torch_mist.baselines.LearnableJointBaseline, mc_samples: int = 1)
+.. py:class:: TUBA(critic: torch_mist.critic.base.Critic, baseline: torch_mist.baselines.Baseline, grad_baseline: Optional[torch_mist.baselines.Baseline] = None, neg_samples: int = 1)
 
 
    Bases: :py:obj:`torch_mist.estimators.discriminative.base.DiscriminativeMutualInformationEstimator`
@@ -900,10 +846,199 @@ Functions
                    evaluation mode.
    :vartype training: bool
 
-   .. py:method:: compute_log_ratio(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
+   .. py:method:: log_normalization_loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: compute_log_normalization(x: torch.Tensor, y: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: compute_log_normalization_loss(x: torch.Tensor, y: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
 
 
 
-.. py:function:: flo(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', mc_samples: int = 1, critic_params: Dict[str, Any] = None, baseline_params: Dict[str, Any] = None) -> FLO
+.. py:function:: tuba(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', neg_samples: int = 1, critic_params: Dict[str, Any] = None, baseline_params: Dict[str, Any] = None) -> TUBA
+
+
+.. py:class:: SMILE(critic: torch_mist.critic.base.Critic, neg_samples: int = 1, tau: float = 5.0)
+
+
+   Bases: :py:obj:`torch_mist.estimators.discriminative.tuba.TUBA`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+   .. py:method:: compute_log_normalization(x: torch.Tensor, y: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> Optional[torch.Tensor]
+
+
+
+.. py:function:: smile(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', neg_samples: int = 1, tau: float = 5.0, critic_params: Dict[str, Any] = None) -> SMILE
+
+
+.. py:class:: AlphaTUBA(critic: torch_mist.critic.base.Critic, baseline: torch_mist.baselines.Baseline, alpha: float = 0.5, neg_samples: int = -1)
+
+
+   Bases: :py:obj:`torch_mist.estimators.discriminative.tuba.TUBA`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+
+.. py:function:: alpha_tuba(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', alpha: float = 0.01, learnable_baseline: bool = True, neg_samples=-1, critic_params: Dict[str, Any] = None, baseline_params: Dict[str, Any] = None) -> AlphaTUBA
+
+
+.. py:class:: FLO(critic: torch_mist.critic.base.Critic, baseline: torch_mist.baselines.LearnableJointBaseline, neg_samples: int = 1)
+
+
+   Bases: :py:obj:`torch_mist.estimators.discriminative.base.DiscriminativeMutualInformationEstimator`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+   .. py:method:: log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+
+.. py:function:: flo(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', neg_samples: int = 1, critic_params: Dict[str, Any] = None, baseline_params: Dict[str, Any] = None) -> FLO
+
+
+.. py:class:: HybridMutualInformationEstimator(generative_estimator: Optional[torch_mist.estimators.generative.base.GenerativeMutualInformationEstimator] = None, discriminative_estimator: Optional[torch_mist.estimators.discriminative.base.DiscriminativeMutualInformationEstimator] = None, train_generative_estimator: bool = True, train_discriminative_estimator: bool = True)
+
+
+   Bases: :py:obj:`torch_mist.estimators.base.MutualInformationEstimator`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+   .. py:method:: expected_log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: unnormalized_log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
 
 

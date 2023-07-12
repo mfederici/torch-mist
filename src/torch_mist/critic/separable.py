@@ -41,7 +41,7 @@ class SeparableCritic(Critic):
 
         assert f_x.ndim == f_y.ndim, f'f_x.ndim={f_x.ndim}, f_y.ndim={f_y.ndim}'
 
-        # hack to expand to the same shape without specifying the number of repeats
+        # hack to expand to the same shape without specifying the number of repeats using broadcasting
         f_x = f_x + f_y * 0
         f_y = f_y + f_x * 0
 

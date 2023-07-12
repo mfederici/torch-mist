@@ -49,9 +49,11 @@ class DoE(GenerativeMutualInformationEstimator):
 
 
 def doe(
-        x_dim: int,
-        y_dim: int,
-        hidden_dims: List[int],
+        x_dim: Optional[int] = None,
+        y_dim: Optional[int] = None,
+        hidden_dims: Optional[List[int]] = None,
+        q_Y_given_X: Optional[ConditionalDistribution] = None,
+        q_Y: Optional[Distribution] = None,
         conditional_transform_name: str = 'conditional_linear',
         n_conditional_transforms: int = 1,
         marginal_transform_name: str = 'linear',
@@ -59,20 +61,26 @@ def doe(
 ) -> DoE:
     from torch_mist.distributions.utils import conditional_transformed_normal, transformed_normal
 
-    q_Y_given_X = conditional_transformed_normal(
-        input_dim=y_dim,
-        context_dim=x_dim,
-        hidden_dims=hidden_dims,
-        transform_name=conditional_transform_name,
-        n_transforms=n_conditional_transforms,
-    )
+    if q_Y_given_X is None:
+        if x_dim is None or y_dim is None or hidden_dims is None:
+            raise ValueError('Either q_Y_given_X or x_dim, y_dim and hidden_dims must be specified.')
+        q_Y_given_X = conditional_transformed_normal(
+            input_dim=y_dim,
+            context_dim=x_dim,
+            hidden_dims=hidden_dims,
+            transform_name=conditional_transform_name,
+            n_transforms=n_conditional_transforms,
+        )
 
-    q_Y = transformed_normal(
-        input_dim=y_dim,
-        hidden_dims=hidden_dims,
-        transform_name=marginal_transform_name,
-        n_transforms=n_marginal_transforms,
-    )
+    if q_Y is None:
+        if y_dim is None or hidden_dims is None:
+            raise ValueError('Either q_Y or y_dim and hidden_dims must be specified.')
+        q_Y = transformed_normal(
+            input_dim=y_dim,
+            hidden_dims=hidden_dims,
+            transform_name=marginal_transform_name,
+            n_transforms=n_marginal_transforms,
+        )
 
     return DoE(
         q_Y_given_X=q_Y_given_X,

@@ -4,14 +4,23 @@
 .. py:module:: torch_mist.utils
 
 
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   data/index.rst
+
+
 Submodules
 ----------
 .. toctree::
    :titlesonly:
    :maxdepth: 1
 
+   batch_utils/index.rst
    caching/index.rst
-   data/index.rst
    estimate/index.rst
 
 
@@ -29,9 +38,9 @@ Functions
 
 
 
-.. py:function:: estimate_mi(estimator: torch_mist.estimators.base.MutualInformationEstimator, dataloader: collections.abc.Iterator[Tuple[torch.Tensor, torch.Tensor]], device: torch.device = torch.device('cpu')) -> Tuple[float, float]
+.. py:function:: estimate_mi(estimator: torch_mist.estimators.base.MutualInformationEstimator, dataloader: Any, device: torch.device = torch.device('cpu')) -> Tuple[float, float]
 
 
-.. py:function:: optimize_mi_estimator(estimator: torch_mist.estimators.base.MutualInformationEstimator, dataloader: collections.abc.Iterator[Tuple[torch.Tensor, torch.Tensor]], device: torch.device = torch.device('cpu'), epochs: int = 1, optimizer_class: Type[torch.optim.Optimizer] = Adam, optimizer_params: Optional[Dict[str, Any]] = None, verbose: bool = False, return_log: bool = True) -> Optional[pandas.DataFrame]
+.. py:function:: optimize_mi_estimator(estimator: torch_mist.estimators.base.MutualInformationEstimator, train_loader: Any, valid_loader: Optional[Any] = None, device: torch.device = torch.device('cpu'), max_epochs: int = 10, optimizer_class: Type[torch.optim.Optimizer] = Adam, optimizer_params: Optional[Dict[str, Any]] = None, verbose: bool = True, return_log: bool = True, lr_annealing: bool = False, warmup_percentage: float = 0.2) -> Optional[pandas.DataFrame]
 
 

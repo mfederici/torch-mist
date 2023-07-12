@@ -22,7 +22,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Example usage" href="example.html" /> 
+    <link rel="next" title="Simple example" href="example.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -46,7 +46,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="example.html">Example usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Simple example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="conduct.html">Code of Conduct</a></li>
@@ -79,11 +79,11 @@
              
   <section id="mist-a-pytorch-mutual-information-estimation-toolkit">
 <h1>Mist - A PyTorch Mutual information Estimation toolkit<a class="headerlink" href="#mist-a-pytorch-mutual-information-estimation-toolkit" title="Permalink to this heading"></a></h1>
-<img src="docs/logo.png" alt="alt text" width="200">
 <p><a class="reference external" href="https://badge.fury.io/py/torch-mist"><img alt="PyPI version" src="https://badge.fury.io/py/torch-mist.svg" /></a>
 <a class="reference external" href="https://codecov.io/gh/mfederici/torch-mist"><img alt="codecov" src="https://codecov.io/gh/mfederici/torch-mist/badge.svg" /></a>
 <a class="reference external" href="https://torch-mist.readthedocs.io/en/latest/?badge=latest"><img alt="Documentation Status" src="https://readthedocs.org/projects/torch-mist/badge/?version=latest" /></a>
 <a class="reference external" href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg" /></a></p>
+<img src="docs/logo.png" onerror="this.onerror=null" width="200">
 <p>Mutual Information Estimation toolkit based on pytorch. TO BE RELEASED SOON</p>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
@@ -112,13 +112,12 @@ of observations using the MINE estimator <span class="xref myst">[2]</span>.</p>
 <p>then we can train the estimator:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch_mist.utils</span> <span class="kn">import</span> <span class="n">optimize_mi_estimator</span>
 
-
 <span class="n">train_log</span> <span class="o">=</span> <span class="n">optimize_mi_estimator</span><span class="p">(</span>
-    <span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span>        <span class="c1"># the estimator to train</span>
-    <span class="n">dataloader</span><span class="o">=</span><span class="n">dataloader</span><span class="p">,</span>      <span class="c1"># the dataloader returning pairs of x and y</span>
-    <span class="n">epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>                  <span class="c1"># the number of epochs</span>
-    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span>               <span class="c1"># the device to use</span>
-    <span class="n">return_log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>            <span class="c1"># whether to return the training log</span>
+    <span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span>  <span class="c1"># the estimator to train</span>
+    <span class="n">train_loader</span><span class="o">=</span><span class="n">dataloader</span><span class="p">,</span>  <span class="c1"># the dataloader returning pairs of x and y</span>
+    <span class="n">max_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>  <span class="c1"># the number of epochs</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span>  <span class="c1"># the device to use</span>
+    <span class="n">return_log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># whether to return the training log</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -134,83 +133,121 @@ of observations using the MINE estimator <span class="xref myst">[2]</span>.</p>
 </pre></div>
 </div>
 <p>Please refer to the <a class="reference external" href="https://torch-mist.readthedocs.io/en/latest/">documentation</a> for a detailed description of the package and its usage.</p>
-<section id="implemented-estimators">
-<h3>Implemented estimators<a class="headerlink" href="#implemented-estimators" title="Permalink to this heading"></a></h3>
+<section id="estimators">
+<h3>Estimators<a class="headerlink" href="#estimators" title="Permalink to this heading"></a></h3>
 <p>The basic estimators implemented in this package are summarized in the following table:</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Estimator</p></th>
 <th class="head"><p>Type</p></th>
 <th class="head"><p>Models</p></th>
+<th class="head"><p>Hyperparameters</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>NWJ <span class="xref myst">[1]</span></p></td>
 <td><p>Discriminative</p></td>
-<td><p>$f_\xi(x,y)$</p></td>
+<td><p>$f_\phi(x,y)$</p></td>
+<td><p>M</p></td>
 </tr>
 <tr class="row-odd"><td><p>MINE  <span class="xref myst">[2]</span></p></td>
 <td><p>Discriminative</p></td>
-<td><p>$f_\xi(x,y)$</p></td>
+<td><p>$f_\phi(x,y)$</p></td>
+<td><p>M, $\gamma_{EMA}$</p></td>
 </tr>
 <tr class="row-even"><td><p>InfoNCE <span class="xref myst">[3]</span></p></td>
 <td><p>Discriminative</p></td>
-<td><p>$f_\xi(x,y)$</p></td>
+<td><p>$f_\phi(x,y)$</p></td>
+<td><p>M</p></td>
 </tr>
 <tr class="row-odd"><td><p>TUBA  <span class="xref myst">[4]</span></p></td>
 <td><p>Discriminative</p></td>
-<td><p>$f_\xi(x,y)$, $b_\xi(x)$</p></td>
+<td><p>$f_\phi(x,y)$, $b_\xi(x)$</p></td>
+<td><p>M</p></td>
 </tr>
 <tr class="row-even"><td><p>AlphaTUBA <span class="xref myst">[4]</span></p></td>
 <td><p>Discriminative</p></td>
-<td><p>$f_\xi(x,y)$, $b_\xi(x)$</p></td>
+<td><p>$f_\phi(x,y)$, $b_\xi(x)$</p></td>
+<td><p>M, $\alpha$</p></td>
 </tr>
 <tr class="row-odd"><td><p>JS <span class="xref myst">[5]</span></p></td>
 <td><p>Discriminative</p></td>
-<td><p>$f_\xi(x,y)$</p></td>
+<td><p>$f_\phi(x,y)$</p></td>
+<td><p>M</p></td>
 </tr>
 <tr class="row-even"><td><p>SMILE <span class="xref myst">[6]</span></p></td>
 <td><p>Discriminative</p></td>
-<td><p>$f_\xi(x,y)$</p></td>
+<td><p>$f_\phi(x,y)$</p></td>
+<td><p>M, $\tau$</p></td>
 </tr>
 <tr class="row-odd"><td><p>FLO <span class="xref myst">[7]</span></p></td>
 <td><p>Discriminative</p></td>
-<td><p>$f_\xi(x,y)$, $b_\xi(x,y)$</p></td>
+<td><p>$f_\phi(x,y)$, $b_\xi(x,y)$</p></td>
+<td><p>M</p></td>
 </tr>
 <tr class="row-even"><td><p>BA <span class="xref myst">[8]</span></p></td>
 <td><p>Generative</p></td>
 <td><p>$q_\theta(y|x)$</p></td>
+<td><p>-</p></td>
 </tr>
 <tr class="row-odd"><td><p>DoE <span class="xref myst">[9]</span></p></td>
 <td><p>Generative</p></td>
-<td><p>$q_\theta(y|x)$, $r_\psi(y)$</p></td>
+<td><p>$q_\theta(y|x)$, $q_\psi(y)$</p></td>
+<td><p>-</p></td>
 </tr>
 <tr class="row-even"><td><p>GM <span class="xref myst">[6]</span></p></td>
 <td><p>Generative</p></td>
-<td><p>$q_\theta(x,y)$, $r_\psi(x)$, $r_\psi(y)$</p></td>
+<td><p>$q_\theta(x,y)$, $q_\psi(x)$, $q_\psi(y)$</p></td>
+<td><p>-</p></td>
 </tr>
 <tr class="row-odd"><td><p>L1OUT <span class="xref myst">[4]</span> <span class="xref myst">[10]</span></p></td>
 <td><p>Generative</p></td>
 <td><p>$q_\theta(y|x)$</p></td>
+<td><p>-</p></td>
 </tr>
 <tr class="row-even"><td><p>CLUB <span class="xref myst">[10]</span></p></td>
 <td><p>Generative</p></td>
 <td><p>$q_\theta(y|x)$</p></td>
+<td><p>-</p></td>
 </tr>
 <tr class="row-odd"><td><p>Discrete <span class="xref myst">[]</span></p></td>
 <td><p>Generative (Discrete)</p></td>
 <td><p>$Q(x)$, $Q(y)$</p></td>
+<td><p>-</p></td>
 </tr>
 <tr class="row-even"><td><p>PQ <span class="xref myst">[11]</span></p></td>
 <td><p>Generative (Discrete)</p></td>
 <td><p>$Q(y)$, $q_\theta(Q(y)|x)$</p></td>
+<td><p>-</p></td>
 </tr>
 </tbody>
 </table>
-</section>
+<p>in which the following models are used:</p>
+<ul class="simple">
+<li><p>$f_\phi(x,y)$ is a <code class="docutils literal notranslate"><span class="pre">critic</span></code> neural network with parameters $\phi, which maps pairs of observations to a scalar value.
+Critics can be either <code class="docutils literal notranslate"><span class="pre">joint</span></code> or <code class="docutils literal notranslate"><span class="pre">separable</span></code> depending on whether they parametrize function of both $x$ and $y$ directly,
+or through the product of separate projection heads ( $f_\phi(x,y)=h_\phi(x)^T h_\phi(y)$ ) respectively.</p></li>
+<li><p>$b_\xi(x)$ is a <code class="docutils literal notranslate"><span class="pre">baseline</span></code> neural network with parameters $\xi$, which maps observations (or paris of observations) to a scalar value.
+When the baseline is a function of both $x$ and $y$ it is referred to as a <code class="docutils literal notranslate"><span class="pre">joint_baseline</span></code>.</p></li>
+<li><p>$q_\theta(y|x)$ is a conditional variational distribution <code class="docutils literal notranslate"><span class="pre">q_Y_given_X</span></code> used to approximate $p(y|x)$ with parameters $\theta$.
+Conditional distributions may have learnable parameters $\theta$ that are usually parametrized by a (conditional) normalizing flow.</p></li>
+<li><p>$q_\psi(y)$ is a marginal variational distribution <code class="docutils literal notranslate"><span class="pre">q_Y</span></code> used to approximate $p(y)$ with parameters $\psi$.
+Marginal distributions may have learnable parameters $\psi$ that are usually parametrized by a normalizing flow.</p></li>
+<li><p>$q_\theta(x,y)$ is a joint variational distribution <code class="docutils literal notranslate"><span class="pre">q_XY</span></code> used to approximate $p(x,y)$ with parameters $\theta$.
+Joint distributions may have learnable parameters $\theta$ that are usually parametrized by a normalizing flow.</p></li>
+<li><p>$Q(x)$ and $Q(y)$ are <code class="docutils literal notranslate"><span class="pre">quantization</span></code> functions that map observations to a finite set of discrete values.</p></li>
+</ul>
+<p>And the following hyperparameters:</p>
+<ul class="simple">
+<li><p>$M \in [1, N]$ is the number of samples used to estimate the log-normalization constant for each element in the batch.</p></li>
+<li><p>$\gamma_{EMA} \in (0,1]$ is the exponential moving average decay used to update the baseline in MINE.</p></li>
+<li><p>$\alpha \in [0,1]$ is the weight of the baseline in AlphaTUBA (0 corresponds to InfoNCE, 1 to TUBA).</p></li>
+<li><p>$\tau \in [0..]$ is used to define the interval $[-\tau,\tau]$ in which critic values are clipped in SMILE.</p></li>
+</ul>
 <section id="hybrid-estimators">
-<h3>Hybrid estimators<a class="headerlink" href="#hybrid-estimators" title="Permalink to this heading"></a></h3>
+<h4>Hybrid estimators<a class="headerlink" href="#hybrid-estimators" title="Permalink to this heading"></a></h4>
 <p>The <code class="docutils literal notranslate"><span class="pre">torch_mist</span></code> package allows to combine Generative and Discriminative estimators in a single hybrid estimators as proposed in <span class="xref myst">[11]</span><span class="xref myst">[12]</span>.</p>
+</section>
 </section>
 <section id="references">
 <h3>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h3>
@@ -248,7 +285,7 @@ of observations using the MINE estimator <span class="xref myst">[2]</span>.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="example.html" class="btn btn-neutral float-right" title="Example usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="example.html" class="btn btn-neutral float-right" title="Simple example" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -44,7 +44,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../example.html">Example usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../example.html">Simple example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../conduct.html">Code of Conduct</a></li>
@@ -82,11 +82,6 @@
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
 
 
-<span class="c1"># The implementations in this work are loosely based on</span>
-<span class="c1"># 1) &quot;On Variational Lower bounds of mutual information&quot; https://arxiv.org/pdf/1905.06922.pdf</span>
-<span class="c1"># 2) &quot;Undertanding the Limitations of Variational Mutual Information Estimators https://arxiv.org/abs/1910.06222</span>
-
-
 <div class="viewcode-block" id="MutualInformationEstimator"><a class="viewcode-back" href="../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.base.MutualInformationEstimator">[docs]</a><span class="k">class</span> <span class="nc">MutualInformationEstimator</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <div class="viewcode-block" id="MutualInformationEstimator.log_ratio"><a class="viewcode-back" href="../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.base.MutualInformationEstimator.log_ratio">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">log_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
@@ -94,6 +89,9 @@
 
 <div class="viewcode-block" id="MutualInformationEstimator.expected_log_ratio"><a class="viewcode-back" href="../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.base.MutualInformationEstimator.expected_log_ratio">[docs]</a>    <span class="k">def</span> <span class="nf">expected_log_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_ratio</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MutualInformationEstimator.unnormalized_log_ratio"><a class="viewcode-back" href="../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.base.MutualInformationEstimator.unnormalized_log_ratio">[docs]</a>    <span class="k">def</span> <span class="nf">unnormalized_log_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_ratio</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MutualInformationEstimator.loss"><a class="viewcode-back" href="../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.base.MutualInformationEstimator.loss">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>

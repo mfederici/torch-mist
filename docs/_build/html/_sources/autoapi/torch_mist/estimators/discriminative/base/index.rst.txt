@@ -38,7 +38,7 @@ Classes
 
 
 
-.. py:class:: DiscriminativeMutualInformationEstimator(critic: torch_mist.critic.base.Critic, mc_samples: int = 1, proposal: Optional[Union[torch.distributions.Distribution, pyro.distributions.ConditionalDistribution]] = None)
+.. py:class:: DiscriminativeMutualInformationEstimator(critic: torch_mist.critic.base.Critic, neg_samples: int = 1, proposal: Optional[Union[torch.distributions.Distribution, pyro.distributions.ConditionalDistribution]] = None)
 
 
    Bases: :py:obj:`torch_mist.estimators.base.MutualInformationEstimator`
@@ -80,13 +80,13 @@ Classes
    .. py:method:: critic_on_positives(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: sample_proposal(x: torch.Tensor, n_samples: int) -> torch.Tensor
-
-
    .. py:method:: critic_on_negatives(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: compute_log_ratio(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, f_: torch.tensor)
+   .. py:method:: log_normalization(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: compute_log_normalization(x: torch.Tensor, y: torch.Tensor, f_: torch.Tensor)
       :abstractmethod:
 
 

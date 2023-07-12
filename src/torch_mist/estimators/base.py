@@ -4,11 +4,6 @@ import torch
 import torch.nn as nn
 
 
-# The implementations in this work are loosely based on
-# 1) "On Variational Lower bounds of mutual information" https://arxiv.org/pdf/1905.06922.pdf
-# 2) "Undertanding the Limitations of Variational Mutual Information Estimators https://arxiv.org/abs/1910.06222
-
-
 class MutualInformationEstimator(nn.Module):
     @abstractmethod
     def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
@@ -16,6 +11,9 @@ class MutualInformationEstimator(nn.Module):
 
     def expected_log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         return self.log_ratio(x, y).mean()
+
+    def unnormalized_log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        return self.log_ratio(x, y)
 
     @abstractmethod
     def loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:

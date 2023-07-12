@@ -25,10 +25,10 @@ Functions
 
 
 
-.. py:class:: DiscreteMutualInformationEstimator(quantization_x: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, quantization_y: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, temperature: float = 0.1)
+.. py:class:: DiscreteMutualInformationEstimator(Q_x: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, Q_y: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, temperature: float = 1.0)
 
 
-   Bases: :py:obj:`torch_mist.estimators.base.MutualInformationEstimator`
+   Bases: :py:obj:`torch_mist.estimators.generative.base.GenerativeMutualInformationEstimator`
 
    Base class for all neural network modules.
 
@@ -61,7 +61,7 @@ Functions
                    evaluation mode.
    :vartype training: bool
 
-   .. py:property:: log_q_qxy
+   .. py:property:: logits
       :type: torch.Tensor
 
 
@@ -71,19 +71,19 @@ Functions
    .. py:method:: quantize_y(y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: approx_log_p_xy(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+   .. py:method:: approx_log_p_qxqy(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: approx_log_p_x(x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
+   .. py:method:: approx_log_p_qx(x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
 
 
-   .. py:method:: approx_log_p_y(y: torch.Tensor, x: Optional[torch.Tensor] = None) -> torch.Tensor
+   .. py:method:: approx_log_p_qy(y: torch.Tensor, x: Optional[torch.Tensor] = None) -> torch.Tensor
 
 
-   .. py:method:: log_p_x_given_y(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+   .. py:method:: log_p_qx_given_qy(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: approx_log_p_y_given_x(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+   .. py:method:: approx_log_p_qy_given_qx(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
    .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
@@ -92,7 +92,12 @@ Functions
    .. py:method:: log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
+   .. py:method:: __repr__()
 
-.. py:function:: discrete(quantization_x: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, quantization_y: Optional[torch_mist.quantization.functions.QuantizationFunction] = None) -> DiscreteMutualInformationEstimator
+      Return repr(self).
+
+
+
+.. py:function:: discrete(Q_x: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, Q_y: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, temperature: float = 0.1) -> DiscreteMutualInformationEstimator
 
 

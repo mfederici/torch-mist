@@ -1,3 +1,3 @@
 from .functions import QuantizationFunction, LearnableQuantization, FixedQuantization, VectorQuantization, \
-    LearnableVectorQuantization, learnable_vector_quantization, trained_vector_quantization
-from .vqvae import VQVAE, vqvae
+    LearnableVectorQuantization, vector_quantization, vqvae_quantization
+from .vqvae import VQVAE, vqvae, train_vqvae

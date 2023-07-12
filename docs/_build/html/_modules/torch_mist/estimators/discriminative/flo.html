@@ -44,7 +44,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../example.html">Example usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../example.html">Simple example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../conduct.html">Code of Conduct</a></li>
@@ -80,10 +80,10 @@
 
 <span class="kn">import</span> <span class="nn">torch</span>
 
-<span class="kn">from</span> <span class="nn">torch_mist.baselines</span> <span class="kn">import</span> <span class="n">LearnableJointBaseline</span><span class="p">,</span> <span class="n">joint_baseline_nn</span>
+<span class="kn">from</span> <span class="nn">torch_mist.baselines</span> <span class="kn">import</span> <span class="n">LearnableJointBaseline</span>
 <span class="kn">from</span> <span class="nn">torch_mist.critic.base</span> <span class="kn">import</span> <span class="n">Critic</span>
-<span class="kn">from</span> <span class="nn">torch_mist.critic.utils</span> <span class="kn">import</span> <span class="n">critic</span>
 <span class="kn">from</span> <span class="nn">torch_mist.estimators.discriminative.base</span> <span class="kn">import</span> <span class="n">DiscriminativeMutualInformationEstimator</span>
+<span class="kn">from</span> <span class="nn">torch_mist.utils.caching</span> <span class="kn">import</span> <span class="n">cached</span>
 
 
 <div class="viewcode-block" id="FLO"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.discriminative.flo.FLO">[docs]</a><span class="k">class</span> <span class="nc">FLO</span><span class="p">(</span><span class="n">DiscriminativeMutualInformationEstimator</span><span class="p">):</span>
@@ -91,46 +91,46 @@
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">critic</span><span class="p">:</span> <span class="n">Critic</span><span class="p">,</span>
             <span class="n">baseline</span><span class="p">:</span> <span class="n">LearnableJointBaseline</span><span class="p">,</span>
-            <span class="n">mc_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">neg_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">critic</span><span class="o">=</span><span class="n">critic</span><span class="p">,</span>
-            <span class="n">mc_samples</span><span class="o">=</span><span class="n">mc_samples</span><span class="p">,</span>
+            <span class="n">neg_samples</span><span class="o">=</span><span class="n">neg_samples</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span> <span class="o">=</span> <span class="n">baseline</span>
 
-<div class="viewcode-block" id="FLO.compute_log_ratio"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.discriminative.flo.FLO.compute_log_ratio">[docs]</a>    <span class="k">def</span> <span class="nf">compute_log_ratio</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-            <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-            <span class="n">f</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-            <span class="n">f_</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">f_</span><span class="o">=</span><span class="n">f_</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="n">b</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">f</span><span class="o">.</span><span class="n">ndim</span>
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">log_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="c1"># Approximate the log-ratio p(y|x)/p(y) on samples from p(x,y).</span>
+        <span class="c1"># x and y have shape [..., X_DIM] and [..., Y_DIM] respectively</span>
 
-        <span class="n">M</span> <span class="o">=</span> <span class="n">f_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Evaluate the unnormalized_log_ratio f(x,y) on the samples from p(x, y), with shape [...]</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic_on_positives</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 
-        <span class="n">log_ratio</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">b</span> <span class="o">+</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="n">f_</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">f</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span> <span class="o">/</span> <span class="n">M</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">f_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic_on_negatives</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">f_</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">f</span><span class="o">.</span><span class="n">ndim</span> <span class="o">+</span> <span class="mi">1</span>
 
-        <span class="k">return</span> <span class="n">log_ratio</span></div></div>
+        <span class="c1"># Compute the baseline. It has shape [...]</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">(</span><span class="n">f_</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">b</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">f_</span><span class="o">.</span><span class="n">ndim</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Baseline has ndim </span><span class="si">{</span><span class="n">b</span><span class="o">.</span><span class="n">ndim</span><span class="si">}</span><span class="s2"> while f_ has ndim </span><span class="si">{</span><span class="n">f_</span><span class="o">.</span><span class="n">ndim</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">log_ratio</span> <span class="o">=</span> <span class="o">-</span> <span class="n">b</span> <span class="o">-</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="n">f_</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">-</span><span class="n">f</span><span class="o">-</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span><span class="o">/</span><span class="n">f_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">log_ratio</span></div>
+
 
 <div class="viewcode-block" id="flo"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.discriminative.flo.flo">[docs]</a><span class="k">def</span> <span class="nf">flo</span><span class="p">(</span>
         <span class="n">x_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">y_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">hidden_dims</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">critic_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;joint&#39;</span><span class="p">,</span>
-        <span class="n">mc_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">neg_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">critic_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">baseline_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FLO</span><span class="p">:</span>
-    <span class="n">url_nn</span> <span class="o">=</span> <span class="n">critic</span><span class="p">(</span>
-        <span class="n">x_dim</span><span class="o">=</span><span class="n">x_dim</span><span class="p">,</span>
-        <span class="n">y_dim</span><span class="o">=</span><span class="n">y_dim</span><span class="p">,</span>
-        <span class="n">hidden_dims</span><span class="o">=</span><span class="n">hidden_dims</span><span class="p">,</span>
-        <span class="n">critic_type</span><span class="o">=</span><span class="n">critic_type</span><span class="p">,</span>
-        <span class="n">critic_params</span><span class="o">=</span><span class="n">critic_params</span>
-    <span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">torch_mist.critic.utils</span> <span class="kn">import</span> <span class="n">critic_nn</span>
+    <span class="kn">from</span> <span class="nn">torch_mist.baselines</span> <span class="kn">import</span> <span class="n">joint_baseline_nn</span>
 
     <span class="k">if</span> <span class="n">baseline_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">baseline_params</span> <span class="o">=</span> <span class="p">{}</span>
@@ -142,9 +142,15 @@
     <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">FLO</span><span class="p">(</span>
-        <span class="n">critic</span><span class="o">=</span><span class="n">url_nn</span><span class="p">,</span>
+        <span class="n">critic</span><span class="o">=</span><span class="n">critic_nn</span><span class="p">(</span>
+            <span class="n">x_dim</span><span class="o">=</span><span class="n">x_dim</span><span class="p">,</span>
+            <span class="n">y_dim</span><span class="o">=</span><span class="n">y_dim</span><span class="p">,</span>
+            <span class="n">hidden_dims</span><span class="o">=</span><span class="n">hidden_dims</span><span class="p">,</span>
+            <span class="n">critic_type</span><span class="o">=</span><span class="n">critic_type</span><span class="p">,</span>
+            <span class="n">critic_params</span><span class="o">=</span><span class="n">critic_params</span>
+        <span class="p">),</span>
         <span class="n">baseline</span><span class="o">=</span><span class="n">baseline</span><span class="p">,</span>
-        <span class="n">mc_samples</span><span class="o">=</span><span class="n">mc_samples</span><span class="p">,</span>
+        <span class="n">neg_samples</span><span class="o">=</span><span class="n">neg_samples</span><span class="p">,</span>
     <span class="p">)</span></div>
 </pre></div>
 

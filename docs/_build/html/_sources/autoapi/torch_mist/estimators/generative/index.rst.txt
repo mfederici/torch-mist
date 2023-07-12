@@ -152,7 +152,7 @@ Functions
 
 
 
-.. py:function:: ba(x_dim: int, y_dim: int, hidden_dims: List[int], entropy_y: Union[float, torch.Tensor], transform_name: str = 'conditional_linear', n_transforms: int = 1) -> BA
+.. py:function:: ba(entropy_y: Union[float, torch.Tensor], x_dim: Optional[int] = None, y_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_Y_given_X: Optional[pyro.distributions.ConditionalDistribution] = None, transform_name: str = 'conditional_linear', n_transforms: int = 1) -> BA
 
 
 .. py:class:: DoE(q_Y_given_X: pyro.distributions.ConditionalDistribution, q_Y: torch.distributions.Distribution)
@@ -203,7 +203,7 @@ Functions
 
 
 
-.. py:function:: doe(x_dim: int, y_dim: int, hidden_dims: List[int], conditional_transform_name: str = 'conditional_linear', n_conditional_transforms: int = 1, marginal_transform_name: str = 'linear', n_marginal_transforms: int = 1) -> DoE
+.. py:function:: doe(x_dim: Optional[int] = None, y_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_Y_given_X: Optional[pyro.distributions.ConditionalDistribution] = None, q_Y: Optional[torch.distributions.Distribution] = None, conditional_transform_name: str = 'conditional_linear', n_conditional_transforms: int = 1, marginal_transform_name: str = 'linear', n_marginal_transforms: int = 1) -> DoE
 
 
 .. py:class:: GM(q_XY: torch_mist.distributions.joint.JointDistribution, q_Y: torch.distributions.Distribution, q_X: torch.distributions.Distribution)
@@ -260,7 +260,7 @@ Functions
 
 
 
-.. py:function:: gm(x_dim: int, y_dim: int, hidden_dims: List[int], joint_transform_name: str = 'conditional_linear', n_joint_transforms: int = 1, marginal_transform_name: str = 'linear', n_marginal_transforms: int = 1) -> GM
+.. py:function:: gm(x_dim: Optional[int] = None, y_dim: Optional[int] = None, hidden_dims: List[int] = None, q_XY: Optional[torch_mist.distributions.joint.JointDistribution] = None, q_Y: Optional[torch.distributions.Distribution] = None, q_X: Optional[torch.distributions.Distribution] = None, joint_transform_name: str = 'affine_autoregressive', n_joint_transforms: int = 1, marginal_transform_name: str = 'linear', n_marginal_transforms: int = 1) -> GM
 
 
 .. py:class:: L1Out(q_Y_given_X: pyro.distributions.ConditionalDistribution)
@@ -310,7 +310,7 @@ Functions
 
 
 
-.. py:function:: l1out(x_dim: int, y_dim: int, hidden_dims: List[int], transform_name: str = 'conditional_linear', n_transforms: int = 1) -> L1Out
+.. py:function:: l1out(x_dim: Optional[int] = None, y_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_Y_given_X: Optional[pyro.distributions.ConditionalDistribution] = None, transform_name: str = 'conditional_linear', n_transforms: int = 1) -> L1Out
 
 
 .. py:class:: CLUB(q_Y_given_X: pyro.distributions.ConditionalDistribution, sample: str = 'all')
@@ -353,65 +353,13 @@ Functions
 
 
 
-.. py:function:: club(x_dim: int, y_dim: int, hidden_dims: List[int], transform_name: str = 'conditional_linear', n_transforms: int = 1) -> CLUB
+.. py:function:: club(x_dim: Optional[int] = None, y_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_Y_given_X: Optional[pyro.distributions.ConditionalDistribution] = None, transform_name: str = 'conditional_linear', n_transforms: int = 1) -> CLUB
 
 
-.. py:class:: PQ(q_qY_given_X: pyro.distributions.ConditionalDistribution, quantization: torch_mist.quantization.functions.QuantizationFunction, temperature: float = 0.1)
+.. py:class:: PQ(q_QX_given_Y: pyro.distributions.ConditionalDistribution, Q_x: torch_mist.quantization.functions.QuantizationFunction, temperature: float = 1.0)
 
 
-   Bases: :py:obj:`torch_mist.estimators.generative.doe.DoE`
-
-   Base class for all neural network modules.
-
-   Your models should also subclass this class.
-
-   Modules can also contain other Modules, allowing to nest them in
-   a tree structure. You can assign the submodules as regular attributes::
-
-       import torch.nn as nn
-       import torch.nn.functional as F
-
-       class Model(nn.Module):
-           def __init__(self):
-               super().__init__()
-               self.conv1 = nn.Conv2d(1, 20, 5)
-               self.conv2 = nn.Conv2d(20, 20, 5)
-
-           def forward(self, x):
-               x = F.relu(self.conv1(x))
-               return F.relu(self.conv2(x))
-
-   Submodules assigned in this way will be registered, and will have their
-   parameters converted too when you call :meth:`to`, etc.
-
-   .. note::
-       As per the example above, an ``__init__()`` call to the parent class
-       must be made before assignment on the child.
-
-   :ivar training: Boolean represents whether this module is in training or
-                   evaluation mode.
-   :vartype training: bool
-
-   .. py:method:: quantize_y(y: torch.Tensor) -> torch.Tensor
-
-
-   .. py:method:: q_Y_given_x(x: torch.Tensor) -> torch.distributions.Distribution
-
-
-   .. py:method:: approx_log_p_y_given_x(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
-
-
-   .. py:method:: approx_log_p_y(y: torch.Tensor, x: Optional[torch.Tensor] = None) -> torch.Tensor
-
-
-
-.. py:function:: pq(x_dim: int, hidden_dims: List[int], quantization: torch_mist.quantization.functions.QuantizationFunction) -> PQ
-
-
-.. py:class:: DiscreteMutualInformationEstimator(quantization_x: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, quantization_y: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, temperature: float = 0.1)
-
-
-   Bases: :py:obj:`torch_mist.estimators.base.MutualInformationEstimator`
+   Bases: :py:obj:`torch_mist.estimators.generative.base.GenerativeMutualInformationEstimator`
 
    Base class for all neural network modules.
 
@@ -444,7 +392,70 @@ Functions
                    evaluation mode.
    :vartype training: bool
 
-   .. py:property:: log_q_qxy
+   .. py:method:: quantize_x(x: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: q_QX_given_y(y: torch.Tensor) -> torch.distributions.Distribution
+
+
+   .. py:method:: approx_log_p_qx_given_y(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: approx_log_p_qx(x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
+
+
+   .. py:method:: log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
+
+
+
+.. py:function:: pq(Q_x: torch_mist.quantization.functions.QuantizationFunction, x_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_QX_given_Y: Optional[pyro.distributions.ConditionalDistribution] = None, temperature: float = 0.1) -> PQ
+
+
+.. py:class:: DiscreteMutualInformationEstimator(Q_x: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, Q_y: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, temperature: float = 1.0)
+
+
+   Bases: :py:obj:`torch_mist.estimators.generative.base.GenerativeMutualInformationEstimator`
+
+   Base class for all neural network modules.
+
+   Your models should also subclass this class.
+
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
+
+       import torch.nn as nn
+       import torch.nn.functional as F
+
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
+
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
+
+   .. py:property:: logits
       :type: torch.Tensor
 
 
@@ -454,19 +465,19 @@ Functions
    .. py:method:: quantize_y(y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: approx_log_p_xy(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+   .. py:method:: approx_log_p_qxqy(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: approx_log_p_x(x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
+   .. py:method:: approx_log_p_qx(x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
 
 
-   .. py:method:: approx_log_p_y(y: torch.Tensor, x: Optional[torch.Tensor] = None) -> torch.Tensor
+   .. py:method:: approx_log_p_qy(y: torch.Tensor, x: Optional[torch.Tensor] = None) -> torch.Tensor
 
 
-   .. py:method:: log_p_x_given_y(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+   .. py:method:: log_p_qx_given_qy(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: approx_log_p_y_given_x(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+   .. py:method:: approx_log_p_qy_given_qx(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
    .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
@@ -475,7 +486,12 @@ Functions
    .. py:method:: log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
+   .. py:method:: __repr__()
 
-.. py:function:: discrete(quantization_x: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, quantization_y: Optional[torch_mist.quantization.functions.QuantizationFunction] = None) -> DiscreteMutualInformationEstimator
+      Return repr(self).
+
+
+
+.. py:function:: discrete(Q_x: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, Q_y: Optional[torch_mist.quantization.functions.QuantizationFunction] = None, temperature: float = 0.1) -> DiscreteMutualInformationEstimator
 
 

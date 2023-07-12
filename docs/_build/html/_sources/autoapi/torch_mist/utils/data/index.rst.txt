@@ -4,27 +4,92 @@
 .. py:module:: torch_mist.utils.data
 
 
-Module Contents
----------------
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   dataset/index.rst
+   loader/index.rst
+   sampler/index.rst
+
+
+Package Contents
+----------------
 
 Classes
 ~~~~~~~
 
 .. autoapisummary::
 
-   torch_mist.utils.data.SampleDataLoader
+   torch_mist.utils.data.DistributionDataLoader
+   torch_mist.utils.data.SameAttributeSampler
+   torch_mist.utils.data.SampleDataset
 
 
 
 
-.. py:class:: SampleDataLoader(joint_dist: torch.distributions.Distribution, batch_size: int, max_samples: int = 100000, split_dim: int = -1)
+.. py:class:: DistributionDataLoader(joint_dist: Union[torch.distributions.Distribution, torch_mist.distributions.joint.JointDistribution], batch_size: int, max_samples: int = 100000, split_dim: int = -1)
 
 
-   Bases: :py:obj:`collections.abc.Iterator`\ [\ :py:obj:`Tuple`\ [\ :py:obj:`torch.Tensor`\ , :py:obj:`torch.Tensor`\ ]\ ]
+   Bases: :py:obj:`collections.Iterator`\ [\ :py:obj:`Dict`\ [\ :py:obj:`str`\ , :py:obj:`torch.Tensor`\ ]\ ]
 
-   .. py:method:: __next__() -> Tuple[torch.Tensor, torch.Tensor]
+   .. py:method:: __next__() -> Dict[str, torch.Tensor]
 
-      Return the next item from the iterator. When exhausted, raise StopIteration
+
+   .. py:method:: __iter__()
+
+
+   .. py:method:: __len__()
+
+
+
+.. py:class:: SameAttributeSampler(batch_size: int, attributes: Optional[Union[torch.Tensor, numpy.ndarray]] = None, n_samples: Optional[int] = None, min_batch_size: int = 0)
+
+
+   Bases: :py:obj:`torch.utils.data.Sampler`
+
+   Base class for all Samplers.
+
+   Every Sampler subclass has to provide an :meth:`__iter__` method, providing a
+   way to iterate over indices of dataset elements, and a :meth:`__len__` method
+   that returns the length of the returned iterators.
+
+   .. note:: The :meth:`__len__` method isn't strictly required by
+             :class:`~torch.utils.data.DataLoader`, but is expected in any
+             calculation involving the length of a :class:`~torch.utils.data.DataLoader`.
+
+   .. py:property:: attributes
+
+
+   .. py:method:: _compute_len()
+
+
+   .. py:method:: compare_attributes(a)
+
+
+   .. py:method:: make_batch(mask: numpy.ndarray) -> numpy.ndarray
+
+
+   .. py:method:: __iter__()
+
+
+   .. py:method:: __len__()
+
+
+
+.. py:class:: SampleDataset(samples: Dict[str, torch.Tensor])
+
+
+   Bases: :py:obj:`Sequence`
+
+   All the operations on a read-only sequence.
+
+   Concrete subclasses must override __new__ or __init__,
+   __getitem__, and __len__.
+
+   .. py:method:: __getitem__(item)
 
 
    .. py:method:: __len__()

@@ -2,13 +2,13 @@ from typing import List, Dict, Any
 
 import torch
 import math
-from torch_mist.critic.utils import critic
+
+from torch_mist.baselines import BatchLogMeanExp
 from torch_mist.critic.separable import SeparableCritic
-from torch_mist.estimators.discriminative.base import DiscriminativeMutualInformationEstimator
-from torch_mist.utils.caching import cached
+from torch_mist.estimators.discriminative.tuba import TUBA
 
 
-class InfoNCE(DiscriminativeMutualInformationEstimator):
+class InfoNCE(TUBA):
     def __init__(
             self,
             critic: SeparableCritic,
@@ -17,15 +17,15 @@ class InfoNCE(DiscriminativeMutualInformationEstimator):
         # This implementation saves some computation
         super().__init__(
             critic=critic,
-            mc_samples=0,  # 0 signifies the whole batch is used as negative samples
+            neg_samples=0,  # 0 signifies the whole batch is used as negative samples
+            baseline=BatchLogMeanExp('first'),
         )
 
-    @cached
-    def compute_log_ratio(self, x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, f_: torch.tensor):
-        # f has shape [N, ...]
-        # f_ has shape [N, N, ...]
+    def compute_log_normalization(self, x: torch.Tensor, y: torch.Tensor, f_: torch.tensor):
+        # We override the compute_log_normalization just for efficiency
+        # The result would be the same as the TUBA implementation with BatchLogMeanExp('first') baseline
         log_norm = f_.logsumexp(0) - math.log(f_.shape[0])
-        return f-log_norm
+        return log_norm
 
 
 def infonce(
@@ -35,14 +35,14 @@ def infonce(
         critic_type='separable',
         critic_params: Dict[str, Any] = None,
 ) -> InfoNCE:
-    url_nn = critic(
-        x_dim=x_dim,
-        y_dim=y_dim,
-        hidden_dims=hidden_dims,
-        critic_type=critic_type,
-        critic_params=critic_params
-    )
+    from torch_mist.critic.utils import critic_nn
 
     return InfoNCE(
-        critic=url_nn,
+        critic=critic_nn(
+            x_dim=x_dim,
+            y_dim=y_dim,
+            hidden_dims=hidden_dims,
+            critic_type=critic_type,
+            critic_params=critic_params
+        )
     )

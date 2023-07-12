@@ -17,48 +17,40 @@ Classes
 
 
 
-.. py:class:: MultivariateCorrelatedNormalMixture(rho: float = 0.95, sigma: float = 0.1, epsilon: float = 0.15, delta: float = 1.5, n_dim: int = 5)
+.. py:class:: MultivariateCorrelatedNormalMixture(rho: float = 0.95, sigma: float = 0.1, epsilon: float = 0.15, delta: float = 1.5, n_dim: int = 5, device: torch.device = torch.device('cpu'))
 
 
-   Bases: :py:obj:`torch.distributions.MixtureSameFamily`
+   Bases: :py:obj:`torch_mist.distributions.joint.JointDistribution`
 
-   The `MixtureSameFamily` distribution implements a (batch of) mixture
-   distribution where all component are from different parameterizations of
-   the same distribution type. It is parameterized by a `Categorical`
-   "selecting distribution" (over `k` component) and a component
-   distribution, i.e., a `Distribution` with a rightmost batch shape
-   (equal to `[k]`) which indexes each (batch of) component.
+   Base class for all neural network modules.
 
-   Examples::
+   Your models should also subclass this class.
 
-       >>> # xdoctest: +SKIP("undefined vars")
-       >>> # Construct Gaussian Mixture Model in 1D consisting of 5 equally
-       >>> # weighted normal distributions
-       >>> mix = D.Categorical(torch.ones(5,))
-       >>> comp = D.Normal(torch.randn(5,), torch.rand(5,))
-       >>> gmm = MixtureSameFamily(mix, comp)
+   Modules can also contain other Modules, allowing to nest them in
+   a tree structure. You can assign the submodules as regular attributes::
 
-       >>> # Construct Gaussian Mixture Modle in 2D consisting of 5 equally
-       >>> # weighted bivariate normal distributions
-       >>> mix = D.Categorical(torch.ones(5,))
-       >>> comp = D.Independent(D.Normal(
-       ...          torch.randn(5,2), torch.rand(5,2)), 1)
-       >>> gmm = MixtureSameFamily(mix, comp)
+       import torch.nn as nn
+       import torch.nn.functional as F
 
-       >>> # Construct a batch of 3 Gaussian Mixture Models in 2D each
-       >>> # consisting of 5 random weighted bivariate normal distributions
-       >>> mix = D.Categorical(torch.rand(3,5))
-       >>> comp = D.Independent(D.Normal(
-       ...         torch.randn(3,5,2), torch.rand(3,5,2)), 1)
-       >>> gmm = MixtureSameFamily(mix, comp)
+       class Model(nn.Module):
+           def __init__(self):
+               super().__init__()
+               self.conv1 = nn.Conv2d(1, 20, 5)
+               self.conv2 = nn.Conv2d(20, 20, 5)
 
-   :param mixture_distribution: `torch.distributions.Categorical`-like
-                                instance. Manages the probability of selecting component.
-                                The number of categories must match the rightmost batch
-                                dimension of the `component_distribution`. Must have either
-                                scalar `batch_shape` or `batch_shape` matching
-                                `component_distribution.batch_shape[:-1]`
-   :param component_distribution: `torch.distributions.Distribution`-like
-                                  instance. Right-most batch dimension indexes component.
+           def forward(self, x):
+               x = F.relu(self.conv1(x))
+               return F.relu(self.conv2(x))
+
+   Submodules assigned in this way will be registered, and will have their
+   parameters converted too when you call :meth:`to`, etc.
+
+   .. note::
+       As per the example above, an ``__init__()`` call to the parent class
+       must be made before assignment on the child.
+
+   :ivar training: Boolean represents whether this module is in training or
+                   evaluation mode.
+   :vartype training: bool
 
 

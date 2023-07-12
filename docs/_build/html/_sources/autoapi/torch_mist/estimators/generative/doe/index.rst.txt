@@ -73,6 +73,6 @@ Functions
 
 
 
-.. py:function:: doe(x_dim: int, y_dim: int, hidden_dims: List[int], conditional_transform_name: str = 'conditional_linear', n_conditional_transforms: int = 1, marginal_transform_name: str = 'linear', n_marginal_transforms: int = 1) -> DoE
+.. py:function:: doe(x_dim: Optional[int] = None, y_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_Y_given_X: Optional[pyro.distributions.ConditionalDistribution] = None, q_Y: Optional[torch.distributions.Distribution] = None, conditional_transform_name: str = 'conditional_linear', n_conditional_transforms: int = 1, marginal_transform_name: str = 'linear', n_marginal_transforms: int = 1) -> DoE
 
 

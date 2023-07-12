@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, Union
+from typing import Dict, Union
 from collections import Iterator
 
 import torch
@@ -7,7 +7,9 @@ from torch.distributions import Distribution
 from torch_mist.distributions.joint import JointDistribution
 
 
-class SampleDataLoader(Iterator[Dict[str, torch.Tensor]]):
+
+
+class DistributionDataLoader(Iterator[Dict[str, torch.Tensor]]):
     def __init__(
             self,
             joint_dist: Union[Distribution, JointDistribution],
@@ -40,8 +42,18 @@ class SampleDataLoader(Iterator[Dict[str, torch.Tensor]]):
 
             return samples
 
+    def __iter__(self):
+        return DistributionDataLoader(
+            joint_dist=self.joint_dist,
+            batch_size=self.batch_size,
+            max_samples=self.max_samples,
+            split_dim=self.split_dim,
+        )
+
     def __len__(self):
         return self.max_samples // self.batch_size
+
+
 
 
 

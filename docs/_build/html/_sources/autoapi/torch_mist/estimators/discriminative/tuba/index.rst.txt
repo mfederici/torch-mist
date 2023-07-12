@@ -25,10 +25,10 @@ Functions
 
 
 
-.. py:class:: TUBA(critic: torch_mist.critic.base.Critic, baseline: torch_mist.baselines.Baseline, grad_baseline: Optional[torch_mist.baselines.Baseline] = None, mc_samples: int = 1)
+.. py:class:: TUBA(critic: torch_mist.critic.base.Critic, baseline: torch_mist.baselines.Baseline, grad_baseline: Optional[torch_mist.baselines.Baseline] = None, neg_samples: int = 1)
 
 
-   Bases: :py:obj:`torch_mist.estimators.discriminative.nwj.NWJ`
+   Bases: :py:obj:`torch_mist.estimators.discriminative.base.DiscriminativeMutualInformationEstimator`
 
    Base class for all neural network modules.
 
@@ -61,10 +61,16 @@ Functions
                    evaluation mode.
    :vartype training: bool
 
-   .. py:method:: compute_log_ratio(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
+   .. py:method:: log_normalization_loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> Optional[torch.Tensor]
+   .. py:method:: compute_log_normalization(x: torch.Tensor, y: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: compute_log_normalization_loss(x: torch.Tensor, y: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
    .. py:method:: __repr__()
@@ -73,6 +79,6 @@ Functions
 
 
 
-.. py:function:: tuba(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', mc_samples: int = 1, critic_params: Dict[str, Any] = None, baseline_params: Dict[str, Any] = None) -> TUBA
+.. py:function:: tuba(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', neg_samples: int = 1, critic_params: Dict[str, Any] = None, baseline_params: Dict[str, Any] = None) -> TUBA
 
 

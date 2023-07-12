@@ -35,7 +35,7 @@ Functions
 
 .. autoapisummary::
 
-   torch_mist.critic.critic
+   torch_mist.critic.critic_nn
    torch_mist.critic.joint_critic
    torch_mist.critic.separable_critic
 
@@ -176,7 +176,7 @@ Functions
 
 
 
-.. py:function:: critic(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str, critic_params: Optional[Dict[str, Any]] = None)
+.. py:function:: critic_nn(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str, critic_params: Optional[Dict[str, Any]] = None)
 
 
 .. py:function:: joint_critic(x_dim: int, y_dim: int, hidden_dims: List[int], nonlinearity=nn.ReLU(True))

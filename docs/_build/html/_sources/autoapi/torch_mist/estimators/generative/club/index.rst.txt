@@ -65,6 +65,6 @@ Functions
 
 
 
-.. py:function:: club(x_dim: int, y_dim: int, hidden_dims: List[int], transform_name: str = 'conditional_linear', n_transforms: int = 1) -> CLUB
+.. py:function:: club(x_dim: Optional[int] = None, y_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_Y_given_X: Optional[pyro.distributions.ConditionalDistribution] = None, transform_name: str = 'conditional_linear', n_transforms: int = 1) -> CLUB
 
 

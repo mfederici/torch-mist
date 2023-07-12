@@ -44,7 +44,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../example.html">Example usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../example.html">Simple example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../conduct.html">Code of Conduct</a></li>
@@ -80,21 +80,23 @@
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+
+<span class="kn">from</span> <span class="nn">torch_mist.baselines</span> <span class="kn">import</span> <span class="n">ConstantBaseline</span>
 <span class="kn">from</span> <span class="nn">torch_mist.critic.base</span> <span class="kn">import</span> <span class="n">Critic</span>
-<span class="kn">from</span> <span class="nn">torch_mist.critic.utils</span> <span class="kn">import</span> <span class="n">critic</span>
-<span class="kn">from</span> <span class="nn">torch_mist.estimators.discriminative.nwj</span> <span class="kn">import</span> <span class="n">NWJ</span>
-<span class="kn">from</span> <span class="nn">torch_mist.utils.caching</span> <span class="kn">import</span> <span class="n">reset_cache_after_call</span><span class="p">,</span> <span class="n">reset_cache_before_call</span>
+<span class="kn">from</span> <span class="nn">torch_mist.estimators.discriminative.tuba</span> <span class="kn">import</span> <span class="n">TUBA</span>
+<span class="kn">from</span> <span class="nn">torch_mist.utils.caching</span> <span class="kn">import</span> <span class="n">reset_cache_before_call</span>
 
 
-<div class="viewcode-block" id="JS"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.discriminative.JS">[docs]</a><span class="k">class</span> <span class="nc">JS</span><span class="p">(</span><span class="n">NWJ</span><span class="p">):</span>
+<div class="viewcode-block" id="JS"><a class="viewcode-back" href="../../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.discriminative.JS">[docs]</a><span class="k">class</span> <span class="nc">JS</span><span class="p">(</span><span class="n">TUBA</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">critic</span><span class="p">:</span> <span class="n">Critic</span><span class="p">,</span>
-            <span class="n">mc_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">neg_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">critic</span><span class="o">=</span><span class="n">critic</span><span class="p">,</span>
-            <span class="n">mc_samples</span><span class="o">=</span><span class="n">mc_samples</span><span class="p">,</span>
+            <span class="n">neg_samples</span><span class="o">=</span><span class="n">neg_samples</span><span class="p">,</span>
+            <span class="n">baseline</span><span class="o">=</span><span class="n">ConstantBaseline</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">),</span>
         <span class="p">)</span>
 
     <span class="nd">@reset_cache_before_call</span>
@@ -103,8 +105,11 @@
             <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
             <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+        <span class="c1"># Compute the critic on the positives. It has shape [...]</span>
         <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic_on_positives</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+        <span class="c1"># Compute the critic on the negatives. It has shape [M, ...] with M as the number of negative samples</span>
         <span class="n">f_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic_on_negatives</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+
         <span class="n">loss</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">softplus</span><span class="p">(</span><span class="o">-</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="n">F</span><span class="o">.</span><span class="n">softplus</span><span class="p">(</span><span class="n">f_</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">loss</span></div>
 
@@ -114,20 +119,20 @@
         <span class="n">y_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">hidden_dims</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">critic_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;joint&#39;</span><span class="p">,</span>
-        <span class="n">mc_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">neg_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">critic_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JS</span><span class="p">:</span>
-    <span class="n">url_nn</span> <span class="o">=</span> <span class="n">critic</span><span class="p">(</span>
-        <span class="n">x_dim</span><span class="o">=</span><span class="n">x_dim</span><span class="p">,</span>
-        <span class="n">y_dim</span><span class="o">=</span><span class="n">y_dim</span><span class="p">,</span>
-        <span class="n">hidden_dims</span><span class="o">=</span><span class="n">hidden_dims</span><span class="p">,</span>
-        <span class="n">critic_type</span><span class="o">=</span><span class="n">critic_type</span><span class="p">,</span>
-        <span class="n">critic_params</span><span class="o">=</span><span class="n">critic_params</span>
-    <span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">torch_mist.critic.utils</span> <span class="kn">import</span> <span class="n">critic_nn</span>
 
     <span class="k">return</span> <span class="n">JS</span><span class="p">(</span>
-        <span class="n">critic</span><span class="o">=</span><span class="n">url_nn</span><span class="p">,</span>
-        <span class="n">mc_samples</span><span class="o">=</span><span class="n">mc_samples</span><span class="p">,</span>
+        <span class="n">critic</span><span class="o">=</span><span class="n">critic_nn</span><span class="p">(</span>
+            <span class="n">x_dim</span><span class="o">=</span><span class="n">x_dim</span><span class="p">,</span>
+            <span class="n">y_dim</span><span class="o">=</span><span class="n">y_dim</span><span class="p">,</span>
+            <span class="n">hidden_dims</span><span class="o">=</span><span class="n">hidden_dims</span><span class="p">,</span>
+            <span class="n">critic_type</span><span class="o">=</span><span class="n">critic_type</span><span class="p">,</span>
+            <span class="n">critic_params</span><span class="o">=</span><span class="n">critic_params</span>
+        <span class="p">),</span>
+        <span class="n">neg_samples</span><span class="o">=</span><span class="n">neg_samples</span><span class="p">,</span>
     <span class="p">)</span></div>
 </pre></div>
 

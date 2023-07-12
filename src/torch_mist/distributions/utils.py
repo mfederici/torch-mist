@@ -32,13 +32,14 @@ def fetch_transform(transform_name: str):
 
 
 class ConditionalCategoricalModule(ConditionalDistributionModule):
-    def __init__(self, net: nn.Module):
+    def __init__(self, net: nn.Module, temperature:float = 1.0):
         super(ConditionalCategoricalModule, self).__init__()
         self.net = net
+        self.temperature = temperature
         self.parametrization = LogitsMap()
 
     def condition(self, x):
-        return Categorical(**self.parametrization(self.net(x)))
+        return Categorical(**self.parametrization(self.net(x)/self.temperature))
 
 
 class NormalModule(Distribution, nn.Module):
@@ -188,6 +189,7 @@ def conditional_categorical(
     n_classes: int,
     context_dim: int,
     hidden_dims: List[int],
+    temperature: float = 1.0,
 ):
     net = DenseNN(input_dim=context_dim, hidden_dims=hidden_dims, param_dims=[n_classes])
-    return ConditionalCategoricalModule(net)
+    return ConditionalCategoricalModule(net, temperature=temperature)

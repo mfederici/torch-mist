@@ -44,7 +44,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../example.html">Example usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../example.html">Simple example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../conduct.html">Code of Conduct</a></li>
@@ -76,65 +76,72 @@
            <div itemprop="articleBody">
              
   <h1>Source code for torch_mist.data.multimixture</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">pyro.distributions</span> <span class="kn">import</span> <span class="n">Independent</span>
 <span class="kn">from</span> <span class="nn">torch.distributions</span> <span class="kn">import</span> <span class="n">MultivariateNormal</span><span class="p">,</span> <span class="n">MixtureSameFamily</span><span class="p">,</span> <span class="n">Categorical</span><span class="p">,</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">Distribution</span>
 
+<span class="kn">from</span> <span class="nn">torch_mist.distributions.joint</span> <span class="kn">import</span> <span class="n">JointDistribution</span>
 
-<div class="viewcode-block" id="MultivariateCorrelatedNormalMixture"><a class="viewcode-back" href="../../../autoapi/torch_mist/data/multimixture/index.html#torch_mist.data.multimixture.MultivariateCorrelatedNormalMixture">[docs]</a><span class="k">class</span> <span class="nc">MultivariateCorrelatedNormalMixture</span><span class="p">(</span><span class="n">MixtureSameFamily</span><span class="p">):</span>
+
+<div class="viewcode-block" id="MultivariateCorrelatedNormalMixture"><a class="viewcode-back" href="../../../autoapi/torch_mist/data/multimixture/index.html#torch_mist.data.multimixture.MultivariateCorrelatedNormalMixture">[docs]</a><span class="k">class</span> <span class="nc">MultivariateCorrelatedNormalMixture</span><span class="p">(</span><span class="n">JointDistribution</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">rho</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">,</span>
             <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
             <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.15</span><span class="p">,</span>
             <span class="n">delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.5</span><span class="p">,</span>
-            <span class="n">n_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+            <span class="n">n_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+            <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cpu&#39;</span><span class="p">)</span>
     <span class="p">):</span>
-        <span class="n">covariance</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">([</span>
-            <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">rho</span><span class="p">],</span>
-            <span class="p">[</span><span class="n">rho</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
-        <span class="p">])</span><span class="o">*</span><span class="n">sigma</span>
+        <span class="n">covariance</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">covariance</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">covariance</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">rho</span>
+        <span class="n">covariance</span> <span class="o">=</span> <span class="n">covariance</span> <span class="o">*</span> <span class="n">sigma</span>
 
-        <span class="n">mu_1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="c1"># offset1 = torch.Tensor([-epsilon, epsilon])</span>
-        <span class="c1"># offset2 = torch.Tensor([-delta, delta])</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
-        <span class="n">mu_1</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">epsilon</span> <span class="o">+</span> <span class="n">delta</span>
-        <span class="n">mu_1</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">epsilon</span> <span class="o">+</span> <span class="n">delta</span>
-
-        <span class="n">mu_2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="n">mu_2</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">epsilon</span> <span class="o">-</span> <span class="n">delta</span>
-        <span class="n">mu_2</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">epsilon</span> <span class="o">-</span> <span class="n">delta</span>
-
-        <span class="n">mu_3</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="n">mu_3</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">epsilon</span> <span class="o">-</span> <span class="n">delta</span>
-        <span class="n">mu_3</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">epsilon</span> <span class="o">-</span> <span class="n">delta</span>
-
-        <span class="n">mu_4</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="n">mu_4</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">epsilon</span> <span class="o">+</span> <span class="n">delta</span>
-        <span class="n">mu_4</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">epsilon</span> <span class="o">+</span> <span class="n">delta</span>
-
-        <span class="n">loc</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">mu_1</span><span class="p">,</span> <span class="n">mu_2</span><span class="p">,</span> <span class="n">mu_3</span><span class="p">,</span> <span class="n">mu_4</span><span class="p">],</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">mu</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">epsilon</span> <span class="o">+</span> <span class="n">delta</span>
+        <span class="n">mu</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">epsilon</span> <span class="o">+</span> <span class="n">delta</span>
+        <span class="n">mu</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">epsilon</span> <span class="o">-</span> <span class="n">delta</span>
+        <span class="n">mu</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">epsilon</span> <span class="o">-</span> <span class="n">delta</span>
+        <span class="n">mu</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">epsilon</span> <span class="o">-</span> <span class="n">delta</span>
+        <span class="n">mu</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">epsilon</span> <span class="o">-</span> <span class="n">delta</span>
+        <span class="n">mu</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">epsilon</span> <span class="o">+</span> <span class="n">delta</span>
+        <span class="n">mu</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">epsilon</span> <span class="o">+</span> <span class="n">delta</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">x_component_dist</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span>
-            <span class="n">loc</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
-            <span class="n">covariance</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mf">0.5</span>
+            <span class="n">mu</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="n">sigma</span><span class="o">**</span><span class="mf">0.5</span>
         <span class="p">)</span>
 
         <span class="c1"># Store the marginal distribution for one dimension</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">p_x</span> <span class="o">=</span> <span class="n">Independent</span><span class="p">(</span><span class="n">MixtureSameFamily</span><span class="p">(</span>
-            <span class="n">Categorical</span><span class="p">(</span><span class="n">probs</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.25</span><span class="p">),</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">x_component_dist</span>
-        <span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_X</span> <span class="o">=</span> <span class="n">Independent</span><span class="p">(</span>
+            <span class="n">MixtureSameFamily</span><span class="p">(</span>
+                <span class="n">Categorical</span><span class="p">(</span>
+                    <span class="n">logits</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+                <span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">x_component_dist</span><span class="p">),</span>
+            <span class="mi">1</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">component_dist</span> <span class="o">=</span> <span class="n">MultivariateNormal</span><span class="p">(</span>
-            <span class="n">loc</span><span class="p">,</span>
+            <span class="n">mu</span><span class="p">,</span>
             <span class="n">covariance</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">Categorical</span><span class="p">(</span><span class="n">probs</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.25</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">component_dist</span>
-        <span class="p">)</span></div>
+        <span class="n">p_XY</span> <span class="o">=</span> <span class="n">Independent</span><span class="p">(</span>
+            <span class="n">MixtureSameFamily</span><span class="p">(</span>
+                <span class="n">Categorical</span><span class="p">(</span>
+                    <span class="n">logits</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+                <span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">component_dist</span>
+            <span class="p">),</span> <span class="mi">1</span>
+        <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">joint_dist</span><span class="o">=</span><span class="n">p_XY</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
 </pre></div>
 
            </div>

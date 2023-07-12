@@ -34,7 +34,7 @@ Functions
 .. py:function:: fetch_transform(transform_name: str)
 
 
-.. py:class:: ConditionalCategoricalModule(net: torch.nn.Module)
+.. py:class:: ConditionalCategoricalModule(net: torch.nn.Module, temperature: float = 1.0)
 
 
    Bases: :py:obj:`torch_mist.distributions.transforms.ConditionalDistributionModule`
@@ -126,6 +126,6 @@ Functions
 .. py:function:: transformed_normal(input_dim: int, hidden_dims: Optional[List[int]] = None, transform_name: str = 'linear', n_transforms: int = 1, transform_params: Dict[Any, Any] = None) -> torch_mist.distributions.transforms.TransformedDistributionModule
 
 
-.. py:function:: conditional_categorical(n_classes: int, context_dim: int, hidden_dims: List[int])
+.. py:function:: conditional_categorical(n_classes: int, context_dim: int, hidden_dims: List[int], temperature: float = 1.0)
 
 

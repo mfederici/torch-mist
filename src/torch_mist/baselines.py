@@ -19,7 +19,7 @@ class ConstantBaseline(Baseline):
         self.value = value
 
     def forward(self, f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
-        return torch.zeros(f_.shape[0]).to(f_.device) + self.value
+        return torch.zeros(f_.shape[1:]).to(f_.device) + self.value
 
 
 class ExponentialMovingAverage(Baseline):
@@ -93,7 +93,6 @@ class LearnableJointBaseline(LearnableBaseline):
         assert x.shape[:-1] == y.shape[:-1]
         xy = torch.cat([x, y], -1)
         return self.net(xy).squeeze(-1)
-
 
 
 class InterpolatedBaseline(Baseline):

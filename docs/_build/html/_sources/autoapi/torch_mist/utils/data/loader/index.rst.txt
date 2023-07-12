@@ -1,0 +1,34 @@
+:py:mod:`torch_mist.utils.data.loader`
+======================================
+
+.. py:module:: torch_mist.utils.data.loader
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.utils.data.loader.DistributionDataLoader
+
+
+
+
+.. py:class:: DistributionDataLoader(joint_dist: Union[torch.distributions.Distribution, torch_mist.distributions.joint.JointDistribution], batch_size: int, max_samples: int = 100000, split_dim: int = -1)
+
+
+   Bases: :py:obj:`collections.Iterator`\ [\ :py:obj:`Dict`\ [\ :py:obj:`str`\ , :py:obj:`torch.Tensor`\ ]\ ]
+
+   .. py:method:: __next__() -> Dict[str, torch.Tensor]
+
+
+   .. py:method:: __iter__()
+
+
+   .. py:method:: __len__()
+
+
+

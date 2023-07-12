@@ -1,5 +1,5 @@
 from distutils.dist import Distribution
-from typing import List
+from typing import List, Optional
 import math
 import torch
 
@@ -17,7 +17,7 @@ class L1Out(GenerativeMutualInformationEstimator):
         super().__init__(q_Y_given_X=q_Y_given_X)
 
     def approx_log_p_y(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        assert x.ndim == y.ndim == 2, 'The input must be 2D tensors'
+        assert x.ndim == y.ndim == 2, 'The input must be 2D tensors, got x.ndim={}, y.ndim={}'.format(x.ndim, y.ndim)
         assert x.shape[0] == y.shape[0], 'The batch size of x and y must be the same'
         N = x.shape[0]
 
@@ -65,21 +65,26 @@ class L1Out(GenerativeMutualInformationEstimator):
 
 
 def l1out(
-        x_dim: int,
-        y_dim: int,
-        hidden_dims: List[int],
+        x_dim: Optional[int] = None,
+        y_dim: Optional[int] = None,
+        hidden_dims: Optional[List[int]] = None,
+        q_Y_given_X: Optional[ConditionalDistribution] = None,
         transform_name: str = 'conditional_linear',
         n_transforms: int = 1,
 ) -> L1Out:
     from torch_mist.distributions.utils import conditional_transformed_normal
 
-    q_Y_given_X = conditional_transformed_normal(
-        input_dim=y_dim,
-        context_dim=x_dim,
-        hidden_dims=hidden_dims,
-        transform_name=transform_name,
-        n_transforms=n_transforms,
-    )
+    if q_Y_given_X is None:
+        if x_dim is None or y_dim is None or hidden_dims is None:
+            raise ValueError('Either q_Y_given_X or x_dim, y_dim and hidden_dims must be provided')
+
+        q_Y_given_X = conditional_transformed_normal(
+            input_dim=y_dim,
+            context_dim=x_dim,
+            hidden_dims=hidden_dims,
+            transform_name=transform_name,
+            n_transforms=n_transforms,
+        )
 
     return L1Out(
         q_Y_given_X=q_Y_given_X,

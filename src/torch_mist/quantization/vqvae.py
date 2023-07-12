@@ -1,4 +1,4 @@
-from typing import Optional, List, Iterator
+from typing import Optional, List, Iterator, Dict, Any
 
 import torch
 from pyro.distributions import ConditionalDistribution
@@ -87,7 +87,6 @@ class VQVAE(nn.Module):
                 self.assignments[max_idx] = new_assignment
 
             mean_vector[assignments == 0] = self.encoder.vectors[assignments == 0]
-            # print((self.assignments * N < self.min_assignment).sum().item())
 
             self.encoder.vectors = self.gamma * self.encoder.vectors + (1 - self.gamma) * mean_vector
 
@@ -109,10 +108,10 @@ def vqvae(
 ) -> VQVAE:
     assert not cross_modal or y_dim is not None, "If cross_modal is True, y_dim must be provided"
 
-    from torch_mist.quantization import learnable_vector_quantization
+    from torch_mist.quantization import vector_quantization
     from torch_mist.distributions.utils import conditional_transformed_normal
 
-    quantization = learnable_vector_quantization(
+    quantization = vector_quantization(
         input_dim=x_dim,
         quantization_dim=quantization_dim,
         hidden_dims=hidden_dims,
@@ -132,3 +131,43 @@ def vqvae(
         cross_modal=cross_modal,
         beta=beta
     )
+
+
+def train_vqvae(
+        model: nn.Module,
+        dataloader: Iterator,
+        max_epochs: int,
+        optimizer_class=torch.optim.Adam,
+        optimizer_params: Optional[Dict[str, Any]] = None,
+        cross_modal: bool = False,
+) -> nn.Module:
+    if optimizer_params is None:
+        optimizer_params = dict(lr=1e-3)
+
+    opt = optimizer_class(model.parameters(), **optimizer_params)
+
+    for epoch in range(max_epochs):
+        for samples in dataloader:
+            if isinstance(samples, dict):
+                if 'x' not in samples:
+                    raise ValueError("Expected 'x' key in samples")
+                x = samples['x']
+                if cross_modal:
+                    assert 'y' in samples, "Expected 'y' key in samples"
+                    y = samples['y']
+                else:
+                    y = None
+            elif isinstance(samples, torch.Tensor):
+                x = samples
+                y = None
+            else:
+                raise ValueError(
+                    f"Unknown sample type {type(samples)}, expected dict containing keys 'x' and 'y' or torch.Tensor")
+
+            opt.zero_grad()
+            model.loss(x, y).backward()
+            opt.step()
+
+    return model
+
+

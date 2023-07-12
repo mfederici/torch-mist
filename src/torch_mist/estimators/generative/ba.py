@@ -27,22 +27,27 @@ class BA(GenerativeMutualInformationEstimator):
         return self.entropy_y-entropy_y_given_x
 
 def ba(
-        x_dim: int,
-        y_dim: int,
-        hidden_dims: List[int],
         entropy_y: Union[float, torch.Tensor],
+        x_dim: Optional[int] = None,
+        y_dim: Optional[int] = None,
+        hidden_dims: Optional[List[int]] = None,
+        q_Y_given_X: Optional[ConditionalDistribution] = None,
         transform_name: str = 'conditional_linear',
         n_transforms: int = 1,
 ) -> BA:
     from torch_mist.distributions.utils import conditional_transformed_normal
 
-    q_Y_given_X = conditional_transformed_normal(
-        input_dim=y_dim,
-        context_dim=x_dim,
-        hidden_dims=hidden_dims,
-        transform_name=transform_name,
-        n_transforms=n_transforms,
-    )
+    if q_Y_given_X is None:
+        if x_dim is None or y_dim is None or hidden_dims is None:
+            raise ValueError('Either q_Y_given_X or x_dim, y_dim and hidden_dims must be provided')
+
+        q_Y_given_X = conditional_transformed_normal(
+            input_dim=y_dim,
+            context_dim=x_dim,
+            hidden_dims=hidden_dims,
+            transform_name=transform_name,
+            n_transforms=n_transforms,
+        )
 
     if isinstance(entropy_y, float):
         entropy_y = torch.FloatTensor([entropy_y])

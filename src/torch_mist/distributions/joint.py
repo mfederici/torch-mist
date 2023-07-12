@@ -10,11 +10,12 @@ from torch_mist.distributions.transforms import ConditionalDistributionModule
 
 
 class JointDistribution(nn.Module):
-    def __init__(self, joint_dist: Distribution, dims: List[int], labels: List[str]):
+    def __init__(self, joint_dist: Distribution, dims: List[int], labels: List[str], squeeze: bool = False):
         super().__init__()
         self.joint_dist = joint_dist
         self.dims = dims
         self.labels = labels
+        self.squeeze = squeeze
 
     def log_prob(self, *args, **kwargs) -> torch.Tensor:
         # Add the args to kwargs
@@ -33,22 +34,29 @@ class JointDistribution(nn.Module):
         # Expand all args to the maximum shape
         kwargs = {name: value.expand(max_shape + [-1]) for name, value in kwargs.items()}
 
+        if self.squeeze:
+            kwargs = {name: value.unsqueeze(-1) for name, value in kwargs.items()}
+
         # Concatenate all the arguments in order
         args = torch.cat([kwargs[name] for name in self.labels], dim=-1)
 
         # Compute the log prob
         log_prob = self.joint_dist.log_prob(args)
-        assert log_prob.shape == args.shape[:-1]
         return log_prob
 
     def sample(self, sample_shape: torch.Size = torch.Size()) -> Dict[str, torch.Tensor]:
         sample = self.joint_dist.sample(sample_shape)
         sample = torch.split(sample, self.dims, dim=-1)
-        return {name: value.squeeze(-1) for name, value in zip(self.labels, sample)}
+        if self.squeeze:
+            sample = [s.squeeze(-1) for s in sample]
+        return {name: value for name, value in zip(self.labels, sample)}
 
     def rsample(self, sample_shape: torch.Size = torch.Size()) -> Dict[str, torch.Tensor]:
         rsample = self.joint_dist.rsample(sample_shape)
         rsample = torch.split(rsample, self.dims, dim=-1)
+
+        if self.squeeze:
+            rsample = [s.squeeze(-1) for s in rsample]
         return {name: value.squeeze(-1) for name, value in zip(self.labels, rsample)}
 
 

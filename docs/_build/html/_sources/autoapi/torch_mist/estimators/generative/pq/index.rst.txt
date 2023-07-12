@@ -12,6 +12,7 @@ Classes
 
 .. autoapisummary::
 
+   torch_mist.estimators.generative.pq.SameBucketConditionalDistribution
    torch_mist.estimators.generative.pq.PQ
 
 
@@ -25,10 +26,24 @@ Functions
 
 
 
-.. py:class:: PQ(q_qY_given_X: pyro.distributions.ConditionalDistribution, quantization: torch_mist.quantization.functions.QuantizationFunction, temperature: float = 0.1)
+.. py:class:: SameBucketConditionalDistribution(Q: torch_mist.quantization.functions.QuantizationFunction)
 
 
-   Bases: :py:obj:`torch_mist.estimators.generative.doe.DoE`
+   Bases: :py:obj:`pyro.distributions.ConditionalDistribution`
+
+   Helper class that provides a standard way to create an ABC using
+   inheritance.
+
+   .. py:method:: condition(context: torch.Tensor)
+
+      :rtype: torch.distributions.Distribution
+
+
+
+.. py:class:: PQ(q_QX_given_Y: pyro.distributions.ConditionalDistribution, Q_x: torch_mist.quantization.functions.QuantizationFunction, temperature: float = 1.0)
+
+
+   Bases: :py:obj:`torch_mist.estimators.generative.base.GenerativeMutualInformationEstimator`
 
    Base class for all neural network modules.
 
@@ -61,19 +76,30 @@ Functions
                    evaluation mode.
    :vartype training: bool
 
-   .. py:method:: quantize_y(y: torch.Tensor) -> torch.Tensor
+   .. py:method:: quantize_x(x: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: q_Y_given_x(x: torch.Tensor) -> torch.distributions.Distribution
+   .. py:method:: q_QX_given_y(y: torch.Tensor) -> torch.distributions.Distribution
 
 
-   .. py:method:: approx_log_p_y_given_x(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+   .. py:method:: approx_log_p_qx_given_y(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
-   .. py:method:: approx_log_p_y(y: torch.Tensor, x: Optional[torch.Tensor] = None) -> torch.Tensor
+   .. py:method:: approx_log_p_qx(x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor
+
+
+   .. py:method:: log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
 
 
 
-.. py:function:: pq(x_dim: int, hidden_dims: List[int], quantization: torch_mist.quantization.functions.QuantizationFunction) -> PQ
+.. py:function:: pq(Q_x: torch_mist.quantization.functions.QuantizationFunction, x_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_QX_given_Y: Optional[pyro.distributions.ConditionalDistribution] = None, temperature: float = 0.1) -> PQ
 
 

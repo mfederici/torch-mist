@@ -25,7 +25,7 @@ Functions
 
 
 
-.. py:class:: SMILE(critic: torch_mist.critic.base.Critic, mc_samples: int = 1, tau: float = 5.0)
+.. py:class:: SMILE(critic: torch_mist.critic.base.Critic, neg_samples: int = 1, tau: float = 5.0)
 
 
    Bases: :py:obj:`torch_mist.estimators.discriminative.tuba.TUBA`
@@ -61,13 +61,13 @@ Functions
                    evaluation mode.
    :vartype training: bool
 
-   .. py:method:: compute_log_ratio(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
+   .. py:method:: compute_log_normalization(x: torch.Tensor, y: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
 
 
    .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> Optional[torch.Tensor]
 
 
 
-.. py:function:: smile(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', mc_samples: int = 1, tau: float = 5.0, critic_params: Dict[str, Any] = None) -> SMILE
+.. py:function:: smile(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', neg_samples: int = 1, tau: float = 5.0, critic_params: Dict[str, Any] = None) -> SMILE
 
 

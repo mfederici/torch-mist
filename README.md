@@ -36,16 +36,16 @@ estimator = mine(
 )
 ```
 then we can train the estimator:
+
 ```python
 from torch_mist.utils import optimize_mi_estimator
 
-
 train_log = optimize_mi_estimator(
-    estimator=estimator,        # the estimator to train
-    dataloader=dataloader,      # the dataloader returning pairs of x and y
-    epochs=10,                  # the number of epochs
-    device="cpu",               # the device to use
-    return_log=True,            # whether to return the training log
+    estimator=estimator,  # the estimator to train
+    train_loader=dataloader,  # the dataloader returning pairs of x and y
+    max_epochs=10,  # the number of epochs
+    device="cpu",  # the device to use
+    return_log=True,  # whether to return the training log
 )
 ```
 Lastly, we can use the trained estimator to estimate the mutual information between pairs of observations:
@@ -68,25 +68,25 @@ Please refer to the [documentation](https://torch-mist.readthedocs.io/en/latest/
 ### Estimators
 The basic estimators implemented in this package are summarized in the following table:
 
-| Estimator                                     | Type                  | Models                                    |
-|-----------------------------------------------|-----------------------|-------------------------------------------|
-| NWJ [[1]](#references)                        | Discriminative        | $f_\phi(x,y)$                              |
-| MINE  [[2]](#references)                      | Discriminative        | $f_\phi(x,y)$                              |
-| InfoNCE [[3]](#references)                    | Discriminative        | $f_\phi(x,y)$                              |
-| TUBA  [[4]](#references)                      | Discriminative        | $f_\phi(x,y)$, $b_\xi(x)$                  | 
-| AlphaTUBA [[4]](#references)                  | Discriminative        | $f_\phi(x,y)$, $b_\xi(x)$                  |
-| JS [[5]](#references)                         | Discriminative        | $f_\phi(x,y)$                              |
-| SMILE [[6]](#references)                      | Discriminative        | $f_\phi(x,y)$                              |
-| FLO [[7]](#references)                        | Discriminative        | $f_\phi(x,y)$, $b_\xi(x,y)$               | 
-| BA [[8]](#references)                         | Generative            | $q_\theta(y\|x)$                          |          
-| DoE [[9]](#references)                        | Generative            | $q_\theta(y\|x)$, $q_\psi(y)$             | 
-| GM [[6]](#references)                         | Generative            | $q_\theta(x,y)$, $q_\psi(x)$, $r_\psi(y)$ |
-| L1OUT [[4]](#references) [[10]](#references)  | Generative            | $q_\theta(y\|x)$                          |                  
-| CLUB [[10]](#references)                      | Generative            | $q_\theta(y\|x)$                          |
-| Discrete [[]](#references)                    | Generative (Discrete) | $Q(x)$, $Q(y)$                            |
-| PQ [[11]](#references)                        | Generative (Discrete) | $Q(y)$, $q_\theta(Q(y)\|x)$               |
+| Estimator                                     | Type                  | Models                                    | Hyperparameters   | 
+|-----------------------------------------------|-----------------------|-------------------------------------------|-------------------|
+| NWJ [[1]](#references)                        | Discriminative        | $f_\phi(x,y)$                             | M                 | 
+| MINE  [[2]](#references)                      | Discriminative        | $f_\phi(x,y)$                             | M, $\gamma_{EMA}$ | 
+| InfoNCE [[3]](#references)                    | Discriminative        | $f_\phi(x,y)$                             | M                 | 
+| TUBA  [[4]](#references)                      | Discriminative        | $f_\phi(x,y)$, $b_\xi(x)$                 | M                 | 
+| AlphaTUBA [[4]](#references)                  | Discriminative        | $f_\phi(x,y)$, $b_\xi(x)$                 | M, $\alpha$       | 
+| JS [[5]](#references)                         | Discriminative        | $f_\phi(x,y)$                             | M                 | 
+| SMILE [[6]](#references)                      | Discriminative        | $f_\phi(x,y)$                             | M, $\tau$         |
+| FLO [[7]](#references)                        | Discriminative        | $f_\phi(x,y)$, $b_\xi(x,y)$               | M                 |
+| BA [[8]](#references)                         | Generative            | $q_\theta(y\|x)$                          | -                 |         
+| DoE [[9]](#references)                        | Generative            | $q_\theta(y\|x)$, $q_\psi(y)$             | -                 |
+| GM [[6]](#references)                         | Generative            | $q_\theta(x,y)$, $q_\psi(x)$, $q_\psi(y)$ | -                 |
+| L1OUT [[4]](#references) [[10]](#references)  | Generative            | $q_\theta(y\|x)$                          | -                 |                 
+| CLUB [[10]](#references)                      | Generative            | $q_\theta(y\|x)$                          | -                 |
+| Discrete [[]](#references)                    | Generative (Discrete) | $Q(x)$, $Q(y)$                            | -                 |
+| PQ [[11]](#references)                        | Generative (Discrete) | $Q(y)$, $q_\theta(Q(y)\|x)$               | -                 |
 
-in which:
+in which the following models are used:
 - $f_\phi(x,y)$ is a `critic` neural network with parameters $\phi, which maps pairs of observations to a scalar value.
 Critics can be either `joint` or `separable` depending on whether they parametrize function of both $x$ and $y$ directly, 
 or through the product of separate projection heads ( $f_\phi(x,y)=h_\phi(x)^T h_\phi(y)$ ) respectively.
@@ -100,6 +100,11 @@ Marginal distributions may have learnable parameters $\psi$ that are usually par
 Joint distributions may have learnable parameters $\theta$ that are usually parametrized by a normalizing flow.
 - $Q(x)$ and $Q(y)$ are `quantization` functions that map observations to a finite set of discrete values.
 
+And the following hyperparameters:
+- $M \in [1, N]$ is the number of samples used to estimate the log-normalization constant for each element in the batch.
+- $\gamma_{EMA} \in (0,1]$ is the exponential moving average decay used to update the baseline in MINE.
+- $\alpha \in [0,1]$ is the weight of the baseline in AlphaTUBA (0 corresponds to InfoNCE, 1 to TUBA).
+- $\tau \in [0..]$ is used to define the interval $[-\tau,\tau]$ in which critic values are clipped in SMILE.
 #### Hybrid estimators
 The `torch_mist` package allows to combine Generative and Discriminative estimators in a single hybrid estimators as proposed in [[11]](#references)[[12]](#references).
 

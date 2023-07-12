@@ -19,7 +19,7 @@ Classes
 
 
 
-.. py:class:: JointDistribution(joint_dist: torch.distributions.Distribution, dims: List[int], names: List[str])
+.. py:class:: JointDistribution(joint_dist: torch.distributions.Distribution, dims: List[int], labels: List[str], squeeze: bool = False)
 
 
    Bases: :py:obj:`torch.nn.Module`

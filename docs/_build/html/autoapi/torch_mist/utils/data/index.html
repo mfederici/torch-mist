@@ -22,8 +22,8 @@
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="torch_mist.utils.estimate" href="../estimate/index.html" />
-    <link rel="prev" title="torch_mist.utils.caching" href="../caching/index.html" /> 
+    <link rel="next" title="torch_mist.utils.data.dataset" href="dataset/index.html" />
+    <link rel="prev" title="torch_mist.utils" href="../index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -47,7 +47,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../../example.html">Example usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../example.html">Simple example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../conduct.html">Code of Conduct</a></li>
@@ -100,30 +100,115 @@
              
   <section id="module-torch_mist.utils.data">
 <span id="torch-mist-utils-data"></span><h1><a class="reference internal" href="#module-torch_mist.utils.data" title="torch_mist.utils.data"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.utils.data</span></code></a><a class="headerlink" href="#module-torch_mist.utils.data" title="Permalink to this heading"></a></h1>
-<section id="module-contents">
-<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading"></a></h2>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dataset/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.utils.data.dataset</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="loader/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.utils.data.loader</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="sampler/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.utils.data.sampler</span></code></a></li>
+</ul>
+</div>
+</section>
+<section id="package-contents">
+<h2>Package Contents<a class="headerlink" href="#package-contents" title="Permalink to this heading"></a></h2>
 <section id="classes">
 <h3>Classes<a class="headerlink" href="#classes" title="Permalink to this heading"></a></h3>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#torch_mist.utils.data.SampleDataLoader" title="torch_mist.utils.data.SampleDataLoader"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SampleDataLoader</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#torch_mist.utils.data.DistributionDataLoader" title="torch_mist.utils.data.DistributionDataLoader"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DistributionDataLoader</span></code></a></p></td>
 <td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#torch_mist.utils.data.SameAttributeSampler" title="torch_mist.utils.data.SameAttributeSampler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SameAttributeSampler</span></code></a></p></td>
+<td><p>Base class for all Samplers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#torch_mist.utils.data.SampleDataset" title="torch_mist.utils.data.SampleDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SampleDataset</span></code></a></p></td>
+<td><p>All the operations on a read-only sequence.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py class">
-<dt class="sig sig-object py" id="torch_mist.utils.data.SampleDataLoader">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.utils.data.</span></span><span class="sig-name descname"><span class="pre">SampleDataLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">joint_dist</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.distributions.Distribution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data.html#SampleDataLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.SampleDataLoader" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">collections.abc.Iterator</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.Tensor</span></code>]]</p>
+<dt class="sig sig-object py" id="torch_mist.utils.data.DistributionDataLoader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.utils.data.</span></span><span class="sig-name descname"><span class="pre">DistributionDataLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">joint_dist</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.distributions.Distribution</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="../../distributions/joint/index.html#torch_mist.distributions.joint.JointDistribution" title="torch_mist.distributions.joint.JointDistribution"><span class="pre">torch_mist.distributions.joint.JointDistribution</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data/loader.html#DistributionDataLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.DistributionDataLoader" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">collections.Iterator</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.Tensor</span></code>]]</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="torch_mist.utils.data.SampleDataLoader.__next__">
-<span class="sig-name descname"><span class="pre">__next__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data.html#SampleDataLoader.__next__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.SampleDataLoader.__next__" title="Permalink to this definition"></a></dt>
-<dd><p>Return the next item from the iterator. When exhausted, raise StopIteration</p>
-</dd></dl>
+<dt class="sig sig-object py" id="torch_mist.utils.data.DistributionDataLoader.__next__">
+<span class="sig-name descname"><span class="pre">__next__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data/loader.html#DistributionDataLoader.__next__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.DistributionDataLoader.__next__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torch_mist.utils.data.SampleDataLoader.__len__">
-<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data.html#SampleDataLoader.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.SampleDataLoader.__len__" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="torch_mist.utils.data.DistributionDataLoader.__iter__">
+<span class="sig-name descname"><span class="pre">__iter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data/loader.html#DistributionDataLoader.__iter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.DistributionDataLoader.__iter__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torch_mist.utils.data.DistributionDataLoader.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data/loader.html#DistributionDataLoader.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.DistributionDataLoader.__len__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torch_mist.utils.data.SameAttributeSampler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.utils.data.</span></span><span class="sig-name descname"><span class="pre">SameAttributeSampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data/sampler.html#SameAttributeSampler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.SameAttributeSampler" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.utils.data.Sampler</span></code></p>
+<p>Base class for all Samplers.</p>
+<p>Every Sampler subclass has to provide an <a class="reference internal" href="#torch_mist.utils.data.SameAttributeSampler.__iter__" title="torch_mist.utils.data.SameAttributeSampler.__iter__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__iter__()</span></code></a> method, providing a
+way to iterate over indices of dataset elements, and a <a class="reference internal" href="#torch_mist.utils.data.SameAttributeSampler.__len__" title="torch_mist.utils.data.SameAttributeSampler.__len__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__len__()</span></code></a> method
+that returns the length of the returned iterators.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <a class="reference internal" href="#torch_mist.utils.data.SameAttributeSampler.__len__" title="torch_mist.utils.data.SameAttributeSampler.__len__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__len__()</span></code></a> method isn’t strictly required by
+<code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code>, but is expected in any
+calculation involving the length of a <code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code>.</p>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="torch_mist.utils.data.SameAttributeSampler.attributes">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">attributes</span></span><a class="headerlink" href="#torch_mist.utils.data.SameAttributeSampler.attributes" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torch_mist.utils.data.SameAttributeSampler._compute_len">
+<span class="sig-name descname"><span class="pre">_compute_len</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data/sampler.html#SameAttributeSampler._compute_len"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.SameAttributeSampler._compute_len" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torch_mist.utils.data.SameAttributeSampler.compare_attributes">
+<span class="sig-name descname"><span class="pre">compare_attributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data/sampler.html#SameAttributeSampler.compare_attributes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.SameAttributeSampler.compare_attributes" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torch_mist.utils.data.SameAttributeSampler.make_batch">
+<span class="sig-name descname"><span class="pre">make_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data/sampler.html#SameAttributeSampler.make_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.SameAttributeSampler.make_batch" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torch_mist.utils.data.SameAttributeSampler.__iter__">
+<span class="sig-name descname"><span class="pre">__iter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data/sampler.html#SameAttributeSampler.__iter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.SameAttributeSampler.__iter__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torch_mist.utils.data.SameAttributeSampler.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data/sampler.html#SameAttributeSampler.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.SameAttributeSampler.__len__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torch_mist.utils.data.SampleDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.utils.data.</span></span><span class="sig-name descname"><span class="pre">SampleDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data/dataset.html#SampleDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.SampleDataset" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code></p>
+<p>All the operations on a read-only sequence.</p>
+<p>Concrete subclasses must override __new__ or __init__,
+__getitem__, and __len__.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="torch_mist.utils.data.SampleDataset.__getitem__">
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data/dataset.html#SampleDataset.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.SampleDataset.__getitem__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torch_mist.utils.data.SampleDataset.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/torch_mist/utils/data/dataset.html#SampleDataset.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.SampleDataset.__len__" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -136,8 +221,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../caching/index.html" class="btn btn-neutral float-left" title="torch_mist.utils.caching" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../estimate/index.html" class="btn btn-neutral float-right" title="torch_mist.utils.estimate" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../index.html" class="btn btn-neutral float-left" title="torch_mist.utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dataset/index.html" class="btn btn-neutral float-right" title="torch_mist.utils.data.dataset" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -1,9 +1,9 @@
-from typing import Tuple, List, Iterator, Optional, Dict, Any
+from typing import List, Iterator, Optional, Dict, Any
 
 import torch
-from pyro.distributions import ConditionalDistribution
 from torch import nn
-from torch.distributions import RelaxedOneHotCategorical
+
+from torch_mist.distributions.utils import conditional_transformed_normal
 
 
 class QuantizationFunction(nn.Module):
@@ -11,7 +11,7 @@ class QuantizationFunction(nn.Module):
     def n_bins(self) -> int:
         raise NotImplemented()
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.LongTensor:
         raise NotImplemented()
 
 
@@ -52,9 +52,9 @@ class VectorQuantization(QuantizationFunction):
     def n_bins(self) -> int:
         return self.vectors.shape[0]
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.LongTensor:
         indices = self.codebook_lookup(x)
-        return torch.nn.functional.one_hot(indices.to(torch.int64), self.n_bins).float()
+        return indices.long()
 
 
 class LearnableVectorQuantization(VectorQuantization):
@@ -90,81 +90,91 @@ class FixedQuantization(QuantizationFunction):
     def n_bins(self) -> int:
         return (self.thresholds.shape[0]+1)**self.input_dim
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.LongTensor:
         bins = torch.bucketize(x, self.thresholds)
         flat_bins = (bins * (torch.FloatTensor([self.n_bins]) ** torch.arange(self.input_dim)).to(bins.device)).sum(-1)
-        return torch.nn.functional.one_hot(flat_bins.to(torch.int64), self.n_bins).float()
+        return flat_bins.long()
 
 
-def learnable_vector_quantization(
-    input_dim: int,
-    quantization_dim: int,
-    hidden_dims: List[int],
-    n_bins: int,
+def vector_quantization(
+        input_dim: int,
+        n_bins: int,
+        hidden_dims: List[int],
+        quantization_dim: Optional[int] = None,
 ) -> LearnableVectorQuantization:
+
+    assert len(hidden_dims) > 0, "hidden_dims must be a non-empty list"
+
     from pyro.nn import DenseNN
 
-    net = DenseNN(
+    if quantization_dim is None:
+        quantization_dim = 16
+
+    encoder = DenseNN(
         input_dim,
         hidden_dims,
         [quantization_dim]
     )
 
-    return LearnableVectorQuantization(
-        net=net,
+    quantization = LearnableVectorQuantization(
+        net=encoder,
         n_bins=n_bins,
         quantization_dim=quantization_dim
     )
 
+    return quantization
 
-def trained_vector_quantization(
-        dataloader: Iterator,
-        x_dim: int,
+
+def vqvae_quantization(
+        input_dim: int,
         n_bins: int,
         hidden_dims: List[int],
+        dataloader: Iterator,
         quantization_dim: Optional[int] = None,
         cross_modal: bool = False,
         decoder_transform_params: Optional[Dict[str, Any]] = None,
         beta: float = 0.2,
-        n_train_epochs: int = 1,
+        max_epochs: int = 1,
         optimizer_class=torch.optim.Adam,
         optimizer_params: Optional[Dict[str, Any]] = None,
-        y_dim: Optional[int] = None,
-) -> QuantizationFunction:
+        target_dim: Optional[int] = None,
+) -> LearnableVectorQuantization:
 
-    assert not cross_modal or y_dim is not None, "y_dim must be specified if cross_modal is True"
-    assert len(hidden_dims) > 0, "hidden_dims must be a non-empty list"
+    from torch_mist.quantization.vqvae import VQVAE, train_vqvae
+
+    assert not cross_modal or target_dim is not None, "target_dim must be specified if cross_modal is True"
 
     if optimizer_params is None:
         optimizer_params = {'lr': 1e-3}
 
-    from torch_mist.quantization import vqvae
-    from tqdm.auto import tqdm
-
-    if quantization_dim is None:
-        quantization_dim = 16
-
-    model = vqvae(
-        x_dim=x_dim,
-        y_dim=y_dim,
-        quantization_dim=quantization_dim,
+    quantization = vector_quantization(
+        input_dim=input_dim,
         n_bins=n_bins,
         hidden_dims=hidden_dims,
-        decoder_transform_params=decoder_transform_params,
+        quantization_dim=quantization_dim
+    )
+
+    decoder = conditional_transformed_normal(
+        input_dim=input_dim if not cross_modal else target_dim,
+        context_dim=quantization_dim,
+        transform_name='conditional_linear',
+        transform_params=decoder_transform_params
+    )
+
+    model = VQVAE(
+        encoder=quantization,
+        decoder=decoder,
         cross_modal=cross_modal,
         beta=beta
     )
 
-    opt = optimizer_class(model.parameters(), **optimizer_params)
+    train_vqvae(
+        model=model,
+        dataloader=dataloader,
+        max_epochs=max_epochs,
+        optimizer_class=optimizer_class,
+        optimizer_params=optimizer_params,
+        cross_modal=cross_modal
+    )
 
-    for epoch in range(n_train_epochs):
-        for data in tqdm(dataloader):
-            opt.zero_grad()
-            model.loss(*data).backward()
-            opt.step()
-
-    return model.quantization
-
-
-
-
+    return quantization

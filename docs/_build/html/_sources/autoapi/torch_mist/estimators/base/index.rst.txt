@@ -60,6 +60,9 @@ Classes
    .. py:method:: expected_log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
 
+   .. py:method:: unnormalized_log_ratio(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+
+
    .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
       :abstractmethod:
 

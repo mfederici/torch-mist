@@ -41,8 +41,8 @@ class HybridMutualInformationEstimator(MutualInformationEstimator):
             y: torch.Tensor,
     ) -> torch.Tensor:
         log_ratio = self.generative_estimator.log_ratio(x, y)
-        proposal = self.generative_estimator.q_Y_given_x(x=x)
-        self.discriminative_estimator.proposal = proposal
+        # proposal = self.generative_estimator.q_Y_given_x(x=x)
+        # self.discriminative_estimator.proposal = proposal
         log_ratio += self.discriminative_estimator.unnormalized_log_ratio(x, y)
 
         return log_ratio

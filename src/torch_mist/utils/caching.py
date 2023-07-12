@@ -7,10 +7,10 @@ T = TypeVar("T")
 
 def cached(method: Callable[..., T]) -> Callable[..., T]:
     def _is_cache_valid(self, key: str, **kwargs):
-        assert key in self._cache, f"Key {key} not in cache"
-        if self._cache[key] is None:
+        assert key in self.__cache, f"Key {key} not in cache"
+        if self.__cache[key] is None:
             return False
-        stored_kwargs, stored_value = self._cache[key]
+        stored_kwargs, stored_value = self.__cache[key]
         if stored_kwargs.keys() != kwargs.keys():
             return False
 
@@ -25,7 +25,7 @@ def cached(method: Callable[..., T]) -> Callable[..., T]:
         return True
 
     def _reset_cache(self):
-        self._cache = {key: None for key in self._cache.keys()}
+        self.__cache = {key: None for key in self.__cache.keys()}
 
     def cached_method(self, *args, **kwargs):
         # transform args in kwargs
@@ -37,7 +37,7 @@ def cached(method: Callable[..., T]) -> Callable[..., T]:
         kwargs = {**kwargs, **new_kwargs}
 
         if not hasattr(self, '_cache'):
-            self._cache = {}
+            self.__cache = {}
             self._caching_enabled = True
             self._reset_cache = _reset_cache.__get__(self)
 
@@ -45,13 +45,13 @@ def cached(method: Callable[..., T]) -> Callable[..., T]:
             return method(*args, **kwargs)
 
         key = method.__name__
-        if key not in self._cache or not _is_cache_valid(self, key, **kwargs):
+        if key not in self.__cache or not _is_cache_valid(self, key, **kwargs):
             value = method(self, **kwargs)
             # print(f"Cache miss for {key}")
-            self._cache[key] = (kwargs, value)
+            self.__cache[key] = (kwargs, value)
         else:
             # print(f"Cache hit for {key}")
-            value = self._cache[key][1]
+            value = self.__cache[key][1]
         return value
 
     return cached_method

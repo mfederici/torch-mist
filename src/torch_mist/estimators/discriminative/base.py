@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from copy import deepcopy
 from typing import Optional, Union
 
 import torch
@@ -41,12 +40,12 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
     def __init__(
             self,
             critic: Critic,
-            mc_samples: int = 1,
+            neg_samples: int = 1,
             proposal: Optional[Union[Distribution, ConditionalDistribution]] = None,
     ):
         super().__init__()
         self.critic = critic
-        self.mc_samples = mc_samples
+        self.neg_samples = neg_samples
         if proposal is None:
             proposal = EmpiricalDistribution()
         self.proposal = proposal
@@ -60,88 +59,106 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
         assert f.ndim == y.ndim - 1
         return f
 
-    def sample_proposal(self, x: torch.Tensor, n_samples: int) -> torch.Tensor:
-        # Sample from the proposal distribution r(y|x) [M',N, ..., Y_DIM] with M' as the number of mc_samples
-        if isinstance(self.proposal, ConditionalDistribution):
-            y_ = self.proposal.condition(x).sample(sample_shape=torch.Size([n_samples]))
-        else:
-            y_ = self.proposal.sample(sample_shape=torch.Size([n_samples]))
-            # The shape of the samples from the proposal distribution is [M', N, ..., Y_DIM]
-        assert y_.ndim == x.ndim+1 and y_.shape[0] == n_samples
-        return y_
-
     @cached
     def critic_on_negatives(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        n_samples = self.mc_samples
-        N = x.shape[0]
-
         if isinstance(self.proposal, EmpiricalDistribution):
+            assert y is not None
             self.proposal.add_samples(y)
 
-        # Negative MC values are interpreted as M' = N + mc_samples
-        if n_samples <= 0:
-            n_samples = N + n_samples
+        neg_samples = self.neg_samples
+
+        # Negative neg_samples values are interpreted as difference from the batch size (-1 is all but one in the batch)
+        if neg_samples <= 0:
+            neg_samples = x.shape[0] + neg_samples
 
         # If we are sampling using the empirical distribution and the critic is separable
         # We can use an efficient implementation
-        if isinstance(self.proposal, EmpiricalDistribution) and isinstance(self.critic, SeparableCritic):
-            # Take the N stored samples from y (stored in _samples). Shape [N, 1, ...,Y_DIM]
-            y_ = y[:N].unsqueeze(1)
-            # Compute the critic on them. Shape [N, N, ...]
-            f_ = self.critic(x, y_)
-            if n_samples != N:
-                # We keep only n_sample off-diagonal elements
-                mask = torch.ones(N, N).to(x.device)
-                mask = torch.triu(mask, 1) - torch.triu(mask, n_samples + 1) + torch.tril(mask, -N + n_samples)
-                mask = mask.bool()
-                while mask.ndim < f_.ndim:
-                    mask = mask.unsqueeze(-1)
-                mask = mask.expand_as(f_)
-                f_ = torch.masked_select(f_, mask).reshape(N, n_samples).transpose(0, 1)
-        else:
-            # Sample from the proposal r(y|x) [M', N, ..., Y_DIM] with M' as the number of mc_samples
-            y_ = self.sample_proposal(x, n_samples)
-            assert y_.shape[0] == n_samples and y_.ndim == x.ndim+1
+        if isinstance(self.proposal, Distribution) and isinstance(self.critic, SeparableCritic):
+            # Efficient implementation for separable critic with empirical distribution (negatives from the same batch)
+            if isinstance(self.proposal, EmpiricalDistribution):
+                N = x.shape[0]
+                # Take the N stored samples from y (stored in _samples). Shape [N, 1, ...,Y_DIM]
+                y_ = self.proposal._samples[:N].unsqueeze(1)
 
-            # Compute the log-ratio on the samples from the proposal p(x)r(y|x) [M',N,...]
+                # Compute the critic on them. Shape [N, N, ...]
+                f_ = self.critic(x, y_)
+                if neg_samples != N:
+                    # We keep only n_sample off-diagonal elements if n_samples < N
+                    mask = torch.ones(N, N).to(x.device)
+                    mask = torch.triu(mask, 1) - torch.triu(mask, neg_samples + 1) + torch.tril(mask, -N + neg_samples)
+                    mask = mask.bool()
+                    while mask.ndim < f_.ndim:
+                        mask = mask.unsqueeze(-1)
+                    mask = mask.expand_as(f_)
+                    f_ = torch.masked_select(f_, mask).reshape(N, neg_samples).transpose(0, 1)
+            else:
+                # Efficient implementation for separable critic with unconditional proposal
+                # Here we re-use the same samples y'~ r(y) for all the batch
+                # Sample from the proposal r(y) [M', 1, ..., Y_DIM] with M' as the number of neg_samples
+                y_ = self.proposal.sample(sample_shape=torch.Size([neg_samples])).unsqueeze(1)
+
+                # Compute the critic on them. Shape [M', ...]
+                f_ = self.critic(x, y_)
+        else:
+            # Sample from the proposal r(y|x) [M, ..., Y_DIM] with M as the number of neg_samples
+            if isinstance(self.proposal, ConditionalDistribution):
+                proposal = self.proposal.condition(x)
+            else:
+                proposal = self.proposal
+
+            y_ = proposal.sample(sample_shape=torch.Size([neg_samples]))
+            # The shape of the samples from the proposal distribution is [M, ..., Y_DIM]
+            assert y_.ndim == x.ndim + 1 and y_.shape[0] == neg_samples
+            assert y_.shape[0] == neg_samples and y_.ndim == x.ndim + 1
+
+            # Compute the log-ratio on the samples from the proposal p(x)r(y|x) [M,...]
             f_ = self.critic(x, y_)
 
         assert f_.ndim == x.ndim, f"Expected {x.ndim} dimensions, got {f_.ndim}"
-        assert f_.shape[0] == n_samples, f"Expected {n_samples} samples, got {f_.shape[0]}"
+        assert f_.shape[0] == neg_samples, f"Expected {neg_samples} samples, got {f_.shape[0]}"
 
         if isinstance(self.proposal, EmpiricalDistribution):
             self.proposal.update()
 
         return f_
 
-    def compute_log_ratio(self, x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, f_: torch.tensor):
-        raise NotImplementedError()
-
-    @ cached
-    def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        assert x.ndim == y.ndim
-        # Compute the log-ratio p(y|x)/p(y) on samples from p(x)p(y|x).
-        # The expected shape is [N]
-
-        # Evaluate the unnormalized_log_ratio f(x,y) on the samples from p(x)p(y|x), with shape [N]
-        f = self.critic_on_positives(x, y)
-
-        # Evaluate the unnormalized_log_ratio f(x,y) on the samples from p(x)r(y|x), with shape [N, M']
+    def log_normalization(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        # Evaluate the unnormalized_log_ratio f(x,y) on the samples from r(y|x), with shape [M, ...]
         f_ = self.critic_on_negatives(x, y)
 
-        log_ratio = self.compute_log_ratio(x, y, f, f_)
+        return self.compute_log_normalization(x, y, f_)
+
+    @abstractmethod
+    def compute_log_normalization(self, x: torch.Tensor, y: torch.Tensor, f_: torch.Tensor):
+        raise NotImplementedError()
+
+    @reset_cache_after_call
+    def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        assert x.ndim == y.ndim
+        # Approximate the log-ratio p(y|x)/p(y) on samples from p(x,y).
+        # x and y have shape [..., X_DIM] and [..., Y_DIM] respectively
+
+        # Evaluate the unnormalized_log_ratio f(x,y) on the samples from p(x, y), with shape [...]
+        f = self.critic_on_positives(x, y)
+
+        # Compute the log-normalization term, with shape [...]
+        log_normalization = self.log_normalization(x, y)
+
+        assert log_normalization.ndim == f.ndim
+
+        log_ratio = f - log_normalization
         assert log_ratio.ndim == y.ndim - 1
 
         return log_ratio
 
     @reset_cache_before_call
     def loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        return -self.expected_log_ratio(x=x, y=y)
+        return -self.log_ratio(x, y).mean()
 
     def __repr__(self):
         s = self.__class__.__name__ + '(\n'
         s += '  (critic): ' + str(self.critic).replace('\n', '\n' + '  ') + '\n'
-        s += '  (mc_samples): ' + str(self.mc_samples) + '\n'
+        s += '  (neg_samples): ' + str(self.neg_samples) + '\n'
         s += ')'
 
         return s

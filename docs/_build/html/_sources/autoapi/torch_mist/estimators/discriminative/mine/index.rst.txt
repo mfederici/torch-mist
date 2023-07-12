@@ -25,7 +25,7 @@ Functions
 
 
 
-.. py:class:: MINE(critic: torch_mist.critic.base.Critic, mc_samples: int = 1, gamma: float = 0.9)
+.. py:class:: MINE(critic: torch_mist.critic.base.Critic, neg_samples: int = 1, gamma: float = 0.9)
 
 
    Bases: :py:obj:`torch_mist.estimators.discriminative.tuba.TUBA`
@@ -62,6 +62,6 @@ Functions
    :vartype training: bool
 
 
-.. py:function:: mine(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', mc_samples: int = 1, gamma: float = 0.9, critic_params: Dict[str, Any] = None) -> MINE
+.. py:function:: mine(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', neg_samples: int = 1, gamma: float = 0.9, critic_params: Dict[str, Any] = None) -> MINE
 
 

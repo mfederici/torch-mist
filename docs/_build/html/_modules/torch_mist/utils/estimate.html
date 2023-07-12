@@ -44,7 +44,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../example.html">Example usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../example.html">Simple example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../conduct.html">Code of Conduct</a></li>
@@ -82,22 +82,26 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">torch.optim</span> <span class="kn">import</span> <span class="n">Optimizer</span>
-<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Iterator</span>
-<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">from</span> <span class="nn">torch.optim</span> <span class="kn">import</span> <span class="n">Adam</span>
+<span class="kn">from</span> <span class="nn">torch.optim.lr_scheduler</span> <span class="kn">import</span> <span class="n">SequentialLR</span><span class="p">,</span> <span class="n">LinearLR</span><span class="p">,</span> <span class="n">CosineAnnealingLR</span><span class="p">,</span> <span class="n">ConstantLR</span>
 
 <span class="kn">from</span> <span class="nn">torch_mist.estimators.base</span> <span class="kn">import</span> <span class="n">MutualInformationEstimator</span>
+<span class="kn">from</span> <span class="nn">torch_mist.utils.batch_utils</span> <span class="kn">import</span> <span class="n">unfold_samples</span>
 
 
 <div class="viewcode-block" id="optimize_mi_estimator"><a class="viewcode-back" href="../../../autoapi/torch_mist/utils/index.html#torch_mist.utils.estimate.optimize_mi_estimator">[docs]</a><span class="k">def</span> <span class="nf">optimize_mi_estimator</span><span class="p">(</span>
         <span class="n">estimator</span><span class="p">:</span> <span class="n">MutualInformationEstimator</span><span class="p">,</span>
-        <span class="n">dataloader</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]],</span>
+        <span class="n">train_loader</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">valid_loader</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cpu&#39;</span><span class="p">),</span>
-        <span class="n">epochs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">max_epochs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
         <span class="n">optimizer_class</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">Optimizer</span><span class="p">]</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">,</span>
         <span class="n">optimizer_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">return_log</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">lr_annealing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">warmup_percentage</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
 
     <span class="n">opt_params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="n">estimator</span><span class="o">.</span><span class="n">parameters</span><span class="p">()}</span>
@@ -111,38 +115,94 @@
         <span class="p">[</span><span class="n">opt_params</span><span class="p">]</span>
     <span class="p">)</span>
 
+    <span class="c1"># Cosine annealing with initial linear warmup</span>
+    <span class="k">if</span> <span class="n">lr_annealing</span><span class="p">:</span>
+        <span class="n">max_iterations</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)</span> <span class="o">*</span> <span class="n">max_epochs</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">warmup_percentage</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Warmup percentage must be between 0 and 1&quot;</span><span class="p">)</span>
+        <span class="n">warmup_iterations</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)</span> <span class="o">*</span> <span class="n">max_epochs</span> <span class="o">*</span> <span class="n">warmup_percentage</span><span class="p">)</span>
+        <span class="n">lr_scheduler</span> <span class="o">=</span> <span class="n">SequentialLR</span><span class="p">(</span>
+            <span class="n">opt</span><span class="p">,</span>
+            <span class="p">[</span>
+                <span class="n">LinearLR</span><span class="p">(</span>
+                    <span class="n">opt</span><span class="p">,</span>
+                    <span class="n">start_factor</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span>
+                    <span class="n">total_iters</span><span class="o">=</span><span class="n">warmup_iterations</span>
+                <span class="p">),</span>
+                <span class="n">CosineAnnealingLR</span><span class="p">(</span>
+                    <span class="n">opt</span><span class="p">,</span>
+                    <span class="n">T_max</span><span class="o">=</span><span class="n">max_iterations</span> <span class="o">-</span> <span class="n">warmup_iterations</span><span class="p">,</span>
+                    <span class="n">eta_min</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">],</span>
+            <span class="n">milestones</span><span class="o">=</span><span class="p">[</span><span class="n">warmup_iterations</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lr_scheduler</span> <span class="o">=</span> <span class="n">ConstantLR</span><span class="p">(</span><span class="n">opt</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
     <span class="n">log</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">valid_log</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="n">estimator</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
     <span class="n">estimator</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
-    <span class="n">dl</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">dataloader</span><span class="p">)</span> <span class="k">if</span> <span class="n">verbose</span> <span class="k">else</span> <span class="n">dataloader</span>
-    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">dl</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">train_iteration</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">unfold_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
 
-            <span class="n">loss</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">return_log</span><span class="p">:</span>
+            <span class="n">estimation</span> <span class="o">=</span> <span class="n">estimator</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">&#39;loss&#39;</span><span class="p">:</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
+                <span class="s1">&#39;iteration&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">log</span><span class="p">),</span>
+                <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">estimation</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
+                <span class="s1">&#39;lr&#39;</span><span class="p">:</span> <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">get_last_lr</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;train&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;epoch&#39;</span><span class="p">:</span> <span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">})</span>
+
+        <span class="n">opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+        <span class="n">opt</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+        <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_epochs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">max_epochs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">samples</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">train_loader</span><span class="p">):</span>
+                <span class="n">train_iteration</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">samples</span> <span class="ow">in</span> <span class="n">train_loader</span><span class="p">:</span>
+                <span class="n">train_iteration</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">valid_loader</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mi</span><span class="p">,</span> <span class="n">mi_std</span> <span class="o">=</span> <span class="n">estimate_mi</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">valid_loader</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation MI: </span><span class="si">{</span><span class="n">mi</span><span class="si">}</span><span class="s2"> +- </span><span class="si">{</span><span class="n">mi_std</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">return_log</span><span class="p">:</span>
-                <span class="n">estimation</span> <span class="o">=</span> <span class="n">estimator</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-                    <span class="s1">&#39;loss&#39;</span><span class="p">:</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
+                <span class="n">valid_log</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">mi</span><span class="p">,</span>
+                    <span class="s1">&#39;std&#39;</span><span class="p">:</span> <span class="n">mi_std</span><span class="p">,</span>
+                    <span class="s1">&#39;epoch&#39;</span><span class="p">:</span> <span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;validation&#39;</span><span class="p">,</span>
                     <span class="s1">&#39;iteration&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">log</span><span class="p">),</span>
-                    <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">estimation</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
                 <span class="p">})</span>
 
-            <span class="n">opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
-            <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
-            <span class="n">opt</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-
     <span class="k">if</span> <span class="n">return_log</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">log</span><span class="p">)</span></div>
+        <span class="n">log</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">valid_loader</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">valid_log</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">valid_log</span><span class="p">)</span>
+            <span class="n">log</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">log</span><span class="p">,</span> <span class="n">valid_log</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">log</span></div>
 
 
 <div class="viewcode-block" id="estimate_mi"><a class="viewcode-back" href="../../../autoapi/torch_mist/utils/index.html#torch_mist.utils.estimate.estimate_mi">[docs]</a><span class="k">def</span> <span class="nf">estimate_mi</span><span class="p">(</span>
         <span class="n">estimator</span><span class="p">:</span> <span class="n">MutualInformationEstimator</span><span class="p">,</span>
-        <span class="n">dataloader</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]],</span>
+        <span class="n">dataloader</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cpu&#39;</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
     <span class="n">mis</span> <span class="o">=</span> <span class="p">[]</span>
@@ -150,7 +210,9 @@
     <span class="n">estimator</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
     <span class="n">estimator</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
-    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">samples</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">unfold_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+
         <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 

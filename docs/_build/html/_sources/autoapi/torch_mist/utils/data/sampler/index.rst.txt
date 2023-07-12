@@ -1,0 +1,53 @@
+:py:mod:`torch_mist.utils.data.sampler`
+=======================================
+
+.. py:module:: torch_mist.utils.data.sampler
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.utils.data.sampler.SameAttributeSampler
+
+
+
+
+.. py:class:: SameAttributeSampler(batch_size: int, attributes: Optional[Union[torch.Tensor, numpy.ndarray]] = None, n_samples: Optional[int] = None, min_batch_size: int = 0)
+
+
+   Bases: :py:obj:`torch.utils.data.Sampler`
+
+   Base class for all Samplers.
+
+   Every Sampler subclass has to provide an :meth:`__iter__` method, providing a
+   way to iterate over indices of dataset elements, and a :meth:`__len__` method
+   that returns the length of the returned iterators.
+
+   .. note:: The :meth:`__len__` method isn't strictly required by
+             :class:`~torch.utils.data.DataLoader`, but is expected in any
+             calculation involving the length of a :class:`~torch.utils.data.DataLoader`.
+
+   .. py:property:: attributes
+
+
+   .. py:method:: _compute_len()
+
+
+   .. py:method:: compare_attributes(a)
+
+
+   .. py:method:: make_batch(mask: numpy.ndarray) -> numpy.ndarray
+
+
+   .. py:method:: __iter__()
+
+
+   .. py:method:: __len__()
+
+
+

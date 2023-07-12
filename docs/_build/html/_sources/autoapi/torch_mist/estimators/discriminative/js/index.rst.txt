@@ -25,10 +25,10 @@ Functions
 
 
 
-.. py:class:: JS(critic: torch_mist.critic.base.Critic, mc_samples: int = 1)
+.. py:class:: JS(critic: torch_mist.critic.base.Critic, neg_samples: int = 1)
 
 
-   Bases: :py:obj:`torch_mist.estimators.discriminative.nwj.NWJ`
+   Bases: :py:obj:`torch_mist.estimators.discriminative.tuba.TUBA`
 
    Base class for all neural network modules.
 
@@ -65,6 +65,6 @@ Functions
 
 
 
-.. py:function:: js(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', mc_samples: int = 1, critic_params: Dict[str, Any] = None) -> JS
+.. py:function:: js(x_dim: int, y_dim: int, hidden_dims: List[int], critic_type: str = 'joint', neg_samples: int = 1, critic_params: Dict[str, Any] = None) -> JS
 
 

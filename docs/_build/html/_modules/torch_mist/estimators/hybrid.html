@@ -44,7 +44,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../example.html">Example usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../example.html">Simple example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../conduct.html">Code of Conduct</a></li>
@@ -86,7 +86,7 @@
 <span class="kn">from</span> <span class="nn">torch_mist.utils.caching</span> <span class="kn">import</span> <span class="n">reset_cache_before_call</span>
 
 
-<div class="viewcode-block" id="HybridMutualInformationEstimator"><a class="viewcode-back" href="../../../autoapi/torch_mist/estimators/hybrid/index.html#torch_mist.estimators.hybrid.HybridMutualInformationEstimator">[docs]</a><span class="k">class</span> <span class="nc">HybridMutualInformationEstimator</span><span class="p">(</span><span class="n">MutualInformationEstimator</span><span class="p">):</span>
+<div class="viewcode-block" id="HybridMutualInformationEstimator"><a class="viewcode-back" href="../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.hybrid.HybridMutualInformationEstimator">[docs]</a><span class="k">class</span> <span class="nc">HybridMutualInformationEstimator</span><span class="p">(</span><span class="n">MutualInformationEstimator</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">generative_estimator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GenerativeMutualInformationEstimator</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -100,7 +100,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">train_generative_estimator</span> <span class="o">=</span> <span class="n">train_generative_estimator</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">train_discriminative_estimator</span> <span class="o">=</span> <span class="n">train_discriminative_estimator</span>
 
-<div class="viewcode-block" id="HybridMutualInformationEstimator.expected_log_ratio"><a class="viewcode-back" href="../../../autoapi/torch_mist/estimators/hybrid/index.html#torch_mist.estimators.hybrid.HybridMutualInformationEstimator.expected_log_ratio">[docs]</a>    <span class="k">def</span> <span class="nf">expected_log_ratio</span><span class="p">(</span>
+<div class="viewcode-block" id="HybridMutualInformationEstimator.expected_log_ratio"><a class="viewcode-back" href="../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.hybrid.HybridMutualInformationEstimator.expected_log_ratio">[docs]</a>    <span class="k">def</span> <span class="nf">expected_log_ratio</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
             <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
@@ -113,14 +113,14 @@
 
         <span class="k">return</span> <span class="n">e1</span> <span class="o">+</span> <span class="n">e2</span></div>
 
-<div class="viewcode-block" id="HybridMutualInformationEstimator.unnormalized_log_ratio"><a class="viewcode-back" href="../../../autoapi/torch_mist/estimators/hybrid/index.html#torch_mist.estimators.hybrid.HybridMutualInformationEstimator.unnormalized_log_ratio">[docs]</a>    <span class="k">def</span> <span class="nf">unnormalized_log_ratio</span><span class="p">(</span>
+<div class="viewcode-block" id="HybridMutualInformationEstimator.unnormalized_log_ratio"><a class="viewcode-back" href="../../../autoapi/torch_mist/estimators/index.html#torch_mist.estimators.hybrid.HybridMutualInformationEstimator.unnormalized_log_ratio">[docs]</a>    <span class="k">def</span> <span class="nf">unnormalized_log_ratio</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
             <span class="n">y</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="n">log_ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generative_estimator</span><span class="o">.</span><span class="n">log_ratio</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-        <span class="n">proposal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generative_estimator</span><span class="o">.</span><span class="n">q_Y_given_x</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">discriminative_estimator</span><span class="o">.</span><span class="n">proposal</span> <span class="o">=</span> <span class="n">proposal</span>
+        <span class="c1"># proposal = self.generative_estimator.q_Y_given_x(x=x)</span>
+        <span class="c1"># self.discriminative_estimator.proposal = proposal</span>
         <span class="n">log_ratio</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">discriminative_estimator</span><span class="o">.</span><span class="n">unnormalized_log_ratio</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">log_ratio</span></div>

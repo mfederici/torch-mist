@@ -65,6 +65,6 @@ Functions
 
 
 
-.. py:function:: ba(x_dim: int, y_dim: int, hidden_dims: List[int], entropy_y: Union[float, torch.Tensor], transform_name: str = 'conditional_linear', n_transforms: int = 1) -> BA
+.. py:function:: ba(entropy_y: Union[float, torch.Tensor], x_dim: Optional[int] = None, y_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_Y_given_X: Optional[pyro.distributions.ConditionalDistribution] = None, transform_name: str = 'conditional_linear', n_transforms: int = 1) -> BA
 
 

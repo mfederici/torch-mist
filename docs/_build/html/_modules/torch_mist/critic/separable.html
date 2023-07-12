@@ -44,7 +44,7 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../example.html">Example usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../example.html">Simple example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../conduct.html">Code of Conduct</a></li>
@@ -119,7 +119,7 @@
 
         <span class="k">assert</span> <span class="n">f_x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">f_y</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;f_x.ndim=</span><span class="si">{</span><span class="n">f_x</span><span class="o">.</span><span class="n">ndim</span><span class="si">}</span><span class="s1">, f_y.ndim=</span><span class="si">{</span><span class="n">f_y</span><span class="o">.</span><span class="n">ndim</span><span class="si">}</span><span class="s1">&#39;</span>
 
-        <span class="c1"># hack to expand to the same shape without specifying the number of repeats</span>
+        <span class="c1"># hack to expand to the same shape without specifying the number of repeats using broadcasting</span>
         <span class="n">f_x</span> <span class="o">=</span> <span class="n">f_x</span> <span class="o">+</span> <span class="n">f_y</span> <span class="o">*</span> <span class="mi">0</span>
         <span class="n">f_y</span> <span class="o">=</span> <span class="n">f_y</span> <span class="o">+</span> <span class="n">f_x</span> <span class="o">*</span> <span class="mi">0</span>
 

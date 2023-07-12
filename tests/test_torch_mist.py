@@ -1,4 +1,4 @@
-from typing import Iterator, Tuple, Dict, Type, Any
+from typing import Iterator, Tuple, Dict, Type, Any, Union
 
 import numpy as np
 import torch
@@ -6,17 +6,19 @@ from torch.distributions import MultivariateNormal, Normal
 from torch.optim import Optimizer, Adam
 
 from torch_mist.estimators import *
-from torch_mist.quantization import FixedQuantization, trained_vector_quantization
+from torch_mist.quantization import FixedQuantization, vqvae_quantization
 
-from torch_mist.utils.data import SampleDataLoader
+from torch_mist.utils.data import DistributionDataLoader
 from torch_mist.utils.estimate import optimize_mi_estimator, estimate_mi
 
 from torch_mist.distributions.joint import JointDistribution
 
+rho = 0.9
 x_dim = y_dim = 1
 batch_size = 64
 n_bins = 32
-mc_samples = 16
+neg_samples = 16
+max_epochs = 1
 
 optimizer_params = {"lr": 1e-3}
 optimizer_class = Adam
@@ -24,29 +26,28 @@ n_train_samples = 100000
 n_test_samples = 10000
 n_pretrain_epochs = 3
 hidden_dims = [64]
-z_dim = 4
+quantization_dim = 4
 atol = 1e-1
 
 
 def _make_data():
-    rho = 0.9
+    mean = torch.tensor([0., 0.])
     cov = torch.tensor([
         [1, rho],
         [rho, 1.]
     ])
-    mean = torch.tensor([0., 0.])
-    p_xy = MultivariateNormal(mean.unsqueeze(0), cov.unsqueeze(0))
+    p_xy = MultivariateNormal(mean, cov)
     true_mi = (MultivariateNormal(mean, torch.eye(2)).entropy() - p_xy.entropy())
     entropy_y = Normal(0, 1).entropy()
 
     p_xy = JointDistribution(p_xy, dims=[1, 1], labels=['x', 'y'])
-    trainloader = SampleDataLoader(
+    trainloader = DistributionDataLoader(
         p_xy,
         batch_size=batch_size,
         max_samples=n_train_samples
     )
 
-    testloader = SampleDataLoader(
+    testloader = DistributionDataLoader(
         p_xy,
         batch_size=batch_size,
         max_samples=n_test_samples,
@@ -57,8 +58,8 @@ def _make_data():
 
 def _test_estimator(
         estimator: MutualInformationEstimator,
-        trainloader: Iterator[Tuple[torch.Tensor, torch.Tensor]],
-        testloader: Iterator[Tuple[torch.Tensor, torch.Tensor]],
+        trainloader: Iterator[Union[Tuple[torch.Tensor, torch.Tensor], Dict[str, torch.Tensor]]],
+        testloader: Iterator[Union[Tuple[torch.Tensor, torch.Tensor], Dict[str, torch.Tensor]]],
         true_mi: float,
         optimizer_params: Dict[str, Any],
         optimizer_class: Type[Optimizer],
@@ -68,9 +69,11 @@ def _test_estimator(
         # Train the estimator
         optimize_mi_estimator(
             estimator=estimator,
-            dataloader=trainloader,
+            train_loader=trainloader,
             optimizer_params=optimizer_params,
             optimizer_class=optimizer_class,
+            max_epochs=max_epochs,
+            lr_annealing=False,
         )
 
         # Compute the estimate
@@ -82,7 +85,8 @@ def _test_estimator(
         print("I(x;y)", mi_estimate, '+-', mi_std)
 
         # Check that the estimate is close to the true value
-        assert np.isclose(mi_estimate, true_mi, atol=atol)
+        assert np.isclose(mi_estimate, true_mi, atol=atol), \
+            f"Estimate {mi_estimate} is not close to true value {true_mi}."
 
 
 def test_discriminative_estimators():
@@ -97,7 +101,7 @@ def test_discriminative_estimators():
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
-            mc_samples=mc_samples
+            neg_samples=neg_samples
         ),
         infonce(
             x_dim=x_dim,
@@ -114,37 +118,37 @@ def test_discriminative_estimators():
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
-            mc_samples=mc_samples
+            neg_samples=neg_samples
         ),
         mine(
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
-            mc_samples=mc_samples
+            neg_samples=neg_samples
         ),
         smile(
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
-            mc_samples=mc_samples
+            neg_samples=neg_samples
         ),
         tuba(
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
-            mc_samples=mc_samples
+            neg_samples=neg_samples
         ),
         alpha_tuba(
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
-            mc_samples=mc_samples
+            neg_samples=neg_samples
         ),
         flo(
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
-            mc_samples=mc_samples
+            neg_samples=neg_samples
         ),
     ]
 
@@ -236,31 +240,32 @@ def test_quantized_mi_estimators():
             input_dim=x_dim,
             thresholds=torch.linspace(-3, 3, n_bins - 1)
         ),
-        trained_vector_quantization(
+        vqvae_quantization(
             dataloader=trainloader,
-            x_dim=x_dim,
-            hidden_dims=hidden_dims+[z_dim],
+            input_dim=x_dim,
+            hidden_dims=hidden_dims,
+            quantization_dim=quantization_dim,
             n_bins=n_bins,
-            n_train_epochs=n_pretrain_epochs,
+            max_epochs=n_pretrain_epochs,
         ),
-        trained_vector_quantization(
+        vqvae_quantization(
             dataloader=trainloader,
-            x_dim=x_dim,
-            y_dim=y_dim,
-            hidden_dims=hidden_dims + [z_dim],
+            input_dim=x_dim,
+            target_dim=y_dim,
+            hidden_dims=hidden_dims,
+            quantization_dim=quantization_dim,
             n_bins=n_bins,
-            n_train_epochs=n_pretrain_epochs,
+            max_epochs=n_pretrain_epochs,
             cross_modal=True,
             decoder_transform_params={"scale": 0.1}
         ),
-
     ]
 
     estimators = [
-        pq(x_dim=x_dim, hidden_dims=hidden_dims, quantization=quantization) for quantization in quantizations
+        pq(x_dim=x_dim, hidden_dims=hidden_dims, Q_x=quantization) for quantization in quantizations
     ]
     estimators += [
-        discrete(quantization_x=quantization, quantization_y=quantization) for quantization in quantizations
+        discrete(Q_x=quantization, Q_y=quantization) for quantization in quantizations
     ]
 
     for estimator in estimators:
@@ -274,9 +279,3 @@ def test_quantized_mi_estimators():
             optimizer_class=optimizer_class,
             atol=atol,
         )
-
-
-# def test_all():
-#     # test_discriminative_estimators()
-#     test_generative_estimators()
-#     test_quantized_mi_estimators()

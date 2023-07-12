@@ -11,5 +11,6 @@ Submodules
    :maxdepth: 1
 
    multimixture/index.rst
+   multivariate/index.rst
 
 

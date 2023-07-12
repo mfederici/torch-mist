@@ -1,3 +1,4 @@
+from .base import DiscriminativeMutualInformationEstimator
 from .nwj import NWJ, nwj
 from .mine import MINE, mine
 from .infonce import InfoNCE, infonce

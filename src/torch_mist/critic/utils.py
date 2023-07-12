@@ -70,7 +70,7 @@ def joint_critic(
     return unnormalized_log_ratio
 
 
-def critic(
+def critic_nn(
         x_dim: int,
         y_dim: int,
         hidden_dims: List[int],

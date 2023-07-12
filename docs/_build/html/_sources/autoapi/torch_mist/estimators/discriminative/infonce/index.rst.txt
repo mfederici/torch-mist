@@ -28,7 +28,7 @@ Functions
 .. py:class:: InfoNCE(critic: torch_mist.critic.separable.SeparableCritic)
 
 
-   Bases: :py:obj:`torch_mist.estimators.discriminative.base.DiscriminativeMutualInformationEstimator`
+   Bases: :py:obj:`torch_mist.estimators.discriminative.tuba.TUBA`
 
    Base class for all neural network modules.
 
@@ -61,7 +61,7 @@ Functions
                    evaluation mode.
    :vartype training: bool
 
-   .. py:method:: compute_log_ratio(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, f_: torch.tensor)
+   .. py:method:: compute_log_normalization(x: torch.Tensor, y: torch.Tensor, f_: torch.tensor)
 
 
 

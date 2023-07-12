@@ -25,10 +25,10 @@ Functions
 
 
 
-.. py:class:: NWJ(critic: torch_mist.critic.base.Critic, mc_samples: int = 1)
+.. py:class:: NWJ(critic: torch_mist.critic.base.Critic, neg_samples: int = 1)
 
 
-   Bases: :py:obj:`torch_mist.estimators.discriminative.base.DiscriminativeMutualInformationEstimator`
+   Bases: :py:obj:`torch_mist.estimators.discriminative.tuba.TUBA`
 
    Base class for all neural network modules.
 
@@ -61,10 +61,7 @@ Functions
                    evaluation mode.
    :vartype training: bool
 
-   .. py:method:: compute_log_ratio(x: torch.Tensor, y: torch.Tensor, f: torch.Tensor, f_: torch.Tensor) -> torch.Tensor
 
-
-
-.. py:function:: nwj(x_dim: int, y_dim: int, hidden_dims: List[int], mc_samples: int = 1, critic_type: str = 'joint', critic_params: Dict[str, Any] = None) -> NWJ
+.. py:function:: nwj(x_dim: int, y_dim: int, hidden_dims: List[int], neg_samples: int = 1, critic_type: str = 'joint', critic_params: Dict[str, Any] = None) -> NWJ
 
 

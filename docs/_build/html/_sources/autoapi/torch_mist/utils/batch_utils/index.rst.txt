@@ -1,0 +1,24 @@
+:py:mod:`torch_mist.utils.batch_utils`
+======================================
+
+.. py:module:: torch_mist.utils.batch_utils
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.utils.batch_utils.unfold_samples
+
+
+
+.. py:function:: unfold_samples(samples: Union[Dict[str, torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]) -> Tuple[torch.Tensor, torch.Tensor]
+
+   Unfold samples into x and y
+
+

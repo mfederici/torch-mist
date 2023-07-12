@@ -79,6 +79,6 @@ Functions
 
 
 
-.. py:function:: gm(x_dim: int, y_dim: int, hidden_dims: List[int], joint_transform_name: str = 'conditional_linear', n_joint_transforms: int = 1, marginal_transform_name: str = 'linear', n_marginal_transforms: int = 1) -> GM
+.. py:function:: gm(x_dim: Optional[int] = None, y_dim: Optional[int] = None, hidden_dims: List[int] = None, q_XY: Optional[torch_mist.distributions.joint.JointDistribution] = None, q_Y: Optional[torch.distributions.Distribution] = None, q_X: Optional[torch.distributions.Distribution] = None, joint_transform_name: str = 'affine_autoregressive', n_joint_transforms: int = 1, marginal_transform_name: str = 'linear', n_marginal_transforms: int = 1) -> GM
 
 
