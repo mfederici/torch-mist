@@ -24,9 +24,6 @@ def cached(method: Callable[..., T]) -> Callable[..., T]:
 
         return True
 
-    def _reset_cache(self):
-        self.__cache = {key: None for key in self.__cache.keys()}
-
     def cached_method(self, *args, **kwargs):
         # transform args in kwargs
         keys = inspect.signature(method).parameters.keys()
@@ -38,10 +35,9 @@ def cached(method: Callable[..., T]) -> Callable[..., T]:
 
         if not hasattr(self, '_cache'):
             self.__cache = {}
-            self._caching_enabled = True
-            self._reset_cache = _reset_cache.__get__(self)
+            self.__caching_enabled = True
 
-        if not self._caching_enabled:
+        if not self.__caching_enabled:
             return method(*args, **kwargs)
 
         key = method.__name__
@@ -60,8 +56,8 @@ def cached(method: Callable[..., T]) -> Callable[..., T]:
 def reset_cache_after_call(method: Callable[..., T]) -> Callable[..., T]:
     def reset_cache(self, *args, **kwargs):
         value = method(self, *args, **kwargs)
-        if hasattr(self, '_reset_cache'):
-            self._reset_cache()
+        if hasattr(self, '__cache'):
+            self.__cache = {key: None for key in self.__cache.keys()}
         return value
 
     return reset_cache
@@ -69,8 +65,8 @@ def reset_cache_after_call(method: Callable[..., T]) -> Callable[..., T]:
 
 def reset_cache_before_call(method: Callable[..., T]) -> Callable[..., T]:
     def reset_cache(self, *args, **kwargs):
-        if hasattr(self, '_reset_cache'):
-            self._reset_cache()
+        if hasattr(self, '__cache'):
+            self.__cache = {key: None for key in self.__cache.keys()}
         return method(self, *args, **kwargs)
 
     return reset_cache
