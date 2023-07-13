@@ -245,7 +245,7 @@
       "      (4): Linear(in_features=64, out_features=1, bias=True)\n",
       "    )\n",
       "  )\n",
-      "  (mc_samples): 16\n",
+      "  (neg_samples): 16\n",
       ")\n"
      ]
     }
@@ -267,12 +267,12 @@
     ")\n",
     "\n",
     "# We also specify the number of Monte Carlo samples to use for the estimation of the normalization constant\n",
-    "mc_samples = 16\n",
+    "neg_samples = 16\n",
     "\n",
     "# Then we pass it to the Jensen-Shannon estimator\n",
     "mi_estimator = JS(\n",
     "    critic=critic,\n",
-    "    mc_samples=mc_samples\n",
+    "    neg_samples=neg_samples\n",
     ")\n",
     "\n",
     "print(mi_estimator)"
@@ -508,7 +508,7 @@
    "outputs": [
     {
      "data": {
-      "text/plain": "JS(\n  (critic): JointCritic(\n    (joint_net): DenseNN(\n      (layers): ModuleList(\n        (0): Linear(in_features=2, out_features=64, bias=True)\n        (1): Linear(in_features=64, out_features=64, bias=True)\n        (2): Linear(in_features=64, out_features=1, bias=True)\n      )\n      (f): ReLU(inplace=True)\n    )\n  )\n  (mc_samples): 16\n)"
+      "text/plain": "JS(\n  (critic): JointCritic(\n    (joint_net): DenseNN(\n      (layers): ModuleList(\n        (0): Linear(in_features=2, out_features=64, bias=True)\n        (1): Linear(in_features=64, out_features=64, bias=True)\n        (2): Linear(in_features=64, out_features=1, bias=True)\n      )\n      (f): ReLU(inplace=True)\n    )\n  )\n  (neg_samples): 16\n)"
      },
      "execution_count": 10,
      "metadata": {},
@@ -522,7 +522,7 @@
     "    x_dim=x_dim,\n",
     "    y_dim=y_dim,\n",
     "    hidden_dims=[64, 64],\n",
-    "    mc_samples=mc_samples\n",
+    "    neg_samples=neg_samples\n",
     ")\n",
     "\n",
     "mi_estimator"
