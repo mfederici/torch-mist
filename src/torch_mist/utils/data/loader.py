@@ -1,4 +1,4 @@
-from typing import Dict, Union, Sequence
+from typing import Dict, Union
 from collections import Iterator
 
 import numpy as np

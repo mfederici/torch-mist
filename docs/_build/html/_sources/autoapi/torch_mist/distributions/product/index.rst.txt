@@ -1,6 +1,0 @@
-:py:mod:`torch_mist.distributions.product`
-==========================================
-
-.. py:module:: torch_mist.distributions.product
-
-

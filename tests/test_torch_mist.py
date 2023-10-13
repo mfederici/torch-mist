@@ -67,17 +67,18 @@ def _test_estimator(
         max_epochs=max_epochs,
         lr_annealing=False,
         batch_size=batch_size,
+        verbose=False,
     )
 
     # Compute the estimate
-    mi_estimate, mi_std = evaluate_mi(
+    mi_estimate = evaluate_mi(
         estimator,
         x=test_samples["x"],
         y=test_samples["y"],
         batch_size=batch_size,
     )
 
-    print("I(x;y)", mi_estimate, "+-", mi_std)
+    print("I(x;y): ", mi_estimate)
 
     # Check that the estimate is close to the true value
     assert np.isclose(
