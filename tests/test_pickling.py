@@ -5,6 +5,7 @@ from torch_mist.estimators import JS
 from torch_mist.critic import JointCritic
 from torch import nn
 
+
 def test_pickle():
     # First we define a critic network that maps pairs of samples to a scalar
     critic = JointCritic(
@@ -21,10 +22,7 @@ def test_pickle():
     neg_samples = 16
 
     # Then we pass it to the Jensen-Shannon estimator
-    mi_estimator = JS(
-        critic=critic,
-        neg_samples=neg_samples
-    )
+    mi_estimator = JS(critic=critic, neg_samples=neg_samples)
 
     mi_estimator.loss(x=torch.randn(10, 5), y=torch.randn(10, 5))
 
@@ -36,5 +34,5 @@ def test_pickle():
     print("Pickle dumps!")
 
     with open("js.pickle", "rb") as f:
-        loaded = pickle.load(f)
+        pickle.load(f)
     print("Pickle loads!")

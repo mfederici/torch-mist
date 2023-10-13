@@ -21,7 +21,7 @@ Submodules
 
    batch_utils/index.rst
    caching/index.rst
-   estimate/index.rst
+   estimation/index.rst
 
 
 Package Contents
@@ -33,14 +33,14 @@ Functions
 
 .. autoapisummary::
 
+   torch_mist.utils.evaluate_mi
    torch_mist.utils.estimate_mi
-   torch_mist.utils.optimize_mi_estimator
 
 
 
-.. py:function:: estimate_mi(estimator: torch_mist.estimators.base.MutualInformationEstimator, dataloader: Any, device: torch.device = torch.device('cpu')) -> Tuple[float, float]
+.. py:function:: evaluate_mi(estimator: torch_mist.estimators.base.MutualInformationEstimator, x: Optional[torch.Tensor] = None, y: Optional[torch.Tensor] = None, dataloader: Optional[Any] = None, device: torch.device = torch.device('cpu'), batch_size: Optional[int] = None, num_workers: int = 8) -> float
 
 
-.. py:function:: optimize_mi_estimator(estimator: torch_mist.estimators.base.MutualInformationEstimator, train_loader: Any, valid_loader: Optional[Any] = None, device: torch.device = torch.device('cpu'), max_epochs: int = 10, optimizer_class: Type[torch.optim.Optimizer] = Adam, optimizer_params: Optional[Dict[str, Any]] = None, verbose: bool = True, return_log: bool = True, lr_annealing: bool = False, warmup_percentage: float = 0.2) -> Optional[pandas.DataFrame]
+.. py:function:: estimate_mi(estimator_name: str, x: Optional[torch.Tensor] = None, y: Optional[torch.Tensor] = None, train_loader: Optional[Any] = None, valid_loader: Optional[Any] = None, test_loader: Optional[Any] = None, valid_percentage: float = 0.2, device: Union[torch.device, str] = torch.device('cpu'), max_epochs: int = 10, optimizer_class: Type[torch.optim.Optimizer] = Adam, optimizer_params: Optional[Dict[str, Any]] = None, verbose: bool = True, return_log: bool = True, lr_annealing: bool = False, warmup_percentage: float = 0.2, train_batch_size: Optional[int] = None, evaluation_batch_size: Optional[int] = None, num_workers: int = 8, early_stopping: bool = True, patience: int = 3, delta: float = 0.001, return_estimator: bool = True, **kwargs) -> Union[float, Tuple[float, pandas.DataFrame], Tuple[float, torch_mist.estimators.base.MutualInformationEstimator], Tuple[float, torch_mist.estimators.base.MutualInformationEstimator, pandas.DataFrame]]
 
 

@@ -100,6 +100,6 @@ Functions
 
 
 
-.. py:function:: pq(Q_x: torch_mist.quantization.functions.QuantizationFunction, x_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_QX_given_Y: Optional[pyro.distributions.ConditionalDistribution] = None, temperature: float = 0.1) -> PQ
+.. py:function:: pq(Q_x: torch_mist.quantization.functions.QuantizationFunction, y_dim: Optional[int] = None, hidden_dims: Optional[List[int]] = None, q_QX_given_Y: Optional[pyro.distributions.ConditionalDistribution] = None, temperature: float = 0.1) -> PQ
 
 

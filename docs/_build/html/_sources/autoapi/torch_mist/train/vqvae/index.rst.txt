@@ -1,0 +1,22 @@
+:py:mod:`torch_mist.train.vqvae`
+================================
+
+.. py:module:: torch_mist.train.vqvae
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.train.vqvae.train_vqvae
+
+
+
+.. py:function:: train_vqvae(model: torch.nn.Module, max_epochs: int, dataloader: Optional[Iterator] = None, x: Optional[Union[torch.Tensor, numpy.array]] = None, optimizer_class=torch.optim.Adam, optimizer_params: Optional[Dict[str, Any]] = None, batch_size: Optional[int] = None, num_workers: int = 8) -> torch.nn.Module
+
+

@@ -79,7 +79,8 @@
              
   <section id="mist-a-pytorch-mutual-information-estimation-toolkit">
 <h1>Mist - A PyTorch Mutual information Estimation toolkit<a class="headerlink" href="#mist-a-pytorch-mutual-information-estimation-toolkit" title="Permalink to this heading"></a></h1>
-<p><a class="reference external" href="https://badge.fury.io/py/torch-mist"><img alt="PyPI version" src="https://badge.fury.io/py/torch-mist.svg" /></a>
+<p><a class="reference external" href="https://arxiv.org/abs/2306.00608"><img alt="arXiv" src="https://img.shields.io/badge/arXiv-2306.00608-b31b1b.svg" /></a>
+<a class="reference external" href="https://badge.fury.io/py/torch-mist"><img alt="PyPI version" src="https://badge.fury.io/py/torch-mist.svg" /></a>
 <a class="reference external" href="https://codecov.io/gh/mfederici/torch-mist"><img alt="codecov" src="https://codecov.io/gh/mfederici/torch-mist/badge.svg" /></a>
 <a class="reference external" href="https://torch-mist.readthedocs.io/en/latest/?badge=latest"><img alt="Documentation Status" src="https://readthedocs.org/projects/torch-mist/badge/?version=latest" /></a>
 <a class="reference external" href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg" /></a></p>
@@ -97,44 +98,119 @@
 <p>The <code class="docutils literal notranslate"><span class="pre">torch_mist</span></code> package provides the basic functionalities for sample-based continuous mutual information estimation using modern
 neural network architectures.</p>
 <p>Here we provide a simple example of how to use the package to estimate mutual information between pairs
-of observations using the MINE estimator <span class="xref myst">[2]</span>.</p>
-<p>First, we need to import and instantiate the estimator from the package:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch_mist.estimators</span> <span class="kn">import</span> <span class="n">mine</span>
+of observations using the MINE estimator <span class="xref myst">[2]</span>.
+Consider the variables $x$ and $y$ as of shape <code class="docutils literal notranslate"><span class="pre">[N,</span> <span class="pre">x_dim]</span></code>, <code class="docutils literal notranslate"><span class="pre">[N,</span> <span class="pre">y_dim]</span></code> respectively sampled from some joint distribution $p(x,y)$.
+Mutual information can be estimated directly using the <code class="docutils literal notranslate"><span class="pre">estimate_mi</span></code> utility function that takes care of fitting the estimator’s parameters and evaluating mutual information.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch_mist</span> <span class="kn">import</span> <span class="n">estimate_mi</span>
 
-<span class="c1"># Defining the estimator</span>
+<span class="n">estimated_mi</span> <span class="o">=</span> <span class="n">estimate_mi</span><span class="p">(</span>
+    
+    <span class="c1"># Mutual Information estimator</span>
+    <span class="n">estimator_name</span><span class="o">=</span><span class="s1">&#39;mine&#39;</span><span class="p">,</span>      <span class="c1"># Use MINE</span>
+    <span class="n">hidden_dims</span><span class="o">=</span><span class="p">[</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span>       <span class="c1"># Hidden dimensions of the neural network</span>
+    <span class="n">neg_samples</span><span class="o">=</span> <span class="mi">16</span><span class="p">,</span>            <span class="c1"># Number of negative examples </span>
+    <span class="n">critic_type</span><span class="o">=</span><span class="s1">&#39;joint&#39;</span><span class="p">,</span>        <span class="c1"># Joint neural network for estimation</span>
+    
+    <span class="c1"># Data</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>                        <span class="c1"># The values for x</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>                        <span class="c1"># The values for y</span>
+    
+    <span class="c1"># Training</span>
+    <span class="n">train_batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>        <span class="c1"># The batch size used for training</span>
+    <span class="n">evaluation_batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>  <span class="c1"># The batch size used for evaluation</span>
+    <span class="n">max_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>              <span class="c1"># The maximum number of epochs</span>
+    <span class="n">device</span><span class="o">=</span><span class="s1">&#39;cpu&#39;</span><span class="p">,</span>               <span class="c1"># The torch device used for training</span>
+    
+    <span class="c1"># Flags to return the training log and estimator other than the estimation</span>
+    <span class="n">return_log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>           <span class="c1"># Return the training log</span>
+    <span class="n">return_estimator</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>     <span class="c1"># Return the trained estimator</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>               <span class="c1"># Verbose output for the estimation procedure</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mutual information estimated value: </span><span class="si">{</span><span class="n">estimated_mi</span><span class="si">}</span><span class="s2"> nats&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Additional flags that can be used to customize the estimators, training and evaluation procedure are included in the documentation.</p>
+<p>Alternatively, it is possible to manually instantiate, train and evaluate the mutual information estimators.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch_mist.estimators</span> <span class="kn">import</span> <span class="n">mine</span>
+<span class="kn">from</span> <span class="nn">torch_mist.train</span> <span class="kn">import</span> <span class="n">train_mi_estimator</span>
+<span class="kn">from</span> <span class="nn">torch_mist.utils</span> <span class="kn">import</span> <span class="n">evaluate_mi</span>
+
+
+<span class="c1"># This code performs the same procedure as the previous example</span>
+
+<span class="c1"># Instantiate the mutual information estimator</span>
 <span class="n">estimator</span> <span class="o">=</span> <span class="n">mine</span><span class="p">(</span>
-    <span class="n">x_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                    <span class="c1"># dimension of x</span>
-    <span class="n">y_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>                    <span class="c1"># dimension of y   </span>
-    <span class="n">hidden_dims</span><span class="o">=</span><span class="p">[</span><span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span>   <span class="c1"># hidden dimensions of the neural networks</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>then we can train the estimator:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch_mist.utils</span> <span class="kn">import</span> <span class="n">optimize_mi_estimator</span>
-
-<span class="n">train_log</span> <span class="o">=</span> <span class="n">optimize_mi_estimator</span><span class="p">(</span>
-    <span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span>  <span class="c1"># the estimator to train</span>
-    <span class="n">train_loader</span><span class="o">=</span><span class="n">dataloader</span><span class="p">,</span>  <span class="c1"># the dataloader returning pairs of x and y</span>
-    <span class="n">max_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>  <span class="c1"># the number of epochs</span>
-    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span>  <span class="c1"># the device to use</span>
-    <span class="n">return_log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># whether to return the training log</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>Lastly, we can use the trained estimator to estimate the mutual information between pairs of observations:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch_mist.utils</span> <span class="kn">import</span> <span class="n">estimate_mi</span>
-<span class="n">value</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">estimate_mi</span><span class="p">(</span>
-    <span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span>        <span class="c1"># the estimator to use</span>
-    <span class="n">dataloader</span><span class="o">=</span><span class="n">dataloader</span><span class="p">,</span>      <span class="c1"># the dataloader returning pairs of x and y</span>
-    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span>               <span class="c1"># the device to use</span>
+    <span class="n">x_dim</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">y_dim</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">neg_samples</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">hidden_dims</span><span class="o">=</span><span class="p">[</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span>
+    <span class="n">critic_type</span><span class="o">=</span><span class="s1">&#39;joint&#39;</span>
 <span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Estimated MI: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> +- </span><span class="si">{</span><span class="n">std</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="c1"># Train it on the given samples</span>
+<span class="n">train_log</span> <span class="o">=</span> <span class="n">train_mi_estimator</span><span class="p">(</span>
+    <span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">return_log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># Evaluate the estimator on the entirety of the data</span>
+<span class="n">estimated_mi</span> <span class="o">=</span> <span class="n">evaluate_mi</span><span class="p">(</span>
+    <span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>Please refer to the <a class="reference external" href="https://torch-mist.readthedocs.io/en/latest/">documentation</a> for a detailed description of the package and its usage.</p>
 <section id="estimators">
 <h3>Estimators<a class="headerlink" href="#estimators" title="Permalink to this heading"></a></h3>
+<p>Each estimator implemented in the library is an instance of <code class="docutils literal notranslate"><span class="pre">MutualInformationEstimator</span></code> and can be instantiated
+through a simplified utility functions or directly for the corresponding class:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1">############################</span>
+<span class="c1"># Simplified instantiation #</span>
+<span class="c1">############################</span>
+<span class="kn">from</span> <span class="nn">torch_mist.estimators</span> <span class="kn">import</span> <span class="n">mine</span>
+
+<span class="n">estimator</span> <span class="o">=</span> <span class="n">mine</span><span class="p">(</span>
+    <span class="n">x_dim</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">y_dim</span><span class="o">=</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">neg_samples</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">hidden_dims</span><span class="o">=</span><span class="p">[</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span>
+    <span class="n">critic_type</span><span class="o">=</span><span class="s1">&#39;joint&#39;</span>
+<span class="p">)</span>
+
+<span class="c1">##########################</span>
+<span class="c1"># Advanced instantiation #</span>
+<span class="c1">##########################</span>
+<span class="kn">from</span> <span class="nn">torch_mist.estimators</span> <span class="kn">import</span> <span class="n">MINE</span>
+<span class="kn">from</span> <span class="nn">torch_mist.critic</span> <span class="kn">import</span> <span class="n">JointCritic</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+
+<span class="c1"># First we define the critic architecture</span>
+<span class="n">critic</span> <span class="o">=</span> <span class="n">JointCritic</span><span class="p">(</span>                               <span class="c1"># Wrapper to concatenate the inputs x and y </span>
+    <span class="n">joint_net</span><span class="o">=</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>                        <span class="c1"># The neural network architectures that maps [x,y] to a scalar</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">32</span><span class="p">),</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Then we pass it to the MINE constructor</span>
+<span class="n">estimator</span> <span class="o">=</span> <span class="n">MINE</span><span class="p">(</span>
+    <span class="n">critic</span><span class="o">=</span><span class="n">critic</span><span class="p">,</span>
+    <span class="n">neg_samples</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that the simplified and advanced instantiation reported in the example above result in the same model.</p>
 <p>The basic estimators implemented in this package are summarized in the following table:</p>
 <table class="docutils align-default">
 <thead>
@@ -246,8 +322,78 @@ Joint distributions may have learnable parameters $\theta$ that are usually para
 </ul>
 <section id="hybrid-estimators">
 <h4>Hybrid estimators<a class="headerlink" href="#hybrid-estimators" title="Permalink to this heading"></a></h4>
-<p>The <code class="docutils literal notranslate"><span class="pre">torch_mist</span></code> package allows to combine Generative and Discriminative estimators in a single hybrid estimators as proposed in <span class="xref myst">[11]</span><span class="xref myst">[12]</span>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">torch_mist</span></code> package allows to combine Generative and Discriminative estimators in a single hybrid estimators as proposed in <span class="xref myst">[11]</span><span class="xref myst">[12]</span>.
+COMING SOON</p>
 </section>
+</section>
+<section id="training-and-evaluation">
+<h3>Training and Evaluation<a class="headerlink" href="#training-and-evaluation" title="Permalink to this heading"></a></h3>
+<p>Most of the estimators included in this package are parametric and require a training procedure for accurate estimation.
+The <code class="docutils literal notranslate"><span class="pre">train_mi_estimator</span></code> utility function supports either row data <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> as <code class="docutils literal notranslate"><span class="pre">numpy.array</span></code> or <code class="docutils literal notranslate"><span class="pre">torch.Tensor</span></code>.
+Alternatively, it is possible to use a <code class="docutils literal notranslate"><span class="pre">torch.utils.DataLoader</span></code> that returns eiter batches of pairs <code class="docutils literal notranslate"><span class="pre">(batch_x,</span> <span class="pre">batch_y)</span></code>
+or dictionaries of batches <code class="docutils literal notranslate"><span class="pre">{'x':</span> <span class="pre">batch_x,</span> <span class="pre">'y':</span> <span class="pre">batch_y}</span></code>, with <code class="docutils literal notranslate"><span class="pre">batch_x</span></code> of shape <code class="docutils literal notranslate"><span class="pre">[batch_size,</span> <span class="pre">...,</span> <span class="pre">x_dim]</span></code> and <code class="docutils literal notranslate"><span class="pre">[batch_size,</span> <span class="pre">...,</span> <span class="pre">y_dim]</span></code> respectively.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch_mist.train</span> <span class="kn">import</span> <span class="n">train_mi_estimator</span>
+
+<span class="c1">######################################</span>
+<span class="c1"># Training using tensors for x and y #</span>
+<span class="c1">######################################</span>
+<span class="c1"># By default 10% of the data is used for cross-validation and early stopping</span>
+<span class="n">train_log</span> <span class="o">=</span> <span class="n">train_mi_estimator</span><span class="p">(</span>
+    <span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">valid_percentage</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">return_log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1">#############################</span>
+<span class="c1"># Training with DataLoaders #</span>
+<span class="c1">#############################</span>
+<span class="kn">from</span> <span class="nn">torch_mist.utils.data</span> <span class="kn">import</span> <span class="n">SampleDataset</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">random_split</span>
+
+<span class="c1"># We provide an utility to make the tensors into a torch.utils.data.Dataset object</span>
+<span class="c1"># This can be replaced with any other Dataset object that may load the data from disk</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">SampleDataset</span><span class="p">(</span>
+    <span class="n">samples</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">y</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># Split into train and validation</span>
+<span class="n">train_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">*</span><span class="mf">0.9</span><span class="p">)</span>
+<span class="n">valid_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">-</span><span class="n">train_size</span>
+<span class="n">train_set</span><span class="p">,</span> <span class="n">valid_set</span> <span class="o">=</span> <span class="n">random_split</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="p">[</span><span class="n">train_size</span><span class="p">,</span> <span class="n">valid_size</span><span class="p">])</span>
+
+<span class="c1"># Instantiate the dataloaders</span>
+<span class="n">train_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">train_set</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span>
+<span class="p">)</span>
+
+<span class="n">valid_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">valid_set</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span>
+<span class="p">)</span>
+
+<span class="c1"># Train using the specified dataloaders</span>
+<span class="c1"># Note that the validation set is optional but recommended </span>
+<span class="c1"># to prevent overfitting.</span>
+
+<span class="n">train_log</span> <span class="o">=</span> <span class="n">train_mi_estimator</span><span class="p">(</span>
+    <span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">,</span>
+    <span class="n">train_loader</span><span class="o">=</span><span class="n">train_loader</span><span class="p">,</span>
+    <span class="n">valid_loader</span><span class="o">=</span><span class="n">valid_loader</span><span class="p">,</span>
+    <span class="n">return_log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The two options result in the same training procedure, but we recommend using <code class="docutils literal notranslate"><span class="pre">DataLoader</span></code> for larger datasets.</p>
+<p>Both <code class="docutils literal notranslate"><span class="pre">DataLoader</span></code> and <code class="docutils literal notranslate"><span class="pre">torch.Tensor</span></code> (or <code class="docutils literal notranslate"><span class="pre">np.array</span></code>) can be used for the <code class="docutils literal notranslate"><span class="pre">evaluate_mi</span></code> function.</p>
 </section>
 <section id="references">
 <h3>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h3>

@@ -1,0 +1,36 @@
+:py:mod:`torch_mist.train`
+==========================
+
+.. py:module:: torch_mist.train
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   mi_estimator/index.rst
+   vqvae/index.rst
+
+
+Package Contents
+----------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.train.train_mi_estimator
+   torch_mist.train.train_vqvae
+
+
+
+.. py:function:: train_mi_estimator(estimator: torch_mist.estimators.base.MutualInformationEstimator, x: Optional[torch.Tensor] = None, y: Optional[torch.Tensor] = None, train_loader: Optional[Any] = None, valid_loader: Optional[Any] = None, valid_percentage: float = 0.2, device: Union[torch.device, str] = torch.device('cpu'), max_epochs: int = 10, optimizer_class: Type[torch.optim.Optimizer] = Adam, optimizer_params: Optional[Dict[str, Any]] = None, verbose: bool = True, return_log: bool = True, lr_annealing: bool = False, warmup_percentage: float = 0.2, batch_size: Optional[int] = None, num_workers: int = 8, early_stopping: bool = True, patience: int = 3, delta: float = 0.001) -> Optional[pandas.DataFrame]
+
+
+.. py:function:: train_vqvae(model: torch.nn.Module, max_epochs: int, dataloader: Optional[Iterator] = None, x: Optional[Union[torch.Tensor, numpy.array]] = None, optimizer_class=torch.optim.Adam, optimizer_params: Optional[Dict[str, Any]] = None, batch_size: Optional[int] = None, num_workers: int = 8) -> torch.nn.Module
+
+

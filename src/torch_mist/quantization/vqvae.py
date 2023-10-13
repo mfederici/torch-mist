@@ -1,22 +1,25 @@
-from typing import Optional, List, Iterator, Dict, Any
+from typing import Optional, List
 
 import torch
 from pyro.distributions import ConditionalDistribution
 from torch import nn
 
-from torch_mist.quantization.functions import LearnableVectorQuantization, QuantizationFunction
+from torch_mist.quantization.functions import (
+    LearnableVectorQuantization,
+    QuantizationFunction,
+)
 
 INITIAL_PATIENCE = 10.0
 
 
 class VQVAE(nn.Module):
     def __init__(
-            self,
-            encoder: LearnableVectorQuantization,
-            decoder: ConditionalDistribution,
-            beta: float = 0.25,
-            gamma: float = 0.99,
-            cross_modal: bool = False,
+        self,
+        encoder: LearnableVectorQuantization,
+        decoder: ConditionalDistribution,
+        beta: float = 0.25,
+        gamma: float = 0.99,
+        cross_modal: bool = False,
     ):
         super().__init__()
         self.encoder = encoder
@@ -29,15 +32,19 @@ class VQVAE(nn.Module):
         self.cross_modal = cross_modal
 
         initial_assignments = torch.zeros(n_bins) + INITIAL_PATIENCE
-        self.register_buffer('assignments', initial_assignments)
-        self.min_assignment = 0.1/n_bins
+        self.register_buffer("assignments", initial_assignments)
+        self.min_assignment = 0.1 / n_bins
 
     @property
     def quantization(self) -> QuantizationFunction:
         return self.encoder
 
-    def loss(self, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
-        assert not self.cross_modal or y is not None, "y must be provided if cross_modal is True"
+    def loss(
+        self, x: torch.Tensor, y: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
+        assert (
+            not self.cross_modal or y is not None
+        ), "y must be provided if cross_modal is True"
 
         z = self.encoder.net(x)
         indices = self.encoder.codebook_lookup(z)
@@ -45,27 +52,38 @@ class VQVAE(nn.Module):
         quantized = self.encoder.vectors[indices]
         z_q = z + (quantized - z).detach()
 
-        assert z_q.shape == z.shape == quantized.shape, f"{z_q.shape} != {z.shape} != {quantized.shape}"
+        assert (
+            z_q.shape == z.shape == quantized.shape
+        ), f"{z_q.shape} != {z.shape} != {quantized.shape}"
 
         if self.cross_modal:
             reconstruction_loss = -self.decoder.condition(z_q).log_prob(y)
-            assert reconstruction_loss.shape == y.shape[:-1], f"{reconstruction_loss.shape} != {y.shape[:-1]}"
+            assert (
+                reconstruction_loss.shape == y.shape[:-1]
+            ), f"{reconstruction_loss.shape} != {y.shape[:-1]}"
             reconstruction_loss = reconstruction_loss.mean()
         else:
             reconstruction_loss = -self.decoder.condition(z_q).log_prob(x)
-            assert reconstruction_loss.shape == x.shape[:-1], f"{reconstruction_loss.shape} != {x.shape[:-1]}"
+            assert (
+                reconstruction_loss.shape == x.shape[:-1]
+            ), f"{reconstruction_loss.shape} != {x.shape[:-1]}"
             reconstruction_loss = reconstruction_loss.mean()
 
         if self.training:
             # Compute the one-hot representation of the indices [N*M, n_bins]
             flat_indices = indices.view(-1)
-            one_hot = torch.nn.functional.one_hot(flat_indices, self.encoder.n_bins).float()
+            one_hot = torch.nn.functional.one_hot(
+                flat_indices, self.encoder.n_bins
+            ).float()
 
             # Compute the number of datapoints assigned to each bin [n_bins]
             assignments = one_hot.mean(0)
 
             if self.training:
-                self.assignments = self.gamma * self.assignments + (1 - self.gamma) * assignments
+                self.assignments = (
+                    self.gamma * self.assignments
+                    + (1 - self.gamma) * assignments
+                )
             # assignments = self.assignments
 
             # Compute the mean vector for each assignment [n_bins, z_dim]
@@ -73,40 +91,56 @@ class VQVAE(nn.Module):
             mean_vector = (one_hot.unsqueeze(-1) * z.unsqueeze(-2)).sum(0)
             mean_vector = mean_vector / (assignments.unsqueeze(-1) * N)
 
-            not_assigned = [i.item() for i in torch.arange(self.encoder.n_bins)[self.assignments * N < self.min_assignment].long()]
+            not_assigned = [
+                i.item()
+                for i in torch.arange(self.encoder.n_bins)[
+                    self.assignments * N < self.min_assignment
+                ].long()
+            ]
             while len(not_assigned) > 0:
                 not_assigned_idx = not_assigned.pop()
                 # Select the vector with the highest assignment
                 max_idx = torch.argmax(assignments)
                 # set the centroid to the vector with the highest assignment + some noise
                 noise = torch.randn_like(self.encoder.vectors[max_idx]) * 1e-5
-                self.encoder.vectors[not_assigned_idx] = self.encoder.vectors[max_idx] + noise
+                self.encoder.vectors[not_assigned_idx] = (
+                    self.encoder.vectors[max_idx] + noise
+                )
                 # set the new assignements to half the max assignment
                 new_assignment = self.assignments[max_idx] / 2
                 self.assignments[not_assigned_idx] = new_assignment
                 self.assignments[max_idx] = new_assignment
 
-            mean_vector[assignments == 0] = self.encoder.vectors[assignments == 0]
+            mean_vector[assignments == 0] = self.encoder.vectors[
+                assignments == 0
+            ]
 
-            self.encoder.vectors = self.gamma * self.encoder.vectors + (1 - self.gamma) * mean_vector
+            self.encoder.vectors = (
+                self.gamma * self.encoder.vectors
+                + (1 - self.gamma) * mean_vector
+            )
 
-        commitment_loss = torch.mean((quantized.detach() - z)**2)
+        commitment_loss = torch.mean((quantized.detach() - z) ** 2)
         # codebook_loss = torch.mean((quantized - z.detach())**2)
-        loss = reconstruction_loss + self.beta * commitment_loss #+ codebook_loss
+        loss = (
+            reconstruction_loss + self.beta * commitment_loss
+        )  # + codebook_loss
         return loss
 
 
 def vqvae(
-        x_dim: int,
-        quantization_dim: int,
-        n_bins: int,
-        hidden_dims: List[int],
-        y_dim: Optional[int] = None,
-        cross_modal: bool = False,
-        decoder_transform_params: Optional[dict] = None,
-        beta: float = 0.2,
+    x_dim: int,
+    quantization_dim: int,
+    n_bins: int,
+    hidden_dims: List[int],
+    y_dim: Optional[int] = None,
+    cross_modal: bool = False,
+    decoder_transform_params: Optional[dict] = None,
+    beta: float = 0.2,
 ) -> VQVAE:
-    assert not cross_modal or y_dim is not None, "If cross_modal is True, y_dim must be provided"
+    assert (
+        not cross_modal or y_dim is not None
+    ), "If cross_modal is True, y_dim must be provided"
 
     from torch_mist.quantization import vector_quantization
     from torch_mist.distributions.utils import conditional_transformed_normal
@@ -115,59 +149,19 @@ def vqvae(
         input_dim=x_dim,
         quantization_dim=quantization_dim,
         hidden_dims=hidden_dims,
-        n_bins=n_bins
+        n_bins=n_bins,
     )
 
     decoder = conditional_transformed_normal(
-            input_dim=x_dim if not cross_modal else y_dim,
-            context_dim=quantization_dim,
-            transform_name='conditional_linear',
-            transform_params=decoder_transform_params
+        input_dim=x_dim if not cross_modal else y_dim,
+        context_dim=quantization_dim,
+        transform_name="conditional_linear",
+        transform_params=decoder_transform_params,
     )
 
     return VQVAE(
         encoder=quantization,
         decoder=decoder,
         cross_modal=cross_modal,
-        beta=beta
+        beta=beta,
     )
-
-
-def train_vqvae(
-        model: nn.Module,
-        dataloader: Iterator,
-        max_epochs: int,
-        optimizer_class=torch.optim.Adam,
-        optimizer_params: Optional[Dict[str, Any]] = None,
-        cross_modal: bool = False,
-) -> nn.Module:
-    if optimizer_params is None:
-        optimizer_params = dict(lr=1e-3)
-
-    opt = optimizer_class(model.parameters(), **optimizer_params)
-
-    for epoch in range(max_epochs):
-        for samples in dataloader:
-            if isinstance(samples, dict):
-                if 'x' not in samples:
-                    raise ValueError("Expected 'x' key in samples")
-                x = samples['x']
-                if cross_modal:
-                    assert 'y' in samples, "Expected 'y' key in samples"
-                    y = samples['y']
-                else:
-                    y = None
-            elif isinstance(samples, torch.Tensor):
-                x = samples
-                y = None
-            else:
-                raise ValueError(
-                    f"Unknown sample type {type(samples)}, expected dict containing keys 'x' and 'y' or torch.Tensor")
-
-            opt.zero_grad()
-            model.loss(x, y).backward()
-            opt.step()
-
-    return model
-
-

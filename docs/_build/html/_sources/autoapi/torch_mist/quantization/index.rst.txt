@@ -39,7 +39,6 @@ Functions
    torch_mist.quantization.vector_quantization
    torch_mist.quantization.vqvae_quantization
    torch_mist.quantization.vqvae
-   torch_mist.quantization.train_vqvae
 
 
 
@@ -266,7 +265,7 @@ Functions
 .. py:function:: vector_quantization(input_dim: int, n_bins: int, hidden_dims: List[int], quantization_dim: Optional[int] = None) -> LearnableVectorQuantization
 
 
-.. py:function:: vqvae_quantization(input_dim: int, n_bins: int, hidden_dims: List[int], dataloader: Iterator, quantization_dim: Optional[int] = None, cross_modal: bool = False, decoder_transform_params: Optional[Dict[str, Any]] = None, beta: float = 0.2, max_epochs: int = 1, optimizer_class=torch.optim.Adam, optimizer_params: Optional[Dict[str, Any]] = None, target_dim: Optional[int] = None) -> LearnableVectorQuantization
+.. py:function:: vqvae_quantization(input_dim: int, n_bins: int, hidden_dims: List[int], x: Optional[Union[torch.Tensor, numpy.array]] = None, dataloader: Optional[Iterator] = None, quantization_dim: Optional[int] = None, decoder_transform_params: Optional[Dict[str, Any]] = None, beta: float = 0.2, max_epochs: int = 1, optimizer_class=torch.optim.Adam, optimizer_params: Optional[Dict[str, Any]] = None, batch_size: Optional[int] = None, num_workers: int = 8) -> LearnableVectorQuantization
 
 
 .. py:class:: VQVAE(encoder: torch_mist.quantization.functions.LearnableVectorQuantization, decoder: pyro.distributions.ConditionalDistribution, beta: float = 0.25, gamma: float = 0.99, cross_modal: bool = False)
@@ -314,8 +313,5 @@ Functions
 
 
 .. py:function:: vqvae(x_dim: int, quantization_dim: int, n_bins: int, hidden_dims: List[int], y_dim: Optional[int] = None, cross_modal: bool = False, decoder_transform_params: Optional[dict] = None, beta: float = 0.2) -> VQVAE
-
-
-.. py:function:: train_vqvae(model: torch.nn.Module, dataloader: Iterator, max_epochs: int, optimizer_class=torch.optim.Adam, optimizer_params: Optional[Dict[str, Any]] = None, cross_modal: bool = False) -> torch.nn.Module
 
 

@@ -20,7 +20,7 @@ Classes
 .. py:class:: SampleDataset(samples: Dict[str, torch.Tensor])
 
 
-   Bases: :py:obj:`Sequence`
+   Bases: :py:obj:`Sequence`, :py:obj:`torch.utils.data.Dataset`
 
    All the operations on a read-only sequence.
 

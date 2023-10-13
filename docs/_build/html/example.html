@@ -48,7 +48,8 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Simple example</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#data-loading">Data loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data">Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#defining-and-training-the-estimator">Defining and training the estimator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#estimator-definition">Estimator definition</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#training">Training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#visualization">Visualization</a></li>
@@ -98,21 +99,87 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0.1.0
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">OSError</span><span class="g g-Whitespace">                                   </span>Traceback (most recent call last)
+<span class="nn">File ~/.cache/pypoetry/virtualenvs/torch-mist-77TFSLfY-py3.9/lib/python3.9/site-packages/torch/__init__.py:168,</span> in <span class="ni">_load_global_deps</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">167</span> <span class="k">try</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">168</span>     <span class="n">ctypes</span><span class="o">.</span><span class="n">CDLL</span><span class="p">(</span><span class="n">lib_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">RTLD_GLOBAL</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">169</span> <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">170</span>     <span class="c1"># Can only happen for wheel with cuda libs as PYPI deps</span>
+<span class="g g-Whitespace">    </span><span class="mi">171</span>     <span class="c1"># As PyTorch is not purelib, but nvidia-*-cu11 is</span>
+
+<span class="nn">File ~/anaconda3/envs/torch-mist/lib/python3.9/ctypes/__init__.py:382,</span> in <span class="ni">CDLL.__init__</span><span class="nt">(self, name, mode, handle, use_errno, use_last_error, winmode)</span>
+<span class="g g-Whitespace">    </span><span class="mi">381</span> <span class="k">if</span> <span class="n">handle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">382</span>     <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span> <span class="o">=</span> <span class="n">_dlopen</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">383</span> <span class="k">else</span><span class="p">:</span>
+
+<span class="ne">OSError</span>: libcurand.so.10: cannot open shared object file: No such file or directory
+
+<span class="n">During</span> <span class="n">handling</span> <span class="n">of</span> <span class="n">the</span> <span class="n">above</span> <span class="n">exception</span><span class="p">,</span> <span class="n">another</span> <span class="n">exception</span> <span class="n">occurred</span><span class="p">:</span>
+
+<span class="ne">ValueError</span><span class="g g-Whitespace">                                </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
+<span class="ne">----&gt; </span><span class="mi">1</span> <span class="kn">import</span> <span class="nn">torch_mist</span>
+<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="nb">print</span><span class="p">(</span><span class="n">torch_mist</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+
+<span class="n">File</span> <span class="o">~/</span><span class="n">Documents</span><span class="o">/</span><span class="n">PhD</span><span class="o">/</span><span class="n">torch_mist</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">torch_mist</span><span class="o">/</span><span class="fm">__init__</span><span class="o">.</span><span class="n">py</span><span class="p">:</span><span class="mi">4</span>
+<span class="g g-Whitespace">      </span><span class="mi">2</span> <span class="kn">from</span> <span class="nn">importlib.metadata</span> <span class="kn">import</span> <span class="n">version</span>
+<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="n">__version__</span> <span class="o">=</span> <span class="n">version</span><span class="p">(</span><span class="s2">&quot;torch_mist&quot;</span><span class="p">)</span>
+<span class="ne">----&gt; </span><span class="mi">4</span> <span class="kn">from</span> <span class="nn">torch_mist.utils.estimation</span> <span class="kn">import</span> <span class="n">estimate_mi</span>
+
+<span class="n">File</span> <span class="o">~/</span><span class="n">Documents</span><span class="o">/</span><span class="n">PhD</span><span class="o">/</span><span class="n">torch_mist</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">torch_mist</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span><span class="fm">__init__</span><span class="o">.</span><span class="n">py</span><span class="p">:</span><span class="mi">1</span>
+<span class="ne">----&gt; </span><span class="mi">1</span> <span class="kn">from</span> <span class="nn">.estimation</span> <span class="kn">import</span> <span class="n">evaluate_mi</span><span class="p">,</span> <span class="n">estimate_mi</span>
+
+<span class="n">File</span> <span class="o">~/</span><span class="n">Documents</span><span class="o">/</span><span class="n">PhD</span><span class="o">/</span><span class="n">torch_mist</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">torch_mist</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span><span class="n">estimation</span><span class="o">.</span><span class="n">py</span><span class="p">:</span><span class="mi">4</span>
+<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="ne">----&gt; </span><span class="mi">4</span> <span class="kn">import</span> <span class="nn">torch</span>
+<span class="g g-Whitespace">      </span><span class="mi">5</span> <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="g g-Whitespace">      </span><span class="mi">6</span> <span class="kn">from</span> <span class="nn">torch.optim</span> <span class="kn">import</span> <span class="n">Optimizer</span><span class="p">,</span> <span class="n">Adam</span>
+
+<span class="n">File</span> <span class="o">~/.</span><span class="n">cache</span><span class="o">/</span><span class="n">pypoetry</span><span class="o">/</span><span class="n">virtualenvs</span><span class="o">/</span><span class="n">torch</span><span class="o">-</span><span class="n">mist</span><span class="o">-</span><span class="mi">77</span><span class="n">TFSLfY</span><span class="o">-</span><span class="n">py3</span><span class="mf">.9</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python3</span><span class="mf">.9</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">packages</span><span class="o">/</span><span class="n">torch</span><span class="o">/</span><span class="fm">__init__</span><span class="o">.</span><span class="n">py</span><span class="p">:</span><span class="mi">228</span>
+<span class="g g-Whitespace">    </span><span class="mi">217</span> <span class="k">else</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">218</span>     <span class="c1"># Easy way.  You want this most of the time, because it will prevent</span>
+<span class="g g-Whitespace">    </span><span class="mi">219</span>     <span class="c1"># C++ symbols from libtorch clobbering C++ symbols from other</span>
+   <span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">225</span>     <span class="c1">#</span>
+<span class="g g-Whitespace">    </span><span class="mi">226</span>     <span class="c1"># See Note [Global dependencies]</span>
+<span class="g g-Whitespace">    </span><span class="mi">227</span>     <span class="k">if</span> <span class="n">USE_GLOBAL_DEPS</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">228</span>         <span class="n">_load_global_deps</span><span class="p">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">229</span>     <span class="kn">from</span> <span class="nn">torch._C</span> <span class="kn">import</span> <span class="o">*</span>  <span class="c1"># noqa: F403</span>
+<span class="g g-Whitespace">    </span><span class="mi">231</span> <span class="c1"># Appease the type checker; ordinarily this binding is inserted by the</span>
+<span class="g g-Whitespace">    </span><span class="mi">232</span> <span class="c1"># torch._C module initialization code in C</span>
+
+<span class="nn">File ~/.cache/pypoetry/virtualenvs/torch-mist-77TFSLfY-py3.9/lib/python3.9/site-packages/torch/__init__.py:189,</span> in <span class="ni">_load_global_deps</span><span class="nt">()</span>
+<span class="g g-Whitespace">    </span><span class="mi">187</span>     <span class="k">raise</span> <span class="n">err</span>
+<span class="g g-Whitespace">    </span><span class="mi">188</span> <span class="k">for</span> <span class="n">lib_folder</span><span class="p">,</span> <span class="n">lib_name</span> <span class="ow">in</span> <span class="n">cuda_libs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="ne">--&gt; </span><span class="mi">189</span>     <span class="n">_preload_cuda_deps</span><span class="p">(</span><span class="n">lib_folder</span><span class="p">,</span> <span class="n">lib_name</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">190</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">CDLL</span><span class="p">(</span><span class="n">lib_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">ctypes</span><span class="o">.</span><span class="n">RTLD_GLOBAL</span><span class="p">)</span>
+
+<span class="nn">File ~/.cache/pypoetry/virtualenvs/torch-mist-77TFSLfY-py3.9/lib/python3.9/site-packages/torch/__init__.py:154,</span> in <span class="ni">_preload_cuda_deps</span><span class="nt">(lib_folder, lib_name)</span>
+<span class="g g-Whitespace">    </span><span class="mi">152</span>         <span class="k">break</span>
+<span class="g g-Whitespace">    </span><span class="mi">153</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">lib_path</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">154</span>     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">lib_name</span><span class="si">}</span><span class="s2"> not found in the system path </span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">155</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">CDLL</span><span class="p">(</span><span class="n">lib_path</span><span class="p">)</span>
+
+<span class="ne">ValueError</span>: libcublas.so.*[0-9] not found in the system path [&#39;/home/marco/Documents/PhD/torch_mist/docs&#39;, &#39;/home/marco/anaconda3/envs/torch-mist/lib/python39.zip&#39;, &#39;/home/marco/anaconda3/envs/torch-mist/lib/python3.9&#39;, &#39;/home/marco/anaconda3/envs/torch-mist/lib/python3.9/lib-dynload&#39;, &#39;&#39;, &#39;/home/marco/.cache/pypoetry/virtualenvs/torch-mist-77TFSLfY-py3.9/lib/python3.9/site-packages&#39;, &#39;/home/marco/Documents/PhD/torch_mist/src&#39;]
 </pre></div>
 </div>
 </div>
 </div>
-<section id="data-loading">
-<h2>Data loading<a class="headerlink" href="#data-loading" title="Permalink to this heading"></a></h2>
+<section id="data">
+<h2>Data<a class="headerlink" href="#data" title="Permalink to this heading"></a></h2>
 <p>We first define a simple dataset that returns pairs of samples from a bivariate normal distribution.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch.distributions</span> <span class="kn">import</span> <span class="n">MultivariateNormal</span>
+<span class="kn">from</span> <span class="nn">torch.distributions</span> <span class="kn">import</span> <span class="n">MultivariateNormal</span><span class="p">,</span> <span class="n">Normal</span>
 
 <span class="n">rho</span> <span class="o">=</span> <span class="mf">0.9</span>
-<span class="n">cov</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="n">rho</span><span class="p">],</span> <span class="p">[</span><span class="n">rho</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]])</span>
+<span class="n">cov</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span>
+    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">rho</span><span class="p">],</span> 
+    <span class="p">[</span><span class="n">rho</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]</span>
+<span class="p">])</span>
 <span class="n">mean</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])</span>
 <span class="n">x_dim</span> <span class="o">=</span> <span class="n">y_dim</span> <span class="o">=</span> <span class="n">n_dim</span> <span class="o">=</span> <span class="mi">1</span>
 
@@ -120,46 +187,13 @@
     <span class="n">mean</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
     <span class="n">cov</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">n_dim</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">p_xy</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>MultivariateNormal(loc: torch.Size([1, 2]), covariance_matrix: torch.Size([1, 2, 2]))
-</pre></div>
-</div>
-</div>
-</div>
-<p>Visualization of the samples</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="n">p_x</span> <span class="o">=</span> <span class="n">p_y</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
-<span class="n">samples</span> <span class="o">=</span> <span class="n">p_xy</span><span class="o">.</span><span class="n">sample</span><span class="p">([</span><span class="mi">10000</span><span class="p">])</span>
+<span class="n">true_mi</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">p_x</span><span class="o">.</span><span class="n">entropy</span><span class="p">()</span> <span class="o">+</span> <span class="n">p_y</span><span class="o">.</span><span class="n">entropy</span><span class="p">()</span> <span class="o">-</span> <span class="n">p_xy</span><span class="o">.</span><span class="n">entropy</span><span class="p">()</span>
+<span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
-    <span class="n">samples</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)[:,</span><span class="mi">0</span><span class="p">],</span>
-    <span class="n">samples</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">],</span>
-    <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
-    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.01</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;matplotlib.collections.PathCollection at 0x7fdd6db7a9d0&gt;
-</pre></div>
-</div>
-<img alt="_images/f3f6d53ecb5e4c9f6e70086ff7d8f78b3a1ae5d5af84705789b8b908850bafb6.png" src="_images/f3f6d53ecb5e4c9f6e70086ff7d8f78b3a1ae5d5af84705789b8b908850bafb6.png" />
-</div>
-</div>
-<p>We can compute the true mutual information as a reference</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">true_mi</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">MultivariateNormal</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">entropy</span><span class="p">()</span> <span class="o">-</span> <span class="n">p_xy</span><span class="o">.</span><span class="n">entropy</span><span class="p">()</span>
-<span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;True Mutual Information:&#39;</span><span class="p">,</span> <span class="n">true_mi</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="s1">&#39;nats&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;True Mutual Information: </span><span class="si">{</span><span class="n">true_mi</span><span class="si">}</span><span class="s2"> nats&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -169,50 +203,106 @@
 </div>
 </div>
 </div>
-<p>We then wrap the distribution into a torch DataLoader</p>
+<p>Visualization of the samples</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch_mist.utils.data</span> <span class="kn">import</span> <span class="n">SampleDataLoader</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
-<span class="n">trainloader</span> <span class="o">=</span> <span class="n">SampleDataLoader</span><span class="p">(</span>
-    <span class="n">p_xy</span><span class="p">,</span>
-    <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-    <span class="n">max_samples</span><span class="o">=</span><span class="mi">100000</span> <span class="c1"># Number of samples per epoch</span>
+<span class="n">samples</span> <span class="o">=</span> <span class="n">p_xy</span><span class="o">.</span><span class="n">sample</span><span class="p">([</span><span class="mi">100000</span><span class="p">])</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)[:,</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)[:,</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">[::</span><span class="mi">10</span><span class="p">],</span> <span class="n">y</span><span class="p">[::</span><span class="mi">10</span><span class="p">],</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span>
 <span class="p">)</span>
 
-<span class="n">testloader</span> <span class="o">=</span> <span class="n">SampleDataLoader</span><span class="p">(</span>
-    <span class="n">p_xy</span><span class="p">,</span>
-    <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-    <span class="n">max_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
-<span class="p">)</span>
-
-
-<span class="c1"># This dataloader simply returns pairs of samples from p(x,y)</span>
-<span class="c1"># with shape [batch_size, X_DIM] [batch_size, Y_DIM]</span>
-<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">trainloader</span><span class="p">:</span>
-    <span class="k">break</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Samples&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;$x$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;$y$&#39;</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">ImportError</span><span class="g g-Whitespace">                               </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
-<span class="ne">----&gt; </span><span class="mi">1</span> <span class="kn">from</span> <span class="nn">torch_mist.utils.data</span> <span class="kn">import</span> <span class="n">SampleDataLoader</span>
-<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="n">trainloader</span> <span class="o">=</span> <span class="n">SampleDataLoader</span><span class="p">(</span>
-<span class="g g-Whitespace">      </span><span class="mi">4</span>     <span class="n">p_xy</span><span class="p">,</span>
-<span class="g g-Whitespace">      </span><span class="mi">5</span>     <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-<span class="g g-Whitespace">      </span><span class="mi">6</span>     <span class="n">max_samples</span><span class="o">=</span><span class="mi">100000</span> <span class="c1"># Number of samples per epoch</span>
-<span class="g g-Whitespace">      </span><span class="mi">7</span> <span class="p">)</span>
-<span class="g g-Whitespace">      </span><span class="mi">9</span> <span class="n">testloader</span> <span class="o">=</span> <span class="n">SampleDataLoader</span><span class="p">(</span>
-<span class="g g-Whitespace">     </span><span class="mi">10</span>     <span class="n">p_xy</span><span class="p">,</span>
-<span class="g g-Whitespace">     </span><span class="mi">11</span>     <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-<span class="g g-Whitespace">     </span><span class="mi">12</span>     <span class="n">max_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
-<span class="g g-Whitespace">     </span><span class="mi">13</span> <span class="p">)</span>
+<img alt="_images/a5822edf59531d23ff8b6c40a791175fec0693e5bbcd4f94e7cd9acca80fcffe.png" src="_images/a5822edf59531d23ff8b6c40a791175fec0693e5bbcd4f94e7cd9acca80fcffe.png" />
+</div>
+</div>
+</section>
+<section id="defining-and-training-the-estimator">
+<h2>Defining and training the estimator<a class="headerlink" href="#defining-and-training-the-estimator" title="Permalink to this heading"></a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch_mist</span> <span class="kn">import</span> <span class="n">estimate_mi</span>
 
-<span class="ne">ImportError</span>: cannot import name &#39;SampleDataLoader&#39; from &#39;torch_mist.utils.data&#39; (/home/marco/Documents/PhD/torch_mist/src/torch_mist/utils/data/__init__.py)
+<span class="n">mi_estimate</span><span class="p">,</span> <span class="n">train_log</span> <span class="o">=</span> <span class="n">estimate_mi</span><span class="p">(</span>
+    <span class="n">estimator_name</span><span class="o">=</span><span class="s1">&#39;js&#39;</span><span class="p">,</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+    <span class="n">train_batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+    <span class="n">evaluation_batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+    <span class="n">return_log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s1">&#39;cpu&#39;</span><span class="p">,</span>
+    <span class="n">hidden_dims</span><span class="o">=</span><span class="p">[</span><span class="mi">128</span><span class="p">,</span><span class="mi">32</span><span class="p">],</span>
+    <span class="n">neg_samples</span><span class="o">=</span><span class="mi">16</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Instantiating the js estimator
+JS(
+  (ratio_estimator): JointCritic(
+    (joint_net): DenseNN(
+      (layers): ModuleList(
+        (0): Linear(in_features=2, out_features=128, bias=True)
+        (1): Linear(in_features=128, out_features=32, bias=True)
+        (2): Linear(in_features=32, out_features=1, bias=True)
+      )
+      (f): ReLU(inplace=True)
+    )
+  )
+  (baseline): ConstantBaseline()
+  (neg_samples): 16
+)
+Training the estimator
+</pre></div>
+</div>
+<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "f16088bcc5dd45a292a3a379bd23a103"}</script><script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "8b9929300e7d4b53bdb421967488fa27"}</script><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>No improvements on validation, stopping.
+Evaluating the value of Mutual Information
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="s1">&#39;whitegrid&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">true_mi</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;True $I(x;y)$&#39;</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span><span class="n">train_log</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s1">&#39;epoch&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s1">&#39;type&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(1.0, 7.3)
+</pre></div>
+</div>
+<img alt="_images/a284584cdfcec18ce666c1a738df26be787537729f6e56b0016cd38275e5bc35.png" src="_images/a284584cdfcec18ce666c1a738df26be787537729f6e56b0016cd38275e5bc35.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Estimated Mutual Information: </span><span class="si">{</span><span class="n">mi_estimate</span><span class="si">}</span><span class="s2"> nats&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;True Mutual Information: </span><span class="si">{</span><span class="n">true_mi</span><span class="si">}</span><span class="s2"> nats&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Estimated Mutual Information: 0.8286637599815798 nats
+True Mutual Information: 0.8303654193878174 nats
 </pre></div>
 </div>
 </div>
@@ -239,12 +329,12 @@
 <span class="p">)</span>
 
 <span class="c1"># We also specify the number of Monte Carlo samples to use for the estimation of the normalization constant</span>
-<span class="n">mc_samples</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">neg_samples</span> <span class="o">=</span> <span class="mi">16</span>
 
 <span class="c1"># Then we pass it to the Jensen-Shannon estimator</span>
 <span class="n">mi_estimator</span> <span class="o">=</span> <span class="n">JS</span><span class="p">(</span>
     <span class="n">critic</span><span class="o">=</span><span class="n">critic</span><span class="p">,</span>
-    <span class="n">mc_samples</span><span class="o">=</span><span class="n">mc_samples</span>
+    <span class="n">neg_samples</span><span class="o">=</span><span class="n">neg_samples</span>
 <span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">mi_estimator</span><span class="p">)</span>
@@ -253,7 +343,7 @@
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>JS(
-  (critic): JointCritic(
+  (ratio_estimator): JointCritic(
     (joint_net): Sequential(
       (0): Linear(in_features=2, out_features=64, bias=True)
       (1): ReLU(inplace=True)
@@ -262,7 +352,8 @@
       (4): Linear(in_features=64, out_features=1, bias=True)
     )
   )
-  (mc_samples): 16
+  (baseline): ConstantBaseline()
+  (neg_samples): 16
 )
 </pre></div>
 </div>
@@ -293,7 +384,6 @@
         <span class="n">loss</span> <span class="o">=</span> <span class="n">mi_estimator</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
         <span class="c1"># And the corresponding estimation of Mutual Information</span>
         <span class="n">mi</span> <span class="o">=</span> <span class="n">mi_estimator</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-
 
         <span class="c1"># Reset the gradients</span>
         <span class="n">opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
@@ -377,46 +467,13 @@ True: 0.830
 <p>The library includes utilities to avoid explicitly defining the critic network and the optimization loop</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch_mist.estimators</span> <span class="kn">import</span> <span class="n">js</span>
-
-<span class="n">mi_estimator</span> <span class="o">=</span> <span class="n">js</span><span class="p">(</span>
-    <span class="n">x_dim</span><span class="o">=</span><span class="n">x_dim</span><span class="p">,</span>
-    <span class="n">y_dim</span><span class="o">=</span><span class="n">y_dim</span><span class="p">,</span>
-    <span class="n">hidden_dims</span><span class="o">=</span><span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">],</span>
-    <span class="n">mc_samples</span><span class="o">=</span><span class="n">mc_samples</span>
-<span class="p">)</span>
-
-<span class="n">mi_estimator</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>JS(
-  (critic): JointCritic(
-    (joint_net): DenseNN(
-      (layers): ModuleList(
-        (0): Linear(in_features=2, out_features=64, bias=True)
-        (1): Linear(in_features=64, out_features=64, bias=True)
-        (2): Linear(in_features=64, out_features=1, bias=True)
-      )
-      (f): ReLU(inplace=True)
-    )
-  )
-  (mc_samples): 16
-)
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torch_mist.utils</span> <span class="kn">import</span> <span class="n">optimize_mi_estimator</span>
 
 <span class="c1"># Train the estimator</span>
 <span class="n">log</span> <span class="o">=</span> <span class="n">optimize_mi_estimator</span><span class="p">(</span>
     <span class="n">estimator</span><span class="o">=</span><span class="n">mi_estimator</span><span class="p">,</span>
-    <span class="n">dataloader</span><span class="o">=</span><span class="n">trainloader</span><span class="p">,</span>
-    <span class="n">epochs</span><span class="o">=</span><span class="n">n_epochs</span><span class="p">,</span>
+    <span class="n">train_loader</span><span class="o">=</span><span class="n">trainloader</span><span class="p">,</span>
+    <span class="n">max_epochs</span><span class="o">=</span><span class="n">n_epochs</span><span class="p">,</span>
     <span class="n">optimizer_class</span><span class="o">=</span><span class="n">AdamW</span><span class="p">,</span>
     <span class="n">optimizer_params</span><span class="o">=</span><span class="p">{</span>
         <span class="s1">&#39;lr&#39;</span><span class="p">:</span> <span class="mf">5e-4</span>

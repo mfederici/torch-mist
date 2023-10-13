@@ -1,1 +1,1 @@
-from .estimate import estimate_mi, optimize_mi_estimator
+from .estimation import evaluate_mi, estimate_mi

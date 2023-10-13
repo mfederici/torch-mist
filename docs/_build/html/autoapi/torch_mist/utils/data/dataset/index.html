@@ -60,6 +60,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../estimators/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.estimators</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../nn/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.nn</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../quantization/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.quantization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../train/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.train</span></code></a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torch_mist.utils</span></code></a></li>
 </ul>
 </li>
@@ -114,19 +115,19 @@
 </table>
 <dl class="py class">
 <dt class="sig sig-object py" id="torch_mist.utils.data.dataset.SampleDataset">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.utils.data.dataset.</span></span><span class="sig-name descname"><span class="pre">SampleDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/utils/data/dataset.html#SampleDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.dataset.SampleDataset" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torch_mist.utils.data.dataset.</span></span><span class="sig-name descname"><span class="pre">SampleDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.utils.data.dataset.SampleDataset" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code></p>
 <p>All the operations on a read-only sequence.</p>
 <p>Concrete subclasses must override __new__ or __init__,
 __getitem__, and __len__.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="torch_mist.utils.data.dataset.SampleDataset.__getitem__">
-<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/utils/data/dataset.html#SampleDataset.__getitem__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.dataset.SampleDataset.__getitem__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.utils.data.dataset.SampleDataset.__getitem__" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torch_mist.utils.data.dataset.SampleDataset.__len__">
-<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/torch_mist/utils/data/dataset.html#SampleDataset.__len__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torch_mist.utils.data.dataset.SampleDataset.__len__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#torch_mist.utils.data.dataset.SampleDataset.__len__" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>

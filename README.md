@@ -1,5 +1,5 @@
 # Mist - A PyTorch Mutual information Estimation toolkit
-
+[![arXiv](https://img.shields.io/badge/arXiv-2306.00608-b31b1b.svg)](https://arxiv.org/abs/2306.00608)
 [![PyPI version](https://badge.fury.io/py/torch-mist.svg)](https://badge.fury.io/py/torch-mist)
 [![codecov](https://codecov.io/gh/mfederici/torch-mist/badge.svg)](https://codecov.io/gh/mfederici/torch-mist)
 [![Documentation Status](https://readthedocs.org/projects/torch-mist/badge/?version=latest)](https://torch-mist.readthedocs.io/en/latest/?badge=latest)
@@ -23,49 +23,125 @@ neural network architectures.
 
 Here we provide a simple example of how to use the package to estimate mutual information between pairs
 of observations using the MINE estimator [[2]](#references).
+Consider the variables $x$ and $y$ as of shape `[N, x_dim]`, `[N, y_dim]` respectively sampled from some joint distribution $p(x,y)$.
+Mutual information can be estimated directly using the `estimate_mi` utility function that takes care of fitting the estimator's parameters and evaluating mutual information.
+```python3
+from torch_mist import estimate_mi
 
-First, we need to import and instantiate the estimator from the package:
-```python
+estimated_mi = estimate_mi(
+    
+    # Mutual Information estimator
+    estimator_name='mine',      # Use MINE
+    hidden_dims=[32, 32],       # Hidden dimensions of the neural network
+    neg_samples= 16,            # Number of negative examples 
+    critic_type='joint',        # Joint neural network for estimation
+    
+    # Data
+    x=x,                        # The values for x
+    y=y,                        # The values for y
+    
+    # Training
+    train_batch_size=64,        # The batch size used for training
+    evaluation_batch_size=128,  # The batch size used for evaluation
+    max_epochs=10,              # The maximum number of epochs
+    device='cpu',               # The torch device used for training
+    
+    # Flags to return the training log and estimator other than the estimation
+    return_log=False,           # Return the training log
+    return_estimator=False,     # Return the trained estimator
+    verbose=True,               # Verbose output for the estimation procedure
+)
+
+print(f"Mutual information estimated value: {estimated_mi} nats")
+```
+Additional flags that can be used to customize the estimators, training and evaluation procedure are included in the documentation.
+
+Alternatively, it is possible to manually instantiate, train and evaluate the mutual information estimators.
+```python3
 from torch_mist.estimators import mine
+from torch_mist.train import train_mi_estimator
+from torch_mist.utils import evaluate_mi
 
-# Defining the estimator
+
+# This code performs the same procedure as the previous example
+
+# Instantiate the mutual information estimator
 estimator = mine(
-    x_dim=1,                    # dimension of x
-    y_dim=1,                    # dimension of y   
-    hidden_dims=[32, 64, 32],   # hidden dimensions of the neural networks
-)
-```
-then we can train the estimator:
-
-```python
-from torch_mist.utils import optimize_mi_estimator
-
-train_log = optimize_mi_estimator(
-    estimator=estimator,  # the estimator to train
-    train_loader=dataloader,  # the dataloader returning pairs of x and y
-    max_epochs=10,  # the number of epochs
-    device="cpu",  # the device to use
-    return_log=True,  # whether to return the training log
-)
-```
-Lastly, we can use the trained estimator to estimate the mutual information between pairs of observations:
-```python
-from torch_mist.utils import estimate_mi
-value, std = estimate_mi(
-    estimator=estimator,        # the estimator to use
-    dataloader=dataloader,      # the dataloader returning pairs of x and y
-    device="cpu",               # the device to use
+    x_dim=x.shape[-1],
+    y_dim=y.shape[-1],
+    neg_samples=16,
+    hidden_dims=[32, 32],
+    critic_type='joint'
 )
 
-print(f"Estimated MI: {value} +- {std}")
+# Train it on the given samples
+train_log = train_mi_estimator(
+    estimator=estimator,
+    x=x,
+    y=y,
+    batch_size=64,
+    return_log=True,
+    verbose=True
+)
+
+# Evaluate the estimator on the entirety of the data
+estimated_mi = evaluate_mi(
+    estimator=estimator,
+    x=x,
+    y=y,
+    batch_size=128
+)
 ```
 
 Please refer to the [documentation](https://torch-mist.readthedocs.io/en/latest/) for a detailed description of the package and its usage.
 
 
-
-
 ### Estimators
+Each estimator implemented in the library is an instance of `MutualInformationEstimator` and can be instantiated
+through a simplified utility functions or directly for the corresponding class:
+```python3
+############################
+# Simplified instantiation #
+############################
+from torch_mist.estimators import mine
+
+estimator = mine(
+    x_dim=x.shape[-1],
+    y_dim=y.shape[-1],
+    neg_samples=16,
+    hidden_dims=[32, 32],
+    critic_type='joint'
+)
+
+##########################
+# Advanced instantiation #
+##########################
+from torch_mist.estimators import MINE
+from torch_mist.critic import JointCritic
+from torch import nn
+
+# First we define the critic architecture
+critic = JointCritic(                               # Wrapper to concatenate the inputs x and y 
+    joint_net=nn.Sequential(                        # The neural network architectures that maps [x,y] to a scalar
+        nn.Linear(x.shape[-1]+y.shape[-1], 32),
+        nn.ReLU(True),
+        nn.Linear(32, 32),
+        nn.ReLU(True),
+        nn.Linear(32, 1)
+    )
+)
+
+# Then we pass it to the MINE constructor
+estimator = MINE(
+    critic=critic,
+    neg_samples=16,
+)
+```
+Note that the simplified and advanced instantiation reported in the example above result in the same model.
+
+
+
+
 The basic estimators implemented in this package are summarized in the following table:
 
 | Estimator                                     | Type                  | Models                                    | Hyperparameters   | 
@@ -105,8 +181,80 @@ And the following hyperparameters:
 - $\gamma_{EMA} \in (0,1]$ is the exponential moving average decay used to update the baseline in MINE.
 - $\alpha \in [0,1]$ is the weight of the baseline in AlphaTUBA (0 corresponds to InfoNCE, 1 to TUBA).
 - $\tau \in [0..]$ is used to define the interval $[-\tau,\tau]$ in which critic values are clipped in SMILE.
+
 #### Hybrid estimators
 The `torch_mist` package allows to combine Generative and Discriminative estimators in a single hybrid estimators as proposed in [[11]](#references)[[12]](#references).
+COMING SOON
+
+### Training and Evaluation
+Most of the estimators included in this package are parametric and require a training procedure for accurate estimation.
+The `train_mi_estimator` utility function supports either row data `x` and `y` as `numpy.array` or `torch.Tensor`.
+Alternatively, it is possible to use a `torch.utils.DataLoader` that returns eiter batches of pairs `(batch_x, batch_y)`
+or dictionaries of batches `{'x': batch_x, 'y': batch_y}`, with `batch_x` of shape `[batch_size, ..., x_dim]` and `[batch_size, ..., y_dim]` respectively.
+
+```python3
+from torch_mist.train import train_mi_estimator
+
+######################################
+# Training using tensors for x and y #
+######################################
+# By default 10% of the data is used for cross-validation and early stopping
+train_log = train_mi_estimator(
+    estimator=estimator,
+    x=x,
+    y=y,
+    batch_size=64,
+    valid_percentage=0.1,
+    return_log=True,
+    verbose=True
+)
+
+#############################
+# Training with DataLoaders #
+#############################
+from torch_mist.utils.data import SampleDataset
+from torch.utils.data import DataLoader, random_split
+
+# We provide an utility to make the tensors into a torch.utils.data.Dataset object
+# This can be replaced with any other Dataset object that may load the data from disk
+dataset = SampleDataset(
+    samples={'x': x, 'y': y}
+)
+
+# Split into train and validation
+train_size = int(len(dataset)*0.9)
+valid_size = len(dataset)-train_size
+train_set, valid_set = random_split(dataset, [train_size, valid_size])
+
+# Instantiate the dataloaders
+train_loader = DataLoader(
+    train_set,
+    batch_size=64,
+    shuffle=True,
+    num_workers=8
+)
+
+valid_loader = DataLoader(
+    valid_set,
+    batch_size=64,
+    num_workers=8
+)
+
+# Train using the specified dataloaders
+# Note that the validation set is optional but recommended 
+# to prevent overfitting.
+
+train_log = train_mi_estimator(
+    estimator=estimator,
+    train_loader=train_loader,
+    valid_loader=valid_loader,
+    return_log=True,
+    verbose=True
+)
+```
+The two options result in the same training procedure, but we recommend using `DataLoader` for larger datasets.
+
+Both `DataLoader` and `torch.Tensor` (or `np.array`) can be used for the `evaluate_mi` function.
 
 
 ### References

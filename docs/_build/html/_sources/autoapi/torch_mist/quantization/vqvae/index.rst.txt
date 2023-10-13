@@ -22,7 +22,6 @@ Functions
 .. autoapisummary::
 
    torch_mist.quantization.vqvae.vqvae
-   torch_mist.quantization.vqvae.train_vqvae
 
 
 
@@ -84,8 +83,5 @@ Attributes
 
 
 .. py:function:: vqvae(x_dim: int, quantization_dim: int, n_bins: int, hidden_dims: List[int], y_dim: Optional[int] = None, cross_modal: bool = False, decoder_transform_params: Optional[dict] = None, beta: float = 0.2) -> VQVAE
-
-
-.. py:function:: train_vqvae(model: torch.nn.Module, dataloader: Iterator, max_epochs: int, optimizer_class=torch.optim.Adam, optimizer_params: Optional[Dict[str, Any]] = None, cross_modal: bool = False) -> torch.nn.Module
 
 

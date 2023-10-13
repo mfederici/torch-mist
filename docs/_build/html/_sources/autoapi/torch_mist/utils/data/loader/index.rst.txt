@@ -13,7 +13,16 @@ Classes
 .. autoapisummary::
 
    torch_mist.utils.data.loader.DistributionDataLoader
+   torch_mist.utils.data.loader.SameAttributeDataLoader
 
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   torch_mist.utils.data.loader.sample_same_attributes
 
 
 
@@ -30,5 +39,109 @@ Classes
 
    .. py:method:: __len__()
 
+
+
+.. py:class:: SameAttributeDataLoader(dataset: torch.utils.data.Dataset, attributes: Union[torch.Tensor, numpy.ndarray], batch_size: int, **kwargs)
+
+
+   Bases: :py:obj:`torch.utils.data.DataLoader`
+
+   Data loader. Combines a dataset and a sampler, and provides an iterable over
+   the given dataset.
+
+   The :class:`~torch.utils.data.DataLoader` supports both map-style and
+   iterable-style datasets with single- or multi-process loading, customizing
+   loading order and optional automatic batching (collation) and memory pinning.
+
+   See :py:mod:`torch.utils.data` documentation page for more details.
+
+   :param dataset: dataset from which to load the data.
+   :type dataset: Dataset
+   :param batch_size: how many samples per batch to load
+                      (default: ``1``).
+   :type batch_size: int, optional
+   :param shuffle: set to ``True`` to have the data reshuffled
+                   at every epoch (default: ``False``).
+   :type shuffle: bool, optional
+   :param sampler: defines the strategy to draw
+                   samples from the dataset. Can be any ``Iterable`` with ``__len__``
+                   implemented. If specified, :attr:`shuffle` must not be specified.
+   :type sampler: Sampler or Iterable, optional
+   :param batch_sampler: like :attr:`sampler`, but
+                         returns a batch of indices at a time. Mutually exclusive with
+                         :attr:`batch_size`, :attr:`shuffle`, :attr:`sampler`,
+                         and :attr:`drop_last`.
+   :type batch_sampler: Sampler or Iterable, optional
+   :param num_workers: how many subprocesses to use for data
+                       loading. ``0`` means that the data will be loaded in the main process.
+                       (default: ``0``)
+   :type num_workers: int, optional
+   :param collate_fn: merges a list of samples to form a
+                      mini-batch of Tensor(s).  Used when using batched loading from a
+                      map-style dataset.
+   :type collate_fn: Callable, optional
+   :param pin_memory: If ``True``, the data loader will copy Tensors
+                      into device/CUDA pinned memory before returning them.  If your data elements
+                      are a custom type, or your :attr:`collate_fn` returns a batch that is a custom type,
+                      see the example below.
+   :type pin_memory: bool, optional
+   :param drop_last: set to ``True`` to drop the last incomplete batch,
+                     if the dataset size is not divisible by the batch size. If ``False`` and
+                     the size of dataset is not divisible by the batch size, then the last batch
+                     will be smaller. (default: ``False``)
+   :type drop_last: bool, optional
+   :param timeout: if positive, the timeout value for collecting a batch
+                   from workers. Should always be non-negative. (default: ``0``)
+   :type timeout: numeric, optional
+   :param worker_init_fn: If not ``None``, this will be called on each
+                          worker subprocess with the worker id (an int in ``[0, num_workers - 1]``) as
+                          input, after seeding and before data loading. (default: ``None``)
+   :type worker_init_fn: Callable, optional
+   :param generator: If not ``None``, this RNG will be used
+                     by RandomSampler to generate random indexes and multiprocessing to generate
+                     `base_seed` for workers. (default: ``None``)
+   :type generator: torch.Generator, optional
+   :param prefetch_factor: Number of batches loaded
+                           in advance by each worker. ``2`` means there will be a total of
+                           2 * num_workers batches prefetched across all workers. (default value depends
+                           on the set value for num_workers. If value of num_workers=0 default is ``None``.
+                           Otherwise if value of num_workers>0 default is ``2``).
+   :type prefetch_factor: int, optional, keyword-only arg
+   :param persistent_workers: If ``True``, the data loader will not shutdown
+                              the worker processes after a dataset has been consumed once. This allows to
+                              maintain the workers `Dataset` instances alive. (default: ``False``)
+   :type persistent_workers: bool, optional
+   :param pin_memory_device: the data loader will copy Tensors
+                             into device pinned memory before returning them if pin_memory is set to true.
+   :type pin_memory_device: str, optional
+
+   .. warning:: If the ``spawn`` start method is used, :attr:`worker_init_fn`
+                cannot be an unpicklable object, e.g., a lambda function. See
+                :ref:`multiprocessing-best-practices` on more details related
+                to multiprocessing in PyTorch.
+
+   .. warning:: ``len(dataloader)`` heuristic is based on the length of the sampler used.
+                When :attr:`dataset` is an :class:`~torch.utils.data.IterableDataset`,
+                it instead returns an estimate based on ``len(dataset) / batch_size``, with proper
+                rounding depending on :attr:`drop_last`, regardless of multi-process loading
+                configurations. This represents the best guess PyTorch can make because PyTorch
+                trusts user :attr:`dataset` code in correctly handling multi-process
+                loading to avoid duplicate data.
+
+                However, if sharding results in multiple workers having incomplete last batches,
+                this estimate can still be inaccurate, because (1) an otherwise complete batch can
+                be broken into multiple ones and (2) more than one batch worth of samples can be
+                dropped when :attr:`drop_last` is set. Unfortunately, PyTorch can not detect such
+                cases in general.
+
+                See `Dataset Types`_ for more details on these two types of datasets and how
+                :class:`~torch.utils.data.IterableDataset` interacts with
+                `Multi-process data loading`_.
+
+   .. warning:: See :ref:`reproducibility`, and :ref:`dataloader-workers-random-seed`, and
+                :ref:`data-loading-randomness` notes for random seed related questions.
+
+
+.. py:function:: sample_same_attributes(dataloader: torch.utils.data.DataLoader, attributes: Union[torch.Tensor, numpy.ndarray])
 
 
