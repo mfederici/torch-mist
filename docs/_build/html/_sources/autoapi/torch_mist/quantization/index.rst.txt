@@ -80,9 +80,11 @@ Functions
 
    .. py:property:: n_bins
       :type: int
+      :abstractmethod:
 
 
    .. py:method:: forward(x: torch.Tensor) -> torch.LongTensor
+      :abstractmethod:
 
 
 
@@ -123,6 +125,7 @@ Functions
    :vartype training: bool
 
    .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+      :abstractmethod:
 
 
 

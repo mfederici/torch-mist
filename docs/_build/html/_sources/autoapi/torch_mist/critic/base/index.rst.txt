@@ -54,6 +54,7 @@ Classes
    :vartype training: bool
 
    .. py:method:: forward(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
+      :abstractmethod:
 
       Compute the value of the critic evaluated at the pair (x, y)
       :param x: a tensor representing x

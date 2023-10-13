@@ -75,6 +75,7 @@ Functions
    torch_mist.estimators.smile
    torch_mist.estimators.alpha_tuba
    torch_mist.estimators.flo
+   torch_mist.estimators.instantiate_estimator
 
 
 
@@ -1040,5 +1041,8 @@ Functions
 
    .. py:method:: loss(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor
 
+
+
+.. py:function:: instantiate_estimator(estimator_name, verbose=True, **kwargs)
 
 
