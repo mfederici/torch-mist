@@ -82,7 +82,7 @@ def estimate_mi(
     early_stopping: bool = True,
     patience: int = 3,
     delta: float = 0.001,
-    return_estimator: bool = True,
+    return_estimator: bool = False,
     **kwargs,
 ) -> Union[
     float,
