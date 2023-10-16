@@ -67,7 +67,7 @@ jobs:
 
       # Replace torch with torch-cpu
       - run: poetry run pip uninstall torch -y
-      - run: poetry run pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - run: poetry run pip install torch=2.0.1 --index-url https://download.pytorch.org/whl/cpu
 
       - run: poetry run pytest --cov=./ --cov-report=xml
 
