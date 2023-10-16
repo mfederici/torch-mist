@@ -76,7 +76,7 @@ def estimate_mi(
     return_log: bool = True,
     lr_annealing: bool = False,
     warmup_percentage: float = 0.2,
-    train_batch_size: Optional[int] = None,
+    batch_size: Optional[int] = None,
     evaluation_batch_size: Optional[int] = None,
     num_workers: int = 8,
     early_stopping: bool = True,
@@ -111,6 +111,10 @@ def estimate_mi(
     if verbose:
         print(estimator)
         print("Training the estimator")
+
+    if evaluation_batch_size is None:
+        evaluation_batch_size = batch_size
+
     train_log = train_mi_estimator(
         estimator=estimator,
         x=x,
@@ -126,15 +130,12 @@ def estimate_mi(
         return_log=return_log,
         lr_annealing=lr_annealing,
         warmup_percentage=warmup_percentage,
-        batch_size=train_batch_size,
+        batch_size=batch_size,
         early_stopping=early_stopping,
         patience=patience,
         delta=delta,
         num_workers=num_workers,
     )
-
-    if evaluation_batch_size is None:
-        evaluation_batch_size = train_batch_size
 
     if verbose:
         print("Evaluating the value of Mutual Information")

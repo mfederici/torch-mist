@@ -25,36 +25,21 @@ Here we provide a simple example of how to use the package to estimate mutual in
 of observations using the MINE estimator [[2]](#references).
 Consider the variables $x$ and $y$ as of shape `[N, x_dim]`, `[N, y_dim]` respectively sampled from some joint distribution $p(x,y)$.
 Mutual information can be estimated directly using the `estimate_mi` utility function that takes care of fitting the estimator's parameters and evaluating mutual information.
+
 ```python3
 from torch_mist import estimate_mi
 
 estimated_mi = estimate_mi(
-    
-    # Mutual Information estimator
-    estimator_name='mine',      # Use MINE
-    hidden_dims=[32, 32],       # Hidden dimensions of the neural network
-    neg_samples= 16,            # Number of negative examples 
-    critic_type='joint',        # Joint neural network for estimation
-    
-    # Data
-    x=x,                        # The values for x
-    y=y,                        # The values for y
-    
-    # Training
-    train_batch_size=64,        # The batch size used for training
-    evaluation_batch_size=128,  # The batch size used for evaluation
-    max_epochs=10,              # The maximum number of epochs
-    device='cpu',               # The torch device used for training
-    
-    # Flags to return the training log and estimator other than the estimation
-    return_log=False,           # Return the training log
-    return_estimator=False,     # Return the trained estimator
-    verbose=True,               # Verbose output for the estimation procedure
+    estimator_name='mine',  # Use MINE
+    hidden_dims=[32, 32],  # Hidden dimensions of the neural network
+    x=x,  # The values for x
+    y=y,  # The values for y
+    batch_size=64,  # The batch size used for training
 )
 
 print(f"Mutual information estimated value: {estimated_mi} nats")
 ```
-Additional flags that can be used to customize the estimators, training and evaluation procedure are included in the documentation.
+Additional flags that can be used to customize the estimators, training and evaluation procedure are included in the [documentation](https://torch-mist.readthedocs.io/en/latest).
 
 Alternatively, it is possible to manually instantiate, train and evaluate the mutual information estimators.
 ```python3
@@ -91,6 +76,9 @@ estimated_mi = evaluate_mi(
     y=y,
     batch_size=128
 )
+
+
+print(f"Mutual information estimated value: {estimated_mi} nats")
 ```
 
 Please refer to the [documentation](https://torch-mist.readthedocs.io/en/latest/) for a detailed description of the package and its usage.
@@ -98,7 +86,7 @@ Please refer to the [documentation](https://torch-mist.readthedocs.io/en/latest/
 
 ### Estimators
 Each estimator implemented in the library is an instance of `MutualInformationEstimator` and can be instantiated
-through a simplified utility functions or directly for the corresponding class:
+through a simplified utility functions
 ```python3
 ############################
 # Simplified instantiation #
@@ -112,7 +100,9 @@ estimator = mine(
     hidden_dims=[32, 32],
     critic_type='joint'
 )
-
+```
+or directly using the corresponfing `MutualInformationEstimator` class
+```python3
 ##########################
 # Advanced instantiation #
 ##########################
@@ -189,8 +179,6 @@ COMING SOON
 ### Training and Evaluation
 Most of the estimators included in this package are parametric and require a training procedure for accurate estimation.
 The `train_mi_estimator` utility function supports either row data `x` and `y` as `numpy.array` or `torch.Tensor`.
-Alternatively, it is possible to use a `torch.utils.DataLoader` that returns eiter batches of pairs `(batch_x, batch_y)`
-or dictionaries of batches `{'x': batch_x, 'y': batch_y}`, with `batch_x` of shape `[batch_size, ..., x_dim]` and `[batch_size, ..., y_dim]` respectively.
 
 ```python3
 from torch_mist.train import train_mi_estimator
@@ -208,7 +196,10 @@ train_log = train_mi_estimator(
     return_log=True,
     verbose=True
 )
-
+```
+Alternatively, it is possible to use a `torch.utils.DataLoader` that returns eiter batches of pairs `(batch_x, batch_y)`
+or dictionaries of batches `{'x': batch_x, 'y': batch_y}`, with `batch_x` of shape `[batch_size, ..., x_dim]` and `[batch_size, ..., y_dim]` respectively.
+```python3
 #############################
 # Training with DataLoaders #
 #############################
@@ -241,8 +232,7 @@ valid_loader = DataLoader(
 )
 
 # Train using the specified dataloaders
-# Note that the validation set is optional but recommended 
-# to prevent overfitting.
+# Note that the validation set is optional but recommended to prevent overfitting.
 
 train_log = train_mi_estimator(
     estimator=estimator,
@@ -257,7 +247,7 @@ The two options result in the same training procedure, but we recommend using `D
 Both `DataLoader` and `torch.Tensor` (or `np.array`) can be used for the `evaluate_mi` function.
 
 
-### References
+# References
 
 [[1] ](https://arxiv.org/abs/0809.0853) Nguyen, XuanLong, Martin J. Wainwright, and Michael I. Jordan. "Estimating divergence functionals and the likelihood ratio by convex risk minimization." IEEE Transactions on Information Theory 56.11 (2010): 5847-5861.
 
