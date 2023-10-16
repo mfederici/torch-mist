@@ -1,5 +1,6 @@
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
+   :caption: Examples:
 
-   example.ipynb
+   notebooks/usage.ipynb
+

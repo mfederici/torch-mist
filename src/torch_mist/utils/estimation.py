@@ -76,7 +76,7 @@ def estimate_mi(
     return_log: bool = True,
     lr_annealing: bool = False,
     warmup_percentage: float = 0.2,
-    batch_size: Optional[int] = None,
+    batch_size: Optional[int] = 64,
     evaluation_batch_size: Optional[int] = None,
     num_workers: int = 8,
     early_stopping: bool = True,

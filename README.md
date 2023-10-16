@@ -34,7 +34,6 @@ estimated_mi = estimate_mi(
     hidden_dims=[32, 32],  # Hidden dimensions of the neural network
     x=x,  # The values for x
     y=y,  # The values for y
-    batch_size=64,  # The batch size used for training
 )
 
 print(f"Mutual information estimated value: {estimated_mi} nats")
