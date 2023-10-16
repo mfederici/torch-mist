@@ -80,7 +80,7 @@ class SameAttributeDataLoader(DataLoader):
 def sample_same_attributes(
     dataloader: DataLoader,
     attributes: Union[torch.Tensor, np.ndarray],
-):
+) -> DataLoader:
     return SameAttributeDataLoader(
         dataset=dataloader.dataset,
         attributes=attributes,

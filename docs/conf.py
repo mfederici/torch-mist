@@ -6,9 +6,9 @@
 
 # -- Project information -----------------------------------------------------
 
-project = u"torch_mist"
-copyright = u"2023, Marco Federici"
-author = u"Marco Federici"
+project = "torch_mist"
+copyright = "2023, Marco Federici"
+author = "Marco Federici"
 
 # -- General configuration ---------------------------------------------------
 
@@ -16,7 +16,7 @@ author = u"Marco Federici"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "myst_nb",
+    "nbsphinx",
     "autoapi.extension",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
@@ -40,4 +40,3 @@ html_theme_options = {
     "style_nav_header_background": "#1a1a1a",
     "logo_only": True,
 }
-

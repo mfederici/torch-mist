@@ -48,15 +48,11 @@ from torch_mist.train import train_mi_estimator
 from torch_mist.utils import evaluate_mi
 
 
-# This code performs the same procedure as the previous example
-
 # Instantiate the mutual information estimator
 estimator = mine(
     x_dim=x.shape[-1],
     y_dim=y.shape[-1],
-    neg_samples=16,
     hidden_dims=[32, 32],
-    critic_type='joint'
 )
 
 # Train it on the given samples
@@ -74,13 +70,13 @@ estimated_mi = evaluate_mi(
     estimator=estimator,
     x=x,
     y=y,
-    batch_size=128
+    batch_size=64
 )
 
 
 print(f"Mutual information estimated value: {estimated_mi} nats")
 ```
-
+Note that the two code snippets above perform the same procedure.
 Please refer to the [documentation](https://torch-mist.readthedocs.io/en/latest/) for a detailed description of the package and its usage.
 
 

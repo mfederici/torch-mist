@@ -5,7 +5,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
-from torch_mist.utils.data import SampleDataset
+from torch_mist.utils.data.dataset import SampleDataset
 
 
 def train_vqvae(
