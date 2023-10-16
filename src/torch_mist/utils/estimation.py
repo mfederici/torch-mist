@@ -62,8 +62,8 @@ def evaluate_mi(
 
 def estimate_mi(
     estimator_name: str,
-    x: Optional[torch.Tensor] = None,
-    y: Optional[torch.Tensor] = None,
+    x: Optional[Union[torch.Tensor, np.array]] = None,
+    y: Optional[Union[torch.Tensor, np.array]] = None,
     train_loader: Optional[Any] = None,
     valid_loader: Optional[Any] = None,
     test_loader: Optional[Any] = None,
@@ -139,6 +139,15 @@ def estimate_mi(
 
     if verbose:
         print("Evaluating the value of Mutual Information")
+    if not (test_loader is None):
+        x = None
+        y = None
+    elif x is None:
+        print(
+            "Warning: using the train_loader to estimate the value of mutual information. Please specify a test_loader"
+        )
+        test_loader = train_loader
+
     mi_value = evaluate_mi(
         estimator=estimator,
         x=x,

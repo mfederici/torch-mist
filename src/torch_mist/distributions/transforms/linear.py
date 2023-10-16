@@ -2,12 +2,14 @@ from functools import partial
 
 import numpy as np
 import torch
-from pyro.distributions import constraints, TransformModule, ConditionalTransformModule
+from pyro.distributions import (
+    constraints,
+    TransformModule,
+    ConditionalTransformModule,
+)
 from pyro.nn import DenseNN
 from torch import nn
 from torch.distributions import Transform
-
-from torch_mist.nn.utils import SkipDenseNN, Identity, Constant, MergeOutputs
 
 
 class ConditionedLinear(Transform):
@@ -15,27 +17,31 @@ class ConditionedLinear(Transform):
     codomain = constraints.real_vector
     bijective = True
 
-    def __init__(self, params,  epsilon=1e-6):
+    def __init__(self, params, epsilon=1e-6):
         super(ConditionedLinear, self).__init__(cache_size=1)
         self._params = params
         self._cached_logDetJ = None
         self.epsilon = epsilon
 
     def _call(self, x):
-        loc, log_scale = self._params() if callable(self._params) else self._params
-        if not(log_scale.shape == loc.shape):
+        loc, log_scale = (
+            self._params() if callable(self._params) else self._params
+        )
+        if not (log_scale.shape == loc.shape):
             log_scale = loc * 0 + log_scale
 
         self._cached_logDetJ = log_scale.sum(-1)
-        y = x * (log_scale.exp()+self.epsilon) + loc
+        y = x * (log_scale.exp() + self.epsilon) + loc
         return y
 
     def _inverse(self, y):
-        loc, log_scale = self._params() if callable(self._params) else self._params
-        if not(log_scale.shape == loc.shape):
+        loc, log_scale = (
+            self._params() if callable(self._params) else self._params
+        )
+        if not (log_scale.shape == loc.shape):
             log_scale = loc * 0 + log_scale
 
-        x = (y - loc) / (log_scale.exp()+self.epsilon)
+        x = (y - loc) / (log_scale.exp() + self.epsilon)
         self._cached_logDetJ = log_scale.sum(-1)
         return x
 
@@ -50,26 +56,22 @@ class ConditionedLinear(Transform):
 
 
 class Linear(ConditionedLinear, TransformModule):
-    def __init__(self, input_dim, loc=None, scale=None, initial_scale=None, epsilon=1e-6):
+    def __init__(
+        self, input_dim, loc=None, scale=None, initial_scale=None, epsilon=1e-6
+    ):
         super(Linear, self).__init__(self._params)
         if loc is None:
-            self.loc = nn.Parameter(
-                torch.zeros(
-                    input_dim
-                )
-            )
+            self.loc = nn.Parameter(torch.zeros(input_dim))
         else:
-            self.register_buffer('loc', torch.zeros(input_dim)+loc)
+            self.register_buffer("loc", torch.zeros(input_dim) + loc)
         if initial_scale is None:
             initial_scale = 1.0
         if scale is None:
             self.log_scale = nn.Parameter(
-                torch.zeros(
-                    input_dim
-                )+np.log(initial_scale)
+                torch.zeros(input_dim) + np.log(initial_scale)
             )
         else:
-            self.register_buffer('log_scale', torch.Tensor([scale]).log())
+            self.register_buffer("log_scale", torch.Tensor([scale]).log())
         self.epsilon = epsilon
 
     def _params(self):
@@ -81,7 +83,15 @@ class ConditionalLinear(ConditionalTransformModule):
     codomain = constraints.real_vector
     bijective = True
 
-    def __init__(self, net, loc=None, scale=None, initial_scale=None, epsilon=1e-6, skip_connection=False):
+    def __init__(
+        self,
+        net,
+        loc=None,
+        scale=None,
+        initial_scale=None,
+        epsilon=1e-6,
+        skip_connection=False,
+    ):
         super(ConditionalLinear, self).__init__()
 
         self.nn = net
@@ -92,7 +102,7 @@ class ConditionalLinear(ConditionalTransformModule):
         if loc is None:
             self.loc = None
         else:
-            self.register_buffer('loc', torch.Tensor([loc]).log())
+            self.register_buffer("loc", torch.Tensor([loc]).log())
 
         if initial_scale is None:
             initial_scale = 1.0
@@ -101,7 +111,7 @@ class ConditionalLinear(ConditionalTransformModule):
             self.log_scale = None
             self.initial_scale = initial_scale
         else:
-            self.register_buffer('log_scale', torch.Tensor([scale]).log())
+            self.register_buffer("log_scale", torch.Tensor([scale]).log())
 
     def _params(self, context):
         if self.log_scale is None and self.loc is None:
@@ -129,55 +139,30 @@ class ConditionalLinear(ConditionalTransformModule):
 
 
 def linear(
-        input_dim,
-        loc=None,
-        scale=None,
-        initial_scale=None,
+    input_dim,
+    loc=None,
+    scale=None,
+    initial_scale=None,
 ):
     return Linear(input_dim, scale=scale, initial_scale=initial_scale, loc=loc)
 
 
 def conditional_linear(
-        input_dim,
-        context_dim,
-        hidden_dims=None,
-        scale=None,
-        initial_scale=None
+    input_dim,
+    context_dim,
+    hidden_dims=None,
+    scale=None,
+    initial_scale=None,
+    skip_connection=False,
 ):
     if hidden_dims is None:
         hidden_dims = [input_dim * 10, input_dim * 10]
     if scale is None:
-        nn = DenseNN(context_dim, hidden_dims, param_dims=[input_dim, input_dim])
+        nn = DenseNN(
+            input_dim=context_dim,
+            hidden_dims=hidden_dims,
+            param_dims=[input_dim, input_dim],
+        )
     else:
         nn = DenseNN(context_dim, hidden_dims, param_dims=[input_dim])
     return ConditionalLinear(nn, scale=scale, initial_scale=initial_scale)
-
-
-def conditional_skip_linear(
-        input_dim,
-        context_dim,
-        hidden_dims=None,
-        learn_loc=False,
-        scale=None,
-        initial_scale: float=1.0,
-):
-    if hidden_dims is None:
-        hidden_dims = [input_dim * 10, input_dim * 10]
-
-    assert input_dim == context_dim
-    if learn_loc:
-        net = SkipDenseNN(input_dim=context_dim, hidden_dims=hidden_dims, param_dims=[input_dim])
-    else:
-        net = Identity()
-
-    if scale is None:
-        scale_net = nn.Sequential(
-            Constant(torch.zeros(context_dim)+np.log(initial_scale)),
-            SkipDenseNN(input_dim=context_dim, hidden_dims=hidden_dims, param_dims=[input_dim])
-        )
-        net = MergeOutputs(net, scale_net)
-    return ConditionalLinear(net, scale=scale, initial_scale=initial_scale)
-
-
-
-
