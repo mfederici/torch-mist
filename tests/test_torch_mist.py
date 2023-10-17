@@ -68,6 +68,7 @@ def _test_estimator(
         lr_annealing=False,
         batch_size=batch_size,
         verbose=False,
+        return_log=True,
     )
 
     # Compute the estimate
@@ -102,6 +103,14 @@ def test_discriminative_estimators():
             neg_samples=neg_samples,
         ),
         instantiate_estimator(
+            estimator_name="nwj",
+            x_dim=x_dim,
+            y_dim=y_dim,
+            hidden_dims=hidden_dims,
+            neg_samples=neg_samples,
+            critic_type="separable",
+        ),
+        instantiate_estimator(
             estimator_name="infonce",
             x_dim=x_dim,
             y_dim=y_dim,
@@ -113,6 +122,13 @@ def test_discriminative_estimators():
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
+        ),
+        instantiate_estimator(
+            estimator_name="infonce",
+            x_dim=x_dim,
+            y_dim=y_dim,
+            hidden_dims=hidden_dims,
+            neg_samples=neg_samples,
         ),
         instantiate_estimator(
             estimator_name="js",
@@ -148,6 +164,14 @@ def test_discriminative_estimators():
             y_dim=y_dim,
             hidden_dims=hidden_dims,
             neg_samples=neg_samples,
+        ),
+        instantiate_estimator(
+            estimator_name="alpha_tuba",
+            x_dim=x_dim,
+            y_dim=y_dim,
+            hidden_dims=hidden_dims,
+            neg_samples=neg_samples,
+            learnable_baseline=False,
         ),
         instantiate_estimator(
             estimator_name="flo",
