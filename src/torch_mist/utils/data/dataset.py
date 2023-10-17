@@ -16,7 +16,7 @@ class SampleDataset(Sequence, Dataset):
         return {
             name: value[item]
             if value[item].ndim == 1
-            else value[item].reshape(-1, 1)
+            else value[item].reshape(1)
             for name, value in self.samples.items()
         }
 

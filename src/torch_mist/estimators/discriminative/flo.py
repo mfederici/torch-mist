@@ -1,19 +1,22 @@
-from typing import List, Dict, Any, Optional
+import inspect
+from typing import List
 
 import torch
 
 from torch_mist.baselines import LearnableJointBaseline
-from torch_mist.critic.base import Critic
-from torch_mist.estimators.discriminative.base import DiscriminativeMutualInformationEstimator
+from torch_mist.critic.base import Critic, CRITIC_TYPE, JOINT_CRITIC
+from torch_mist.estimators.discriminative.base import (
+    DiscriminativeMutualInformationEstimator,
+)
 from torch_mist.utils.caching import cached
 
 
 class FLO(DiscriminativeMutualInformationEstimator):
     def __init__(
-            self,
-            critic: Critic,
-            baseline: LearnableJointBaseline,
-            neg_samples: int = 1,
+        self,
+        critic: Critic,
+        baseline: LearnableJointBaseline,
+        neg_samples: int = 1,
     ):
         super().__init__(
             critic=critic,
@@ -35,32 +38,39 @@ class FLO(DiscriminativeMutualInformationEstimator):
 
         # Compute the baseline. It has shape [...]
         b = self.baseline(f_, x, y)
-        assert b.ndim == f_.ndim-1, f"Baseline has ndim {b.ndim} while f_ has ndim {f_.ndim}"
+        assert (
+            b.ndim == f_.ndim - 1
+        ), f"Baseline has ndim {b.ndim} while f_ has ndim {f_.ndim}"
 
-        log_ratio = - b - (torch.logsumexp(f_, 0)-f-b).exp()/f_.shape[0] + 1
+        log_ratio = (
+            -b - (torch.logsumexp(f_, 0) - f - b).exp() / f_.shape[0] + 1
+        )
 
         return log_ratio
 
 
 def flo(
-        x_dim: int,
-        y_dim: int,
-        hidden_dims: List[int],
-        critic_type: str = 'joint',
-        neg_samples: int = 1,
-        critic_params: Dict[str, Any] = None,
-        baseline_params: Dict[str, Any] = None,
+    x_dim: int,
+    y_dim: int,
+    hidden_dims: List[int],
+    neg_samples: int = 1,
+    critic_type: str = JOINT_CRITIC,
+    **kwargs,
 ) -> FLO:
     from torch_mist.critic.utils import critic_nn
     from torch_mist.baselines import joint_baseline_nn
 
-    if baseline_params is None:
-        baseline_params = {}
+    baseline_params = {}
+    critic_params = {}
+
+    for param_name, param_value in kwargs:
+        if param_name in inspect.signature(joint_baseline_nn).parameters:
+            baseline_params[param_name] = param_value
+        else:
+            critic_params[param_name] = param_value
+
     baseline = joint_baseline_nn(
-        x_dim=x_dim,
-        y_dim=y_dim,
-        hidden_dims=hidden_dims,
-        **baseline_params
+        x_dim=x_dim, y_dim=y_dim, hidden_dims=hidden_dims, **baseline_params
     )
 
     return FLO(
@@ -69,7 +79,7 @@ def flo(
             y_dim=y_dim,
             hidden_dims=hidden_dims,
             critic_type=critic_type,
-            critic_params=critic_params
+            **critic_params,
         ),
         baseline=baseline,
         neg_samples=neg_samples,

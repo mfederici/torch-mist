@@ -1,6 +1,11 @@
 import torch
 from torch import nn
 
+CRITIC_TYPE = "critic_type"
+SEPARABLE_CRITIC = "separable"
+JOINT_CRITIC = "joint"
+CRITIC_TYPES = [JOINT_CRITIC, SEPARABLE_CRITIC]
+
 
 class Critic(nn.Module):
     def forward(

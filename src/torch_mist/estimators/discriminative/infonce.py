@@ -4,24 +4,27 @@ import torch
 import math
 
 from torch_mist.baselines import BatchLogMeanExp
+from torch_mist.critic.base import CRITIC_TYPE, JOINT_CRITIC, SEPARABLE_CRITIC
 from torch_mist.critic.separable import SeparableCritic
 from torch_mist.estimators.discriminative.tuba import TUBA
 
 
 class InfoNCE(TUBA):
     def __init__(
-            self,
-            critic: SeparableCritic,
+        self,
+        critic: SeparableCritic,
     ):
         # Note that this can be equivalently obtained by extending TUBA with a BatchLogMeanExp(dim=1) baseline
         # This implementation saves some computation
         super().__init__(
             critic=critic,
             neg_samples=0,  # 0 signifies the whole batch is used as negative samples
-            baseline=BatchLogMeanExp('first'),
+            baseline=BatchLogMeanExp("first"),
         )
 
-    def compute_log_normalization(self, x: torch.Tensor, y: torch.Tensor, f_: torch.tensor):
+    def compute_log_normalization(
+        self, x: torch.Tensor, y: torch.Tensor, f_: torch.tensor
+    ):
         # We override the compute_log_normalization just for efficiency
         # The result would be the same as the TUBA implementation with BatchLogMeanExp('first') baseline
         log_norm = f_.logsumexp(0) - math.log(f_.shape[0])
@@ -29,11 +32,11 @@ class InfoNCE(TUBA):
 
 
 def infonce(
-        x_dim: int,
-        y_dim: int,
-        hidden_dims: List[int],
-        critic_type='separable',
-        critic_params: Dict[str, Any] = None,
+    x_dim: int,
+    y_dim: int,
+    hidden_dims: List[int],
+    critic_type: str = SEPARABLE_CRITIC,
+    **kwargs
 ) -> InfoNCE:
     from torch_mist.critic.utils import critic_nn
 
@@ -41,8 +44,8 @@ def infonce(
         critic=critic_nn(
             x_dim=x_dim,
             y_dim=y_dim,
-            hidden_dims=hidden_dims,
             critic_type=critic_type,
-            critic_params=critic_params
+            hidden_dims=hidden_dims,
+            **kwargs
         )
     )

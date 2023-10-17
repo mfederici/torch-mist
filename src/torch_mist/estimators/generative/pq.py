@@ -14,6 +14,9 @@ from torch_mist.utils.caching import cached
 
 
 class SameBucketConditionalDistribution(ConditionalDistribution):
+    # Technically this is not a lower-bound but the estimation of marginal entropy is usually accurate
+    lower_bound = True
+
     def __init__(self, Q: QuantizationFunction):
         self.Q = Q
 

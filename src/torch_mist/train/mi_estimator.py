@@ -1,4 +1,4 @@
-from typing import Type, Optional, Dict, Any, Union, Tuple
+from typing import Type, Optional, Dict, Any, Union, Tuple, List
 
 import torch
 import pandas as pd
@@ -20,7 +20,7 @@ from torch_mist.utils.data.dataset import SampleDataset
 from torch_mist.utils.estimation import evaluate_mi
 
 
-def _make_dataloaders(
+def _instantiate_dataloaders(
     x: Optional[torch.Tensor] = None,
     y: Optional[torch.Tensor] = None,
     train_loader: Optional[Any] = None,
@@ -70,7 +70,7 @@ def _make_dataloaders(
     return train_loader, valid_loader
 
 
-def _make_optimizer(
+def _instantiate_optimizer(
     estimator: MutualInformationEstimator,
     max_epochs: int,
     iterations_per_epoch: int,
@@ -116,6 +116,47 @@ def _make_optimizer(
     return opt, lr_scheduler
 
 
+def _train_epoch(
+    estimator: MutualInformationEstimator,
+    train_loader: DataLoader,
+    opt: Optimizer,
+    lr_scheduler: LRScheduler,
+    epoch: int,
+    device: Union[str, torch.device],
+    log: Optional[List[Dict[str, Any]]] = None,
+    tqdm_iteration: Optional[tqdm] = None,
+):
+    for samples in train_loader:
+        x, y = unfold_samples(samples)
+
+        x = x.to(device)
+        y = y.to(device)
+
+        loss = estimator.loss(x, y)
+
+        if log:
+            estimation = estimator(x, y)
+            log.append(
+                {
+                    "loss": loss.item(),
+                    "iteration": len(log),
+                    "value": estimation.item(),
+                    "lr": lr_scheduler.get_last_lr()[0],
+                    "type": "train",
+                    "epoch": epoch + 1,
+                }
+            )
+
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+        lr_scheduler.step()
+
+        if tqdm_iteration:
+            tqdm_iteration.update(1)
+            tqdm_iteration.set_postfix_str(f"loss: {loss}")
+
+
 def train_mi_estimator(
     estimator: MutualInformationEstimator,
     x: Optional[torch.Tensor] = None,
@@ -137,7 +178,7 @@ def train_mi_estimator(
     patience: int = 3,
     delta: float = 0.001,
 ) -> Optional[pd.DataFrame]:
-    train_loader, valid_loader = _make_dataloaders(
+    train_loader, valid_loader = _instantiate_dataloaders(
         x=x,
         y=y,
         train_loader=train_loader,
@@ -147,7 +188,7 @@ def train_mi_estimator(
         num_workers=num_workers,
     )
 
-    opt, lr_scheduler = _make_optimizer(
+    opt, lr_scheduler = _instantiate_optimizer(
         estimator=estimator,
         optimizer_class=optimizer_class,
         optimizer_params=optimizer_params,
@@ -159,59 +200,38 @@ def train_mi_estimator(
 
     estimator.train()
     estimator = estimator.to(device)
-    log = []
-    valid_log = []
+    log = [] if return_log else None
 
     best_mi = 0
-    terminate = False
-
-    if verbose:
-        tqdm_epochs = tqdm(total=max_epochs, desc="Epoch", position=1)
-        tqdm_iteration = tqdm(
-            total=len(train_loader), desc="Iteration", position=1
-        )
+    tqdm_epochs = (
+        tqdm(total=max_epochs, desc="Epoch", position=1) if verbose else None
+    )
+    tqdm_iteration = (
+        tqdm(total=len(train_loader), desc="Iteration", position=1)
+        if verbose
+        else None
+    )
 
     for epoch in range(max_epochs):
-        if verbose:
-            tqdm_iteration.reset()
-        for samples in train_loader:
-            x, y = unfold_samples(samples)
-
-            x = x.to(device)
-            y = y.to(device)
-
-            loss = estimator.loss(x, y)
-
-            if return_log:
-                estimation = estimator(x, y)
-                log.append(
-                    {
-                        "loss": loss.item(),
-                        "iteration": len(log),
-                        "value": estimation.item(),
-                        "lr": lr_scheduler.get_last_lr()[0],
-                        "type": "train",
-                        "epoch": epoch + 1,
-                    }
-                )
-
-            opt.zero_grad()
-            loss.backward()
-            opt.step()
-            lr_scheduler.step()
-
-            if verbose:
-                tqdm_iteration.update(1)
-                tqdm_iteration.set_postfix_str(f"loss: {loss}")
+        _train_epoch(
+            estimator=estimator,
+            train_loader=train_loader,
+            opt=opt,
+            lr_scheduler=lr_scheduler,
+            log=log,
+            tqdm_iteration=tqdm_iteration,
+            device=device,
+            epoch=epoch,
+        )
 
         if valid_loader is not None:
             valid_mi = evaluate_mi(
                 estimator=estimator, dataloader=valid_loader, device=device
             )
-            if verbose:
+            if tqdm_epochs:
                 tqdm_epochs.set_postfix_str(f"valid_mi: {valid_mi}")
             if return_log:
-                valid_log.append(
+                log.append(
                     {
                         "value": valid_mi,
                         "epoch": epoch + 1,
@@ -221,25 +241,28 @@ def train_mi_estimator(
                 )
 
             if early_stopping:
-                if valid_mi - best_mi >= delta:
+                if estimator.lower_bound:
+                    improvement = valid_mi - best_mi
+                elif estimator.upper_bound:
+                    improvement = best_mi - valid_mi
+                else:
+                    improvement = delta
+
+                if improvement >= delta:
                     # Improvement
                     best_mi = valid_mi
                 else:
                     patience -= 1
 
-                if patience < 0:
-                    if verbose:
-                        print("No improvements on validation, stopping.")
-                    terminate = True
-
-        if terminate:
+        if patience < 0:
+            if verbose:
+                print("No improvements on validation, stopping.")
             break
-        if verbose:
+
+        if tqdm_epochs:
             tqdm_epochs.update(1)
+            tqdm_iteration.reset()
 
     if return_log:
         log = pd.DataFrame(log)
-        if valid_loader is not None:
-            valid_log = pd.DataFrame(valid_log)
-            log = pd.concat([log, valid_log])
         return log

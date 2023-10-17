@@ -8,7 +8,12 @@ from torch.distributions import Distribution
 from torch_mist.estimators.base import MutualInformationEstimator
 from torch_mist.critic.base import Critic
 from torch_mist.critic.separable import SeparableCritic
-from torch_mist.utils.caching import cached, reset_cache_before_call, reset_cache_after_call
+from torch_mist.utils.caching import (
+    cached,
+    reset_cache_before_call,
+    reset_cache_after_call,
+)
+from torch_mist.utils.indexing import select_off_diagonal
 
 
 class EmpiricalDistribution(Distribution):
@@ -23,25 +28,23 @@ class EmpiricalDistribution(Distribution):
         assert self._samples is not None
         assert len(sample_shape) == 1
         n_samples = sample_shape[0]
-        max_samples = self._samples.shape[0]
 
-        # We sample from the proposal distribution (off diagonal elements)
-        idx = torch.arange(max_samples * n_samples).to(self._samples.device).view(max_samples, n_samples).long()
-        idx = (idx % n_samples + torch.div(idx, n_samples, rounding_mode='floor') + 1) % max_samples
-        y_ = self._samples[idx.T]
-
-        return y_
+        return select_off_diagonal(self._samples, n_samples)
 
     def update(self):
         self._samples = None
 
 
 class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
+    lower_bound: bool = True
+
     def __init__(
-            self,
-            critic: Critic,
-            neg_samples: int = 1,
-            proposal: Optional[Union[Distribution, ConditionalDistribution]] = None,
+        self,
+        critic: Critic,
+        neg_samples: int = 1,
+        proposal: Optional[
+            Union[Distribution, ConditionalDistribution]
+        ] = None,
     ):
         super().__init__()
         self.critic = critic
@@ -50,17 +53,23 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
             proposal = EmpiricalDistribution()
         self.proposal = proposal
 
-    def unnormalized_log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    def unnormalized_log_ratio(
+        self, x: torch.Tensor, y: torch.Tensor
+    ) -> torch.Tensor:
         return self.critic_on_positives(x, y)
 
     @cached
-    def critic_on_positives(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    def critic_on_positives(
+        self, x: torch.Tensor, y: torch.Tensor
+    ) -> torch.Tensor:
         f = self.critic(x, y)
         assert f.ndim == y.ndim - 1
         return f
 
     @cached
-    def critic_on_negatives(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    def critic_on_negatives(
+        self, x: torch.Tensor, y: torch.Tensor
+    ) -> torch.Tensor:
         if isinstance(self.proposal, EmpiricalDistribution):
             assert y is not None
             self.proposal.add_samples(y)
@@ -73,29 +82,28 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
 
         # If we are sampling using the empirical distribution and the critic is separable
         # We can use an efficient implementation
-        if isinstance(self.proposal, Distribution) and isinstance(self.critic, SeparableCritic):
+        if isinstance(self.proposal, Distribution) and isinstance(
+            self.critic, SeparableCritic
+        ):
             # Efficient implementation for separable critic with empirical distribution (negatives from the same batch)
             if isinstance(self.proposal, EmpiricalDistribution):
                 N = x.shape[0]
-                # Take the N stored samples from y (stored in _samples). Shape [N, 1, ...,Y_DIM]
-                y_ = self.proposal._samples[:N].unsqueeze(1)
-
-                # Compute the critic on them. Shape [N, N, ...]
-                f_ = self.critic(x, y_)
                 if neg_samples != N:
-                    # We keep only n_sample off-diagonal elements if n_samples < N
-                    mask = torch.ones(N, N).to(x.device)
-                    mask = torch.triu(mask, 1) - torch.triu(mask, neg_samples + 1) + torch.tril(mask, -N + neg_samples)
-                    mask = mask.bool()
-                    while mask.ndim < f_.ndim:
-                        mask = mask.unsqueeze(-1)
-                    mask = mask.expand_as(f_)
-                    f_ = torch.masked_select(f_, mask).reshape(N, neg_samples).transpose(0, 1)
+                    f_ = self.critic(x, y, neg_samples)
+                else:
+                    # Take the N stored samples from y (stored in _samples). Shape [N, 1, ...,Y_DIM]
+                    y_ = self.proposal._samples[:N].unsqueeze(1)
+
+                    # Compute the critic on them. Shape [N, N, ...]
+                    f_ = self.critic(x, y_)
+
             else:
                 # Efficient implementation for separable critic with unconditional proposal
                 # Here we re-use the same samples y'~ r(y) for all the batch
                 # Sample from the proposal r(y) [M', 1, ..., Y_DIM] with M' as the number of neg_samples
-                y_ = self.proposal.sample(sample_shape=torch.Size([neg_samples])).unsqueeze(1)
+                y_ = self.proposal.sample(
+                    sample_shape=torch.Size([neg_samples])
+                ).unsqueeze(1)
 
                 # Compute the critic on them. Shape [M', ...]
                 f_ = self.critic(x, y_)
@@ -114,22 +122,30 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
             # Compute the log-ratio on the samples from the proposal p(x)r(y|x) [M,...]
             f_ = self.critic(x, y_)
 
-        assert f_.ndim == x.ndim, f"Expected {x.ndim} dimensions, got {f_.ndim}"
-        assert f_.shape[0] == neg_samples, f"Expected {neg_samples} samples, got {f_.shape[0]}"
+        assert (
+            f_.ndim == x.ndim
+        ), f"Expected {x.ndim} dimensions, got {f_.ndim}"
+        assert (
+            f_.shape[0] == neg_samples
+        ), f"Expected {neg_samples} samples, got {f_.shape[0]}"
 
         if isinstance(self.proposal, EmpiricalDistribution):
             self.proposal.update()
 
         return f_
 
-    def log_normalization(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    def log_normalization(
+        self, x: torch.Tensor, y: torch.Tensor
+    ) -> torch.Tensor:
         # Evaluate the unnormalized_log_ratio f(x,y) on the samples from r(y|x), with shape [M, ...]
         f_ = self.critic_on_negatives(x, y)
 
         return self.compute_log_normalization(x, y, f_)
 
     @abstractmethod
-    def compute_log_normalization(self, x: torch.Tensor, y: torch.Tensor, f_: torch.Tensor):
+    def compute_log_normalization(
+        self, x: torch.Tensor, y: torch.Tensor, f_: torch.Tensor
+    ):
         raise NotImplementedError()
 
     @reset_cache_after_call
@@ -156,13 +172,11 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
         return -self.log_ratio(x, y).mean()
 
     def __repr__(self):
-        s = self.__class__.__name__ + '(\n'
-        s += '  (critic): ' + str(self.critic).replace('\n', '\n' + '  ') + '\n'
-        s += '  (neg_samples): ' + str(self.neg_samples) + '\n'
-        s += ')'
+        s = self.__class__.__name__ + "(\n"
+        s += (
+            "  (critic): " + str(self.critic).replace("\n", "\n" + "  ") + "\n"
+        )
+        s += "  (neg_samples): " + str(self.neg_samples) + "\n"
+        s += ")"
 
         return s
-
-
-
-

@@ -9,7 +9,12 @@ from torch import nn
 
 class Baseline(nn.Module):
     @abstractmethod
-    def forward(self, f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self,
+        f_: torch.Tensor,
+        x: torch.Tensor,
+        y: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         raise NotImplementedError()
 
 
@@ -18,7 +23,12 @@ class ConstantBaseline(Baseline):
         super(ConstantBaseline, self).__init__()
         self.value = value
 
-    def forward(self, f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self,
+        f_: torch.Tensor,
+        x: torch.Tensor,
+        y: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         return torch.zeros(f_.shape[1:]).to(f_.device) + self.value
 
 
@@ -29,7 +39,12 @@ class ExponentialMovingAverage(Baseline):
         assert 0 <= gamma <= 1
         self.gamma = gamma
 
-    def forward(self, f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self,
+        f_: torch.Tensor,
+        x: torch.Tensor,
+        y: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         average = f_.exp().mean().detach()
         average = torch.clamp(average, min=1e-4, max=1e4)
 
@@ -52,19 +67,24 @@ class ExponentialMovingAverage(Baseline):
 
 class BatchLogMeanExp(Baseline):
     def __init__(self, dims: str):
-        assert dims in ['first', 'all']
+        assert dims in ["first", "all"]
         super(BatchLogMeanExp, self).__init__()
         self.dims = dims
 
-    def forward(self, f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self,
+        f_: torch.Tensor,
+        x: torch.Tensor,
+        y: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         # log 1/M \sum e^f_ = logsumexp(f_) - log M
-        if self.dims == 'all':
-            f_ = f_.view(-1)
+        if self.dims == "all":
+            f_ = f_.reshape(-1)
 
         M = f_.shape[0]
         b = torch.logsumexp(f_, 0) - math.log(M)
 
-        if self.dims == 'all':
+        if self.dims == "all":
             for _ in range(x.ndim - 1):
                 b = b.unsqueeze(0)
             b = b.expand_as(x[..., 0])
@@ -77,12 +97,22 @@ class LearnableBaseline(Baseline):
         super(LearnableBaseline, self).__init__()
         self.net = net
 
-    def forward(self, f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self,
+        f_: torch.Tensor,
+        x: torch.Tensor,
+        y: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         return self.net(x).squeeze(-1)
 
 
 class LearnableJointBaseline(LearnableBaseline):
-    def forward(self, f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self,
+        f_: torch.Tensor,
+        x: torch.Tensor,
+        y: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         n_dims = x.ndim
         # Find the maximum shape
         max_shape = [max(x.shape[i], y.shape[i]) for i in range(n_dims - 1)]
@@ -96,14 +126,21 @@ class LearnableJointBaseline(LearnableBaseline):
 
 
 class InterpolatedBaseline(Baseline):
-    def __init__(self, baseline_1: Baseline, baseline_2: Baseline, alpha: float):
+    def __init__(
+        self, baseline_1: Baseline, baseline_2: Baseline, alpha: float
+    ):
         super(InterpolatedBaseline, self).__init__()
         assert 0 <= alpha <= 1
         self.alpha = alpha
         self.baseline_1 = baseline_1
         self.baseline_2 = baseline_2
 
-    def forward(self, f_: torch.Tensor, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self,
+        f_: torch.Tensor,
+        x: torch.Tensor,
+        y: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         b1 = self.baseline_1.forward(f_=f_, x=x, y=y)
         b2 = self.baseline_2.forward(f_=f_, x=x, y=y)
 
@@ -117,10 +154,14 @@ class InterpolatedBaseline(Baseline):
             # We use logsumexp for numerical stability
             # log alpha * exp(b1) + (1-alpha) * exp(b2) = log(exp(b1+log alpha) + exp(b2+log(1-alpha)))
             b = torch.logsumexp(
-                torch.cat([
-                    b1.unsqueeze(-1)+math.log(self.alpha),
-                    b2.unsqueeze(-1)+math.log(1-self.alpha)
-                ], -1), -1
+                torch.cat(
+                    [
+                        b1.unsqueeze(-1) + math.log(self.alpha),
+                        b2.unsqueeze(-1) + math.log(1 - self.alpha),
+                    ],
+                    -1,
+                ),
+                -1,
             )
 
             return b
@@ -130,13 +171,13 @@ class AlphaTUBABaseline(InterpolatedBaseline):
     def __init__(self, x_dim: int, hidden_dims: List[int], alpha: float):
         baseline_1 = BatchLogMeanExp(dim=1)
         baseline_2 = baseline_nn(x_dim, hidden_dims)
-        super(AlphaTUBABaseline, self).__init__(baseline_1=baseline_1, baseline_2=baseline_2, alpha=alpha)
+        super(AlphaTUBABaseline, self).__init__(
+            baseline_1=baseline_1, baseline_2=baseline_2, alpha=alpha
+        )
 
 
 def baseline_nn(
-        x_dim: int,
-        hidden_dims: List[int],
-        nonlinearity: Callable = nn.ReLU(True)
+    x_dim: int, hidden_dims: List[int], nonlinearity: Callable = nn.ReLU(True)
 ) -> LearnableBaseline:
     from pyro.nn import DenseNN
 
@@ -144,24 +185,24 @@ def baseline_nn(
         input_dim=x_dim,
         hidden_dims=hidden_dims,
         param_dims=[1],
-        nonlinearity=nonlinearity
+        nonlinearity=nonlinearity,
     )
 
     return LearnableBaseline(net)
 
 
 def joint_baseline_nn(
-        x_dim: int,
-        y_dim: int,
-        hidden_dims: List[int],
-        nonlinearity: Any = nn.ReLU(True)
+    x_dim: int,
+    y_dim: int,
+    hidden_dims: List[int],
+    nonlinearity: Any = nn.ReLU(True),
 ) -> LearnableJointBaseline:
     from pyro.nn import DenseNN
 
     net = DenseNN(
-            input_dim=x_dim+y_dim,
-            hidden_dims=hidden_dims,
-            param_dims=[1],
-            nonlinearity=nonlinearity
-        )
+        input_dim=x_dim + y_dim,
+        hidden_dims=hidden_dims,
+        param_dims=[1],
+        nonlinearity=nonlinearity,
+    )
     return LearnableJointBaseline(net)

@@ -6,22 +6,23 @@ from pyro.nn import DenseNN
 from torch import nn
 
 from .base import Critic
+from torch_mist.utils.indexing import select_off_diagonal
 
 
 class SeparableCritic(Critic):
     def __init__(
-            self,
-            f_x: Optional[nn.Module] = None,
-            f_y: Optional[nn.Module] = None,
-            temperature: float = 1.0
+        self,
+        f_x: Optional[nn.Module] = None,
+        f_y: Optional[nn.Module] = None,
+        temperature: float = 1.0,
     ):
-        '''
+        """
         Model the critic as the product of two feature extractors
         f(x,y) = f_x(x)^T f_y(y)
         Note that the baseline can return a constant value (e.g. NWJ estimator)
         :param f_x: a (learnable) model returning a real vector of size D when given x. The identity is used if None is specified.
         :param f_y: a (learnable) model returning a real vector of size D when given y. The identity is used if None is specified.
-        '''
+        """
 
         super().__init__()
         self.f_x = (lambda x: x) if f_x is None else f_x
@@ -29,9 +30,10 @@ class SeparableCritic(Critic):
         self.temperature = temperature
 
     def forward(
-            self,
-            x: torch.Tensor,
-            y: torch.Tensor,
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
+        k: Optional[int] = None,
     ) -> torch.Tensor:
         f_x = self.f_x(x)
         f_y = self.f_y(y)
@@ -39,11 +41,18 @@ class SeparableCritic(Critic):
         if f_x.ndim < f_y.ndim:
             f_x = f_x.unsqueeze(0)
 
-        assert f_x.ndim == f_y.ndim, f'f_x.ndim={f_x.ndim}, f_y.ndim={f_y.ndim}'
+        assert (
+            f_x.ndim == f_y.ndim
+        ), f"f_x.ndim={f_x.ndim}, f_y.ndim={f_y.ndim}"
 
         # hack to expand to the same shape without specifying the number of repeats using broadcasting
         f_x = f_x + f_y * 0
         f_y = f_y + f_x * 0
 
-        K = torch.einsum('...b, ...b -> ...', f_x, f_y)
+        if k is None:
+            K = torch.einsum("...b, ...b -> ...", f_x, f_y)
+        else:
+            # Select the k off diagonal elements
+            off_diagonal_f_y = select_off_diagonal(f_y, k)
+            K = torch.einsum("...bc,bc->...b", off_diagonal_f_y, f_x)
         return K / self.temperature

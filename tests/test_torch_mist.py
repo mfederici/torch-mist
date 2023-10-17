@@ -30,6 +30,7 @@ n_train_samples = 100000
 n_test_samples = 10000
 n_pretrain_epochs = 3
 hidden_dims = [64]
+output_dim = 64
 quantization_dim = 4
 atol = 1e-1
 
@@ -103,32 +104,28 @@ def test_discriminative_estimators():
             neg_samples=neg_samples,
         ),
         instantiate_estimator(
-            estimator_name="nwj",
+            estimator_name="js",
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
             neg_samples=neg_samples,
             critic_type="separable",
+            output_dim=output_dim,
         ),
         instantiate_estimator(
             estimator_name="infonce",
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
-            critic_params={"projection_head": "asymmetric"},
+            output_dim=output_dim,
+            projection_head="symmetric",
         ),
         instantiate_estimator(
             estimator_name="infonce",
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
-        ),
-        instantiate_estimator(
-            estimator_name="infonce",
-            x_dim=x_dim,
-            y_dim=y_dim,
-            hidden_dims=hidden_dims,
-            neg_samples=neg_samples,
+            output_dim=output_dim,
         ),
         instantiate_estimator(
             estimator_name="js",

@@ -1,22 +1,27 @@
+import inspect
 from typing import List, Dict, Any
 
 from torch_mist.estimators.discriminative.tuba import TUBA
-from torch_mist.critic.base import Critic
-from torch_mist.baselines import Baseline, InterpolatedBaseline, BatchLogMeanExp
+from torch_mist.critic.base import Critic, CRITIC_TYPE, JOINT_CRITIC
+from torch_mist.baselines import (
+    Baseline,
+    InterpolatedBaseline,
+    BatchLogMeanExp,
+)
 
 
 class AlphaTUBA(TUBA):
     def __init__(
-            self,
-            critic: Critic,
-            baseline: Baseline,
-            alpha: float = 0.5,
-            neg_samples: int = -1,
+        self,
+        critic: Critic,
+        baseline: Baseline,
+        alpha: float = 0.5,
+        neg_samples: int = -1,
     ):
         alpha_baseline = InterpolatedBaseline(
-            baseline_1=BatchLogMeanExp('first'),
+            baseline_1=BatchLogMeanExp("first"),
             baseline_2=baseline,
-            alpha=alpha
+            alpha=alpha,
         )
 
         super().__init__(
@@ -27,29 +32,34 @@ class AlphaTUBA(TUBA):
 
 
 def alpha_tuba(
-        x_dim: int,
-        y_dim: int,
-        hidden_dims: List[int],
-        critic_type: str = 'joint',
-        alpha: float = 0.01,
-        learnable_baseline: bool = True,
-        neg_samples=-1,
-        critic_params: Dict[str, Any] = None,
-        baseline_params: Dict[str, Any] = None,
+    x_dim: int,
+    y_dim: int,
+    hidden_dims: List[int],
+    alpha: float = 0.01,
+    learnable_baseline: bool = True,
+    critic_type: str = JOINT_CRITIC,
+    neg_samples: int = -1,
+    **kwargs
 ) -> AlphaTUBA:
     from torch_mist.critic.utils import critic_nn
     from torch_mist.baselines import ConstantBaseline, baseline_nn
 
+    baseline_params = {}
+    critic_params = {}
+
+    for param_name, param_value in kwargs:
+        if param_name in inspect.signature(baseline_nn).parameters:
+            baseline_params[param_name] = param_value
+        else:
+            critic_params[param_name] = param_value
+        if param_name in inspect.signature(critic_nn).parameters:
+            critic_params[param_name] = param_value
+
     if learnable_baseline:
-        if baseline_params is None:
-            baseline_params = {}
         b_nn = baseline_nn(
-            x_dim=x_dim,
-            hidden_dims=hidden_dims,
-            **baseline_params
+            x_dim=x_dim, hidden_dims=hidden_dims, **baseline_params
         )
     else:
-        assert baseline_params is None
         b_nn = ConstantBaseline(value=1.0)
 
     return AlphaTUBA(
@@ -58,7 +68,7 @@ def alpha_tuba(
             y_dim=y_dim,
             hidden_dims=hidden_dims,
             critic_type=critic_type,
-            critic_params=critic_params
+            **critic_params
         ),
         baseline=b_nn,
         alpha=alpha,
