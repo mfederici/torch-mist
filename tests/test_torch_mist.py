@@ -5,12 +5,20 @@ import torch
 from torch.distributions import MultivariateNormal, Normal
 from torch.optim import Optimizer, Adam
 
+from torch_mist.data.multivariate import JointMultivariateNormal
+from torch_mist.distributions.transforms import (
+    ConditionalTransformedDistributionModule,
+    permute,
+)
+from torch_mist.distributions.utils import ConditionalStandardNormalModule
 from torch_mist.estimators import (
     MutualInformationEstimator,
     instantiate_estimator,
     CLUB,
+    BA,
 )
 from torch_mist.quantization import FixedQuantization, vqvae_quantization
+from torch_mist.utils.data import DistributionDataLoader
 
 from torch_mist.utils.estimation import evaluate_mi
 from torch_mist.train.mi_estimator import train_mi_estimator
@@ -80,7 +88,8 @@ def _test_estimator(
         batch_size=batch_size,
     )
 
-    print("I(x;y): ", mi_estimate)
+    print("True I(x;y): ", true_mi)
+    print("Estimated I(x;y): ", mi_estimate)
 
     # Check that the estimate is close to the true value
     assert np.isclose(
@@ -126,6 +135,7 @@ def test_discriminative_estimators():
             y_dim=y_dim,
             hidden_dims=hidden_dims,
             output_dim=output_dim,
+            normalize=True,
         ),
         instantiate_estimator(
             estimator_name="js",
@@ -318,3 +328,57 @@ def test_quantized_mi_estimators():
             optimizer_class=optimizer_class,
             atol=atol,
         )
+
+
+def test_flow_generative():
+    input_dim = 2
+
+    p_xy = JointMultivariateNormal(n_dim=input_dim)
+    true_mi = (p_xy.p_X.entropy() * 2 - p_xy.joint_dist.entropy()).item()
+
+    from pyro.distributions.transforms import conditional_affine_coupling
+
+    base = ConditionalStandardNormalModule(input_dim)
+    transforms = [
+        conditional_affine_coupling(
+            input_dim=input_dim, context_dim=input_dim, hidden_dims=hidden_dims
+        ),
+        permute(input_dim),
+        conditional_affine_coupling(
+            input_dim=input_dim, context_dim=input_dim, hidden_dims=hidden_dims
+        ),
+        permute(input_dim),
+        conditional_affine_coupling(
+            input_dim=input_dim, context_dim=input_dim, hidden_dims=hidden_dims
+        ),
+    ]
+    transformed_dist = ConditionalTransformedDistributionModule(
+        base, transforms
+    )
+
+    estimator = BA(
+        q_Y_given_X=transformed_dist,
+        entropy_y=p_xy.p_X.entropy(),
+    )
+
+    train_loader = DistributionDataLoader(
+        joint_dist=p_xy,
+        batch_size=64,
+        max_samples=100000,
+    )
+
+    train_mi_estimator(
+        estimator,
+        train_loader=train_loader,
+        max_epochs=5,
+        verbose=False,
+    )
+
+    mi_estimate = evaluate_mi(estimator, dataloader=train_loader)
+
+    print("True I(x;y): ", true_mi)
+    print("Estimated I(x;y): ", mi_estimate)
+
+    assert np.isclose(
+        mi_estimate, true_mi, atol=atol
+    ), f"Estimate {mi_estimate} is not close to true value {true_mi}."

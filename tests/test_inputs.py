@@ -1,8 +1,11 @@
 import numpy as np
+import torch
+
 from torch_mist import estimate_mi
 from torch.utils.data import DataLoader
 
 from torch_mist.utils.data import SampleDataset
+from torch_mist.utils.batch_utils import unfold_samples
 
 
 def test_inputs_train_mi_estimator():
@@ -108,3 +111,33 @@ def test_inputs_train_mi_estimator():
             failed = True
             print(e)
         assert failed == test["should_fail"], test["message"]
+
+
+def test_utils():
+    x = torch.zeros(10, 1)
+    failed = False
+    try:
+        unfold_samples((x,))
+    except Exception as e:
+        print(e)
+        failed = True
+
+    assert failed
+
+    failed = False
+    try:
+        unfold_samples({"x": x})
+    except Exception as e:
+        print(e)
+        failed = True
+
+    assert failed
+
+    failed = False
+    try:
+        unfold_samples(x)
+    except Exception as e:
+        print(e)
+        failed = True
+
+    assert failed

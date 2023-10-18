@@ -2,6 +2,7 @@ from typing import Callable, TypeVar
 import inspect
 
 import torch
+
 T = TypeVar("T")
 
 
@@ -28,17 +29,17 @@ def cached(method: Callable[..., T]) -> Callable[..., T]:
         # transform args in kwargs
         keys = inspect.signature(method).parameters.keys()
         unused_keys = [key for key in keys if key not in kwargs]
-        if 'self' in unused_keys:
-            unused_keys.remove('self')
+        if "self" in unused_keys:
+            unused_keys.remove("self")
         new_kwargs = {unused_keys[i]: arg for i, arg in enumerate(args)}
         kwargs = {**kwargs, **new_kwargs}
 
-        if not hasattr(self, '_cache'):
+        if not hasattr(self, "__cache"):
             self.__cache = {}
             self.__caching_enabled = True
 
         if not self.__caching_enabled:
-            return method(*args, **kwargs)
+            return method(self, *args, **kwargs)
 
         key = method.__name__
         if key not in self.__cache or not _is_cache_valid(self, key, **kwargs):
@@ -56,7 +57,7 @@ def cached(method: Callable[..., T]) -> Callable[..., T]:
 def reset_cache_after_call(method: Callable[..., T]) -> Callable[..., T]:
     def reset_cache(self, *args, **kwargs):
         value = method(self, *args, **kwargs)
-        if hasattr(self, '__cache'):
+        if hasattr(self, "__cache"):
             self.__cache = {key: None for key in self.__cache.keys()}
         return value
 
@@ -65,7 +66,7 @@ def reset_cache_after_call(method: Callable[..., T]) -> Callable[..., T]:
 
 def reset_cache_before_call(method: Callable[..., T]) -> Callable[..., T]:
     def reset_cache(self, *args, **kwargs):
-        if hasattr(self, '__cache'):
+        if hasattr(self, "__cache"):
             self.__cache = {key: None for key in self.__cache.keys()}
         return method(self, *args, **kwargs)
 
