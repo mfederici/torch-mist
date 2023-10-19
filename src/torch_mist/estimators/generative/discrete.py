@@ -4,7 +4,7 @@ import torch
 from torch import nn
 
 from torch_mist.estimators.generative.base import (
-    GenerativeMutualInformationEstimator,
+    GenerativeMIEstimator,
 )
 from torch_mist.estimators.generative.pq import (
     SameBucketConditionalDistribution,
@@ -17,7 +17,7 @@ from torch_mist.utils.caching import (
 )
 
 
-class DiscreteMutualInformationEstimator(GenerativeMutualInformationEstimator):
+class DiscreteMIEstimator(GenerativeMIEstimator):
     # Technically this is not a lower-bound but the estimation of marginal entropy is usually accurate
     lower_bound = True
 
@@ -147,8 +147,8 @@ def discrete(
     Q_x: Optional[QuantizationFunction] = None,
     Q_y: Optional[QuantizationFunction] = None,
     temperature: float = 0.1,
-) -> DiscreteMutualInformationEstimator:
-    return DiscreteMutualInformationEstimator(
+) -> DiscreteMIEstimator:
+    return DiscreteMIEstimator(
         Q_x=Q_x,
         Q_y=Q_y,
         temperature=temperature,

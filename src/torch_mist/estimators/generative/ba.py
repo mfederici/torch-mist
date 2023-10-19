@@ -5,12 +5,12 @@ import torch
 from pyro.distributions import ConditionalDistribution
 
 from torch_mist.estimators.generative.base import (
-    GenerativeMutualInformationEstimator,
+    GenerativeMIEstimator,
 )
 from torch_mist.utils.caching import reset_cache_after_call
 
 
-class BA(GenerativeMutualInformationEstimator):
+class BA(GenerativeMIEstimator):
     upper_bound: bool = True
 
     def __init__(

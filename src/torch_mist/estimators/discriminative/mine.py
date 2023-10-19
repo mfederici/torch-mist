@@ -2,10 +2,12 @@ from typing import List, Dict, Any
 
 from torch_mist.baselines import BatchLogMeanExp, ExponentialMovingAverage
 from torch_mist.critic.base import Critic, JOINT_CRITIC, CRITIC_TYPE
-from torch_mist.estimators.discriminative.tuba import TUBA
+from torch_mist.estimators.discriminative.baseline import (
+    BaselineDiscriminativeMIEstimator,
+)
 
 
-class MINE(TUBA):
+class MINE(BaselineDiscriminativeMIEstimator):
     lower_bound = False  # Technically MINE is a lower bound but sometimes it converges from above
 
     def __init__(
@@ -18,7 +20,7 @@ class MINE(TUBA):
             critic=critic,
             neg_samples=neg_samples,
             baseline=BatchLogMeanExp("all"),
-            grad_baseline=ExponentialMovingAverage(gamma=gamma),
+            train_baseline=ExponentialMovingAverage(gamma=gamma),
         )
 
 

@@ -1,20 +1,22 @@
 import inspect
-from typing import List, Dict, Any
+from typing import List
 
-from torch_mist.estimators.discriminative.tuba import TUBA
-from torch_mist.critic.base import Critic, CRITIC_TYPE, JOINT_CRITIC
+from torch_mist.critic.base import Critic, JOINT_CRITIC
 from torch_mist.baselines import (
-    Baseline,
+    LearnableBaseline,
     InterpolatedBaseline,
     BatchLogMeanExp,
 )
+from torch_mist.estimators.discriminative.baseline import (
+    BaselineDiscriminativeMIEstimator,
+)
 
 
-class AlphaTUBA(TUBA):
+class AlphaTUBA(BaselineDiscriminativeMIEstimator):
     def __init__(
         self,
         critic: Critic,
-        baseline: Baseline,
+        baseline: LearnableBaseline,
         alpha: float = 0.5,
         neg_samples: int = -1,
     ):

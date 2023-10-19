@@ -14,7 +14,7 @@ from torch.optim.lr_scheduler import (
 )
 from torch.utils.data import random_split, DataLoader
 
-from torch_mist.estimators.base import MutualInformationEstimator
+from torch_mist.estimators.base import MIEstimator
 from torch_mist.utils.batch_utils import unfold_samples
 from torch_mist.utils.data.dataset import SampleDataset
 from torch_mist.utils.estimation import evaluate_mi
@@ -71,7 +71,7 @@ def _instantiate_dataloaders(
 
 
 def _instantiate_optimizer(
-    estimator: MutualInformationEstimator,
+    estimator: MIEstimator,
     max_epochs: int,
     iterations_per_epoch: int,
     optimizer_class: Type[Optimizer] = Adam,
@@ -117,15 +117,18 @@ def _instantiate_optimizer(
 
 
 def _train_epoch(
-    estimator: MutualInformationEstimator,
+    estimator: MIEstimator,
     train_loader: DataLoader,
     opt: Optimizer,
     lr_scheduler: LRScheduler,
     epoch: int,
+    iteration: int,
     device: Union[str, torch.device],
-    log: Optional[List[Dict[str, Any]]] = None,
+    return_log: bool,
     tqdm_iteration: Optional[tqdm] = None,
-):
+) -> List[Dict[str, Any]]:
+    log = []
+    trained_iterations = 0
     for samples in train_loader:
         x, y = unfold_samples(samples)
 
@@ -134,15 +137,15 @@ def _train_epoch(
 
         loss = estimator.loss(x, y)
 
-        if log:
+        if return_log:
             estimation = estimator(x, y)
             log.append(
                 {
                     "loss": loss.item(),
-                    "iteration": len(log),
+                    "iteration": iteration + trained_iterations,
                     "value": estimation.item(),
                     "lr": lr_scheduler.get_last_lr()[0],
-                    "type": "train",
+                    "split": "train",
                     "epoch": epoch + 1,
                 }
             )
@@ -151,14 +154,17 @@ def _train_epoch(
         loss.backward()
         opt.step()
         lr_scheduler.step()
+        trained_iterations += 1
 
         if tqdm_iteration:
             tqdm_iteration.update(1)
             tqdm_iteration.set_postfix_str(f"loss: {loss}")
 
+    return log
+
 
 def train_mi_estimator(
-    estimator: MutualInformationEstimator,
+    estimator: MIEstimator,
     x: Optional[torch.Tensor] = None,
     y: Optional[torch.Tensor] = None,
     train_loader: Optional[Any] = None,
@@ -200,9 +206,10 @@ def train_mi_estimator(
 
     estimator.train()
     estimator = estimator.to(device)
-    log = [] if return_log else None
+    log = []
 
     best_mi = 0
+    iteration = 0
     tqdm_epochs = (
         tqdm(total=max_epochs, desc="Epoch", position=1) if verbose else None
     )
@@ -213,16 +220,22 @@ def train_mi_estimator(
     )
 
     for epoch in range(max_epochs):
-        _train_epoch(
+        if tqdm_epochs:
+            tqdm_iteration.reset()
+
+        train_log = _train_epoch(
             estimator=estimator,
             train_loader=train_loader,
             opt=opt,
             lr_scheduler=lr_scheduler,
-            log=log,
+            return_log=return_log,
             tqdm_iteration=tqdm_iteration,
             device=device,
             epoch=epoch,
+            iteration=iteration,
         )
+        log += train_log
+        iteration += len(train_log)
 
         if valid_loader is not None:
             valid_mi = evaluate_mi(
@@ -235,8 +248,8 @@ def train_mi_estimator(
                     {
                         "value": valid_mi,
                         "epoch": epoch + 1,
-                        "type": "validation",
-                        "iteration": len(log),
+                        "split": "validation",
+                        "iteration": iteration,
                     }
                 )
 
@@ -261,7 +274,6 @@ def train_mi_estimator(
 
         if tqdm_epochs:
             tqdm_epochs.update(1)
-            tqdm_iteration.reset()
 
     if return_log:
         log = pd.DataFrame(log)

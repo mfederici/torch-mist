@@ -5,10 +5,12 @@ import torch
 from torch_mist.baselines import BatchLogMeanExp
 from torch_mist.critic.base import Critic, CRITIC_TYPE, JOINT_CRITIC
 from torch_mist.estimators.discriminative.js import JS
-from torch_mist.estimators.discriminative.tuba import TUBA
+from torch_mist.estimators.discriminative.baseline import (
+    BaselineDiscriminativeMIEstimator,
+)
 
 
-class SMILE(TUBA):
+class SMILE(BaselineDiscriminativeMIEstimator):
     def __init__(
         self,
         critic: Critic,

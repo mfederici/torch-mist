@@ -2,19 +2,19 @@ from typing import Optional
 
 import torch
 
-from torch_mist.estimators.base import MutualInformationEstimator
-from torch_mist.estimators.discriminative.base import DiscriminativeMutualInformationEstimator
-from torch_mist.estimators.generative.base import GenerativeMutualInformationEstimator
+from torch_mist.estimators.base import MIEstimator
+from torch_mist.estimators.discriminative.base import DiscriminativeMIEstimator
+from torch_mist.estimators.generative.base import GenerativeMIEstimator
 from torch_mist.utils.caching import reset_cache_before_call
 
 
-class HybridMutualInformationEstimator(MutualInformationEstimator):
+class HybridMIEstimator(MIEstimator):
     def __init__(
-            self,
-            generative_estimator: Optional[GenerativeMutualInformationEstimator] = None,
-            discriminative_estimator: Optional[DiscriminativeMutualInformationEstimator] = None,
-            train_generative_estimator: bool = True,
-            train_discriminative_estimator: bool = True,
+        self,
+        generative_estimator: Optional[GenerativeMIEstimator] = None,
+        discriminative_estimator: Optional[DiscriminativeMIEstimator] = None,
+        train_generative_estimator: bool = True,
+        train_discriminative_estimator: bool = True,
     ):
         super().__init__()
         self.generative_estimator = generative_estimator
@@ -23,11 +23,10 @@ class HybridMutualInformationEstimator(MutualInformationEstimator):
         self.train_discriminative_estimator = train_discriminative_estimator
 
     def expected_log_ratio(
-            self,
-            x: torch.Tensor,
-            y: torch.Tensor,
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
     ) -> torch.Tensor:
-
         e1 = self.generative_estimator.expected_log_ratio(x, y)
         proposal = self.generative_estimator.q_Y_given_x(x=x)
         self.discriminative_estimator.proposal = proposal
@@ -36,9 +35,9 @@ class HybridMutualInformationEstimator(MutualInformationEstimator):
         return e1 + e2
 
     def unnormalized_log_ratio(
-            self,
-            x: torch.Tensor,
-            y: torch.Tensor,
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
     ) -> torch.Tensor:
         log_ratio = self.generative_estimator.log_ratio(x, y)
         # proposal = self.generative_estimator.q_Y_given_x(x=x)

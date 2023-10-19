@@ -5,11 +5,13 @@ import torch.nn.functional as F
 
 from torch_mist.baselines import ConstantBaseline
 from torch_mist.critic.base import Critic, CRITIC_TYPE, JOINT_CRITIC
-from torch_mist.estimators.discriminative.tuba import TUBA
+from torch_mist.estimators.discriminative.baseline import (
+    BaselineDiscriminativeMIEstimator,
+)
 from torch_mist.utils.caching import reset_cache_before_call
 
 
-class JS(TUBA):
+class JS(BaselineDiscriminativeMIEstimator):
     def __init__(
         self,
         critic: Critic,

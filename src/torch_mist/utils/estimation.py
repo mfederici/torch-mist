@@ -6,13 +6,13 @@ import numpy as np
 from torch.optim import Optimizer, Adam
 from torch.utils.data import DataLoader
 
-from torch_mist.estimators.base import MutualInformationEstimator
+from torch_mist.estimators.base import MIEstimator
 from torch_mist.utils.batch_utils import unfold_samples
 from torch_mist.utils.data.dataset import SampleDataset
 
 
 def evaluate_mi(
-    estimator: MutualInformationEstimator,
+    estimator: MIEstimator,
     x: Optional[torch.Tensor] = None,
     y: Optional[torch.Tensor] = None,
     dataloader: Optional[Any] = None,
@@ -87,8 +87,8 @@ def estimate_mi(
 ) -> Union[
     float,
     Tuple[float, pd.DataFrame],
-    Tuple[float, MutualInformationEstimator],
-    Tuple[float, MutualInformationEstimator, pd.DataFrame],
+    Tuple[float, MIEstimator],
+    Tuple[float, MIEstimator, pd.DataFrame],
 ]:
     from torch_mist.estimators.utils import instantiate_estimator
     from torch_mist.train import train_mi_estimator

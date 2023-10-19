@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 
-class MutualInformationEstimator(nn.Module):
+class MIEstimator(nn.Module):
     lower_bound: bool = False
     upper_bound: bool = False
 

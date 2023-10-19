@@ -6,12 +6,12 @@ import torch
 from torch_mist.baselines import LearnableJointBaseline
 from torch_mist.critic.base import Critic, CRITIC_TYPE, JOINT_CRITIC
 from torch_mist.estimators.discriminative.base import (
-    DiscriminativeMutualInformationEstimator,
+    DiscriminativeMIEstimator,
 )
 from torch_mist.utils.caching import cached
 
 
-class FLO(DiscriminativeMutualInformationEstimator):
+class FLO(DiscriminativeMIEstimator):
     def __init__(
         self,
         critic: Critic,

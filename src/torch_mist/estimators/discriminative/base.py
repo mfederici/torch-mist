@@ -5,7 +5,7 @@ import torch
 from pyro.distributions import ConditionalDistribution
 from torch.distributions import Distribution
 
-from torch_mist.estimators.base import MutualInformationEstimator
+from torch_mist.estimators.base import MIEstimator
 from torch_mist.critic.base import Critic
 from torch_mist.critic.separable import SeparableCritic
 from torch_mist.utils.caching import (
@@ -35,7 +35,7 @@ class EmpiricalDistribution(Distribution):
         self._samples = None
 
 
-class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
+class DiscriminativeMIEstimator(MIEstimator):
     lower_bound: bool = True
 
     def __init__(
@@ -75,10 +75,15 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
             self.proposal.add_samples(y)
 
         neg_samples = self.neg_samples
+        N = x.shape[0]
 
         # Negative neg_samples values are interpreted as difference from the batch size (-1 is all but one in the batch)
         if neg_samples <= 0:
-            neg_samples = x.shape[0] + neg_samples
+            neg_samples = N + neg_samples
+
+        # We can't use more negative than the batch
+        if neg_samples > N:
+            neg_samples = N
 
         # If we are sampling using the empirical distribution and the critic is separable
         # We can use an efficient implementation
@@ -87,7 +92,6 @@ class DiscriminativeMutualInformationEstimator(MutualInformationEstimator):
         ):
             # Efficient implementation for separable critic with empirical distribution (negatives from the same batch)
             if isinstance(self.proposal, EmpiricalDistribution):
-                N = x.shape[0]
                 if neg_samples != N:
                     f_ = self.critic(x, y, neg_samples)
                 else:

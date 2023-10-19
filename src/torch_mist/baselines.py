@@ -169,7 +169,7 @@ class InterpolatedBaseline(Baseline):
 
 class AlphaTUBABaseline(InterpolatedBaseline):
     def __init__(self, x_dim: int, hidden_dims: List[int], alpha: float):
-        baseline_1 = BatchLogMeanExp(dim=1)
+        baseline_1 = BatchLogMeanExp("first")
         baseline_2 = baseline_nn(x_dim, hidden_dims)
         super(AlphaTUBABaseline, self).__init__(
             baseline_1=baseline_1, baseline_2=baseline_2, alpha=alpha

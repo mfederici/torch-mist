@@ -7,7 +7,7 @@ from torch.distributions import Categorical, Distribution
 from torch_mist.distributions.utils import CategoricalModule
 from torch_mist.estimators.discriminative.base import EmpiricalDistribution
 from torch_mist.estimators.generative.base import (
-    GenerativeMutualInformationEstimator,
+    GenerativeMIEstimator,
 )
 from torch_mist.quantization.functions import QuantizationFunction
 from torch_mist.utils.caching import cached
@@ -32,7 +32,7 @@ class SameBucketConditionalDistribution(ConditionalDistribution):
         return EmpiricalDistribution()
 
 
-class PQ(GenerativeMutualInformationEstimator):
+class PQ(GenerativeMIEstimator):
     def __init__(
         self,
         q_QX_given_Y: ConditionalDistribution,

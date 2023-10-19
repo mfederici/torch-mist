@@ -3,4 +3,5 @@
    :caption: Examples:
 
    notebooks/usage.ipynb
+   notebooks/discriminative.ipynb
 

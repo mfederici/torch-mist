@@ -6,10 +6,12 @@ import math
 from torch_mist.baselines import BatchLogMeanExp
 from torch_mist.critic.base import CRITIC_TYPE, JOINT_CRITIC, SEPARABLE_CRITIC
 from torch_mist.critic.separable import SeparableCritic
-from torch_mist.estimators.discriminative.tuba import TUBA
+from torch_mist.estimators.discriminative.baseline import (
+    BaselineDiscriminativeMIEstimator,
+)
 
 
-class InfoNCE(TUBA):
+class InfoNCE(BaselineDiscriminativeMIEstimator):
     def __init__(
         self,
         critic: SeparableCritic,
@@ -28,6 +30,9 @@ class InfoNCE(TUBA):
         # We override the compute_log_normalization just for efficiency
         # The result would be the same as the TUBA implementation with BatchLogMeanExp('first') baseline
         log_norm = f_.logsumexp(0) - math.log(f_.shape[0])
+
+        # We override the compute_log_normalization for efficiency since e^(F(x,y))-b(x) = 1
+        log_norm = self.baseline(x=x, y=y, f_=f_)
         return log_norm
 
 
