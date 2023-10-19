@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from torch.distributions import MultivariateNormal, Normal
 from torch.optim import Optimizer, Adam
+from pyro.distributions.transforms import conditional_affine_coupling
 
 from torch_mist.data.multivariate import JointMultivariateNormal
 from torch_mist.distributions.transforms import (
@@ -330,12 +331,14 @@ def test_quantized_mi_estimators():
 
 
 def test_flow_generative():
+    # Seed everything
+    np.random.seed(42)
+    torch.manual_seed(42)
+
     input_dim = 2
 
     p_xy = JointMultivariateNormal(n_dim=input_dim)
     true_mi = (p_xy.p_X.entropy() * 2 - p_xy.joint_dist.entropy()).item()
-
-    from pyro.distributions.transforms import conditional_affine_coupling
 
     base = ConditionalStandardNormalModule(input_dim)
     transforms = [
