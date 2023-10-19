@@ -1,8 +1,4 @@
 # Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 # -- Project information -----------------------------------------------------
 
@@ -12,9 +8,6 @@ author = "Marco Federici"
 
 # -- General configuration ---------------------------------------------------
 
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
 extensions = [
     "nbsphinx",
     "autoapi.extension",
@@ -34,9 +27,11 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # a list of builtin themes.
 #
 html_theme = "sphinx_rtd_theme"
-html_logo = "logo.png"
+html_logo = "_static/logo.png"
 # Change the color of search and top bar
 html_theme_options = {
     "style_nav_header_background": "#1a1a1a",
     "logo_only": True,
 }
+
+html_favicon = "_static/favicon.ico"

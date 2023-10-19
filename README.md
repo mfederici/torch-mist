@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-<img src="docs/logo.png" onerror="this.onerror=null" width="200">
+<img src="docs/_static/logo.png" onerror="this.onerror=null" width="200">
 
 
 Mutual Information Estimation toolkit based on pytorch. TO BE RELEASED SOON
