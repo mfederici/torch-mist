@@ -4,7 +4,6 @@ from .functions import (
     FixedQuantization,
     VectorQuantization,
     LearnableVectorQuantization,
-    vector_quantization,
-    vqvae_quantization,
 )
-from .vqvae import VQVAE, vqvae
+from .vqvae import VQVAE
+from .factories import *

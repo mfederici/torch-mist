@@ -1,8 +1,7 @@
-from typing import Iterator, Tuple, Dict, Type, Any, Union
+from typing import Tuple, Dict, Type, Any
 
 import numpy as np
 import torch
-from torch.distributions import MultivariateNormal, Normal
 from torch.optim import Optimizer, Adam
 from pyro.distributions.transforms import conditional_affine_coupling
 
@@ -11,7 +10,7 @@ from torch_mist.distributions.transforms import (
     ConditionalTransformedDistributionModule,
     permute,
 )
-from torch_mist.distributions.utils import ConditionalStandardNormalModule
+from torch_mist.distributions.factories import ConditionalStandardNormalModule
 from torch_mist.estimators import (
     MIEstimator,
     instantiate_estimator,
@@ -24,7 +23,6 @@ from torch_mist.utils.data import DistributionDataLoader
 from torch_mist.utils.estimation import evaluate_mi
 from torch_mist.train.mi_estimator import train_mi_estimator
 
-from torch_mist.distributions.joint import JointDistribution
 
 rho = 0.9
 x_dim = y_dim = 1
@@ -44,14 +42,18 @@ quantization_dim = 4
 atol = 1e-1
 
 
-def _make_data():
-    mean = torch.tensor([0.0, 0.0])
-    cov = torch.tensor([[1, rho], [rho, 1.0]])
-    p_xy = MultivariateNormal(mean, cov)
-    true_mi = MultivariateNormal(mean, torch.eye(2)).entropy() - p_xy.entropy()
-    entropy_y = Normal(0, 1).entropy()
+def _make_data() -> (
+    Tuple[
+        Dict[str, torch.Tensor],
+        Dict[str, torch.Tensor],
+        torch.Tensor,
+        torch.Tensor,
+    ]
+):
+    p_xy = JointMultivariateNormal(sigma=1, rho=rho, n_dim=1)
+    true_mi = p_xy.mutual_information()
+    entropy_y = p_xy.entropy("y")
 
-    p_xy = JointDistribution(p_xy, dims=[1, 1], labels=["x", "y"])
     train_samples = p_xy.sample([n_train_samples])
     test_samples = p_xy.sample([n_test_samples])
 
@@ -62,7 +64,7 @@ def _test_estimator(
     estimator: MIEstimator,
     train_samples: Dict[str, torch.Tensor],
     test_samples: Dict[str, torch.Tensor],
-    true_mi: float,
+    true_mi: torch.Tensor,
     optimizer_params: Dict[str, Any],
     optimizer_class: Type[Optimizer],
     atol: float = 1e-1,
@@ -282,7 +284,7 @@ def test_quantized_mi_estimators():
             input_dim=x_dim, thresholds=torch.linspace(-3, 3, n_bins - 1)
         ),
         vqvae_quantization(
-            x=train_samples["x"],
+            data=train_samples["x"],
             input_dim=x_dim,
             hidden_dims=hidden_dims,
             quantization_dim=quantization_dim,
@@ -291,7 +293,7 @@ def test_quantized_mi_estimators():
             batch_size=batch_size,
         ),
         vqvae_quantization(
-            x=train_samples["x"],
+            data=train_samples["x"],
             input_dim=x_dim,
             hidden_dims=hidden_dims,
             quantization_dim=quantization_dim,
@@ -304,15 +306,15 @@ def test_quantized_mi_estimators():
     estimators = [
         instantiate_estimator(
             estimator_name="pq",
-            y_dim=y_dim,
+            x_dim=x_dim,
             hidden_dims=hidden_dims,
-            Q_x=quantization,
+            Q_y=quantization,
         )
         for quantization in quantizations
     ]
     estimators += [
         instantiate_estimator(
-            estimator_name="discrete", Q_x=quantization, Q_y=quantization
+            estimator_name="binned", Q_x=quantization, Q_y=quantization
         )
         for quantization in quantizations
     ]
@@ -338,7 +340,8 @@ def test_flow_generative():
     input_dim = 2
 
     p_xy = JointMultivariateNormal(n_dim=input_dim)
-    true_mi = (p_xy.p_X.entropy() * 2 - p_xy.joint_dist.entropy()).item()
+    true_mi = p_xy.mutual_information()
+    entropy_y = p_xy.entropy("y")
 
     base = ConditionalStandardNormalModule(input_dim)
     transforms = [
@@ -360,7 +363,7 @@ def test_flow_generative():
 
     estimator = BA(
         q_Y_given_X=transformed_dist,
-        entropy_y=p_xy.p_X.entropy(),
+        entropy_y=entropy_y,
     )
 
     train_loader = DistributionDataLoader(

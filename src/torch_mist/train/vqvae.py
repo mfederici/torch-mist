@@ -12,22 +12,22 @@ def train_vqvae(
     model: nn.Module,
     max_epochs: int,
     dataloader: Optional[Iterator] = None,
-    x: Optional[Union[torch.Tensor, np.array]] = None,
+    data: Optional[Union[torch.Tensor, np.array]] = None,
     optimizer_class=torch.optim.Adam,
     optimizer_params: Optional[Dict[str, Any]] = None,
     batch_size: Optional[int] = None,
     num_workers: int = 8,
 ) -> nn.Module:
-    if (x is None and dataloader is None) or (
-        not (x is None) and not (dataloader is None)
+    if (data is None and dataloader is None) or (
+        not (data is None) and not (dataloader is None)
     ):
         raise ValueError(
             "Either a set of samples or a dataloader need to be specified."
         )
-    if not (x is None):
+    if not (data is None):
         if batch_size is None:
             raise ValueError("Please specify a value for batch_size.")
-        dataset = SampleDataset({"x": x})
+        dataset = SampleDataset({"x": data})
         dataloader = DataLoader(
             dataset,
             batch_size=batch_size,
@@ -45,16 +45,16 @@ def train_vqvae(
             if isinstance(samples, dict):
                 if "x" not in samples:
                     raise ValueError("Expected 'x' key in samples")
-                x = samples["x"]
+                data = samples["x"]
             elif isinstance(samples, torch.Tensor):
-                x = samples
+                data = samples
             else:
                 raise ValueError(
                     f"Unknown sample type {type(samples)}, expected dict containing keys 'x' and 'y' or torch.Tensor"
                 )
 
             opt.zero_grad()
-            model.loss(x).backward()
+            model.loss(data).backward()
             opt.step()
 
     return model

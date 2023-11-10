@@ -5,9 +5,11 @@ import torch
 from pyro.distributions import ConditionalDistribution
 from torch.distributions import Distribution
 
+from torch_mist.baseline import Baseline
+from torch_mist.distributions.empirical import EmpiricalDistribution
 from torch_mist.estimators.base import MIEstimator
-from torch_mist.critic.base import Critic
-from torch_mist.critic.separable import SeparableCritic
+from torch_mist.critic import Critic
+from torch_mist.critic import SeparableCritic
 from torch_mist.utils.caching import (
     cached,
     reset_cache_before_call,
@@ -16,27 +18,9 @@ from torch_mist.utils.caching import (
 from torch_mist.utils.indexing import select_off_diagonal
 
 
-class EmpiricalDistribution(Distribution):
-    def __init__(self):
-        super().__init__(validate_args=False)
-        self._samples = None
-
-    def add_samples(self, samples):
-        self._samples = samples
-
-    def sample(self, sample_shape=torch.Size()):
-        assert self._samples is not None
-        assert len(sample_shape) == 1
-        n_samples = sample_shape[0]
-
-        return select_off_diagonal(self._samples, n_samples)
-
-    def update(self):
-        self._samples = None
-
-
 class DiscriminativeMIEstimator(MIEstimator):
     lower_bound: bool = True
+    infomax_gradient: bool = True
 
     def __init__(
         self,
@@ -53,13 +37,8 @@ class DiscriminativeMIEstimator(MIEstimator):
             proposal = EmpiricalDistribution()
         self.proposal = proposal
 
-    def unnormalized_log_ratio(
-        self, x: torch.Tensor, y: torch.Tensor
-    ) -> torch.Tensor:
-        return self.critic_on_positives(x, y)
-
     @cached
-    def critic_on_positives(
+    def unnormalized_log_ratio(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
         f = self.critic(x, y)
@@ -85,6 +64,9 @@ class DiscriminativeMIEstimator(MIEstimator):
         if neg_samples > N:
             neg_samples = N
 
+        # At least one negative sample
+        neg_samples = max(neg_samples, 1)
+
         # If we are sampling using the empirical distribution and the critic is separable
         # We can use an efficient implementation
         if isinstance(self.proposal, Distribution) and isinstance(
@@ -92,15 +74,20 @@ class DiscriminativeMIEstimator(MIEstimator):
         ):
             # Efficient implementation for separable critic with empirical distribution (negatives from the same batch)
             if isinstance(self.proposal, EmpiricalDistribution):
-                if neg_samples != N:
-                    f_ = self.critic(x, y, neg_samples)
+                # Keep only neg_samples negatives for each positive (off-diagonal)
+                if neg_samples < N:
+                    # Override the default self.critic(x,y) for efficient computation
+                    f_x = self.critic.f_x(x)
+                    f_y = self.critic.f_y(y)
+                    off_diagonal_f_y = select_off_diagonal(f_y, neg_samples)
+                    f_ = torch.einsum(
+                        "ab...c, b...c -> ab...", off_diagonal_f_y, f_x
+                    )
                 else:
-                    # Take the N stored samples from y (stored in _samples). Shape [N, 1, ...,Y_DIM]
-                    y_ = self.proposal._samples[:N].unsqueeze(1)
-
-                    # Compute the critic on them. Shape [N, N, ...]
+                    # Take the M stored samples from y (from the empirical). Shape [M, 1, ...,Y_DIM]
+                    y_ = self.proposal._samples[:neg_samples].unsqueeze(1)
+                    # Compute the critic on all pairs
                     f_ = self.critic(x, y_)
-
             else:
                 # Efficient implementation for separable critic with unconditional proposal
                 # Here we re-use the same samples y'~ r(y) for all the batch
@@ -127,27 +114,33 @@ class DiscriminativeMIEstimator(MIEstimator):
             f_ = self.critic(x, y_)
 
         assert (
-            f_.ndim == x.ndim
-        ), f"Expected {x.ndim} dimensions, got {f_.ndim}"
-        assert (
             f_.shape[0] == neg_samples
         ), f"Expected {neg_samples} samples, got {f_.shape[0]}"
+        assert (
+            f_.shape[1:] == x.shape[:-1]
+        ), f"Negatives have shape {f_.shape} shape, while x has shape {x.shape}"
 
         if isinstance(self.proposal, EmpiricalDistribution):
             self.proposal.update()
 
         return f_
 
-    def log_normalization(
+    def approx_log_partition(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
-        # Evaluate the unnormalized_log_ratio f(x,y) on the samples from r(y|x), with shape [M, ...]
+        # Evaluate the unnormalized_log_ratio f(x,y) on the samples from p(x)r(y|x)
+        # The tensor f_ has shape [M, N...] in which f_[i,j] contains critic(x[j], y_[i,j]).
+        # and y_ is sampled from r(y|x), which is set to the empirical p(y) unless a proposal is specified
         f_ = self.critic_on_negatives(x, y)
 
-        return self.compute_log_normalization(x, y, f_)
+        log_Z = self._approx_log_partition(x, y, f_)
+
+        assert log_Z.numel() == 1
+
+        return log_Z
 
     @abstractmethod
-    def compute_log_normalization(
+    def _approx_log_partition(
         self, x: torch.Tensor, y: torch.Tensor, f_: torch.Tensor
     ):
         raise NotImplementedError()
@@ -159,14 +152,12 @@ class DiscriminativeMIEstimator(MIEstimator):
         # x and y have shape [..., X_DIM] and [..., Y_DIM] respectively
 
         # Evaluate the unnormalized_log_ratio f(x,y) on the samples from p(x, y), with shape [...]
-        f = self.critic_on_positives(x, y)
+        unnormalized_log_ratio = self.unnormalized_log_ratio(x, y)
 
         # Compute the log-normalization term, with shape [...]
-        log_normalization = self.log_normalization(x, y)
+        log_partition = self.approx_log_partition(x, y)
 
-        assert log_normalization.ndim == f.ndim
-
-        log_ratio = f - log_normalization
+        log_ratio = unnormalized_log_ratio - log_partition
         assert log_ratio.ndim == y.ndim - 1
 
         return log_ratio
@@ -179,6 +170,78 @@ class DiscriminativeMIEstimator(MIEstimator):
         s = self.__class__.__name__ + "(\n"
         s += (
             "  (critic): " + str(self.critic).replace("\n", "\n" + "  ") + "\n"
+        )
+        s += "  (neg_samples): " + str(self.neg_samples) + "\n"
+        s += ")"
+
+        return s
+
+
+class CombinedDiscriminativeMIEstimator(DiscriminativeMIEstimator):
+    def __init__(
+        self,
+        train_estimator: DiscriminativeMIEstimator,
+        eval_estimator: DiscriminativeMIEstimator,
+    ):
+        assert train_estimator.critic == eval_estimator.critic
+        assert train_estimator.neg_samples == eval_estimator.neg_samples
+
+        super().__init__(
+            critic=train_estimator.critic,
+            neg_samples=train_estimator.neg_samples,
+        )
+
+        self.train_estimator = train_estimator
+        self.eval_estimator = eval_estimator
+
+    def loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        return self.train_estimator.loss(x, y)
+
+    def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        return self.eval_estimator.log_ratio(x, y)
+
+
+class BaselineDiscriminativeMIEstimator(DiscriminativeMIEstimator):
+    def __init__(
+        self,
+        critic: Critic,
+        baseline: Baseline,
+        neg_samples: int = 1,
+    ):
+        super().__init__(
+            critic=critic,
+            neg_samples=neg_samples,
+        )
+
+        self.baseline = baseline
+
+    def _approx_log_partition(
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
+        f_: torch.Tensor,
+    ) -> torch.Tensor:
+        # Compute the baseline. It has shape [...]
+        b = self.baseline(f_, x, y)
+        assert (
+            b.ndim == f_.ndim - 1
+        ), f"Baseline has ndim {b.ndim} while f_ has ndim {f_.ndim}"
+
+        log_norm = (f_ - b.unsqueeze(0)).exp().mean(0) + b - 1.0
+
+        return log_norm.mean()
+
+    def __repr__(self):
+        s = self.__class__.__name__ + "(\n"
+        s += (
+            "  (ratio_estimator): "
+            + str(self.critic).replace("\n", "\n" + "  ")
+            + "\n"
+        )
+        s += (
+            "  (baseline): "
+            + str(self.baseline).replace("\n", "\n" + "  ")
+            + "\n"
         )
         s += "  (neg_samples): " + str(self.neg_samples) + "\n"
         s += ")"

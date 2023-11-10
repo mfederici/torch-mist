@@ -1,5 +1,7 @@
 from .base import MIEstimator
-from .generative import *
-from .discriminative import *
-from .hybrid import HybridMIEstimator
-from .utils import instantiate_estimator
+from .generative.implementations import *
+from .discriminative.implementations import *
+from .transformed.implementations import *
+from .transformed import TransformedMIEstimator
+from .factories import *
+from .utils import FlippedMIEstimator, flip_estimator

@@ -1,6 +1,27 @@
-def instantiate_estimator(estimator_name, **kwargs):
-    import torch_mist.estimators as estimators
+import torch
 
-    factory = getattr(estimators, estimator_name)
-    estimator = factory(**kwargs)
-    return estimator
+from torch_mist.estimators import MIEstimator
+
+
+class FlippedMIEstimator(MIEstimator):
+    def __init__(self, estimator: MIEstimator):
+        super().__init__()
+        self.estimator = estimator
+
+    def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        return self.estimator.log_ratio(y, x)
+
+    def loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        return self.estimator.loss(y, x)
+
+    def expected_log_ratio(
+        self, x: torch.Tensor, y: torch.Tensor
+    ) -> torch.Tensor:
+        return self.estimator.expected_log_ratio(y, x)
+
+
+def flip_estimator(estimator: MIEstimator) -> MIEstimator:
+    if isinstance(estimator, FlippedMIEstimator):
+        return estimator.estimator
+    else:
+        return FlippedMIEstimator(estimator)

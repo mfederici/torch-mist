@@ -98,6 +98,7 @@ estimator = mine(
 )
 ```
 or directly using the corresponfing `MutualInformationEstimator` class
+
 ```python3
 ##########################
 # Advanced instantiation #
@@ -107,9 +108,9 @@ from torch_mist.critic import JointCritic
 from torch import nn
 
 # First we define the critic architecture
-critic = JointCritic(                               # Wrapper to concatenate the inputs x and y 
-    joint_net=nn.Sequential(                        # The neural network architectures that maps [x,y] to a scalar
-        nn.Linear(x.shape[-1]+y.shape[-1], 32),
+critic = JointCritic(  # Wrapper to concatenate the inputs x and y 
+    joint_net=nn.Sequential(  # The neural network architectures that maps [x,y] to a scalar
+        nn.Linear(x.shape[-1] + y.shape[-1], 32),
         nn.ReLU(True),
         nn.Linear(32, 32),
         nn.ReLU(True),
@@ -130,23 +131,23 @@ Note that the simplified and advanced instantiation reported in the example abov
 
 The basic estimators implemented in this package are summarized in the following table:
 
-| Estimator                                     | Type                  | Models                                    | Hyperparameters   | 
-|-----------------------------------------------|-----------------------|-------------------------------------------|-------------------|
-| NWJ [[1]](#references)                        | Discriminative        | $f_\phi(x,y)$                             | M                 | 
-| MINE  [[2]](#references)                      | Discriminative        | $f_\phi(x,y)$                             | M, $\gamma_{EMA}$ | 
-| InfoNCE [[3]](#references)                    | Discriminative        | $f_\phi(x,y)$                             | M                 | 
-| TUBA  [[4]](#references)                      | Discriminative        | $f_\phi(x,y)$, $b_\xi(x)$                 | M                 | 
-| AlphaTUBA [[4]](#references)                  | Discriminative        | $f_\phi(x,y)$, $b_\xi(x)$                 | M, $\alpha$       | 
-| JS [[5]](#references)                         | Discriminative        | $f_\phi(x,y)$                             | M                 | 
-| SMILE [[6]](#references)                      | Discriminative        | $f_\phi(x,y)$                             | M, $\tau$         |
-| FLO [[7]](#references)                        | Discriminative        | $f_\phi(x,y)$, $b_\xi(x,y)$               | M                 |
-| BA [[8]](#references)                         | Generative            | $q_\theta(y\|x)$                          | -                 |         
-| DoE [[9]](#references)                        | Generative            | $q_\theta(y\|x)$, $q_\psi(y)$             | -                 |
-| GM [[6]](#references)                         | Generative            | $q_\theta(x,y)$, $q_\psi(x)$, $q_\psi(y)$ | -                 |
-| L1OUT [[4]](#references) [[10]](#references)  | Generative            | $q_\theta(y\|x)$                          | -                 |                 
-| CLUB [[10]](#references)                      | Generative            | $q_\theta(y\|x)$                          | -                 |
-| Discrete [[]](#references)                    | Generative (Discrete) | $Q(x)$, $Q(y)$                            | -                 |
-| PQ [[11]](#references)                        | Generative (Discrete) | $Q(y)$, $q_\theta(Q(y)\|x)$               | -                 |
+| Estimator                                             | Type                     | Models                                    | Hyperparameters   | 
+|-------------------------------------------------------|--------------------------|-------------------------------------------|-------------------|
+| NWJ [[1]](#references)                                | Discriminative           | $f_\phi(x,y)$                             | M                 | 
+| MINE  [[2]](#references)                              | Discriminative           | $f_\phi(x,y)$                             | M, $\gamma_{EMA}$ | 
+| InfoNCE [[3]](#references)                            | Discriminative           | $f_\phi(x,y)$                             | M                 | 
+| TUBA  [[4]](#references)                              | Discriminative           | $f_\phi(x,y)$, $b_\xi(x)$                 | M                 | 
+| AlphaTUBA [[4]](#references)                          | Discriminative           | $f_\phi(x,y)$, $b_\xi(x)$                 | M, $\alpha$       | 
+| JS [[5]](#references)                                 | Discriminative           | $f_\phi(x,y)$                             | M                 | 
+| SMILE [[6]](#references)                              | Discriminative           | $f_\phi(x,y)$                             | M, $\tau$         |
+| FLO [[7]](#references)                                | Discriminative           | $f_\phi(x,y)$, $b_\xi(x,y)$               | M                 |
+| BA [[8]](#references)                                 | Generative               | $q_\theta(y\|x)$                          | -                 |         
+| DoE [[9]](#references)                                | Generative               | $q_\theta(y\|x)$, $q_\psi(y)$             | -                 |
+| GM [[6]](#references)                                 | Generative               | $q_\theta(x,y)$, $q_\psi(x)$, $q_\psi(y)$ | -                 |
+| L1OUT [[4]](#references) [[10]](#references)          | Generative               | $q_\theta(y\|x)$                          | -                 |                 
+| CLUB [[10]](#references)                              | Generative               | $q_\theta(y\|x)$                          | -                 |
+| Binned [[13]](https://arxiv.org/abs/cond-mat/0305641) | Transformed (Generative) | $Q(x)$, $Q(y)$                            | -                 |
+| PQ [[11]](#references)                                | Transformed (Generative) | $Q(y)$, $q_\theta(Q(y)\|x)$               | -                 |
 
 in which the following models are used:
 - $f_\phi(x,y)$ is a `critic` neural network with parameters $\phi, which maps pairs of observations to a scalar value.
@@ -268,6 +269,8 @@ Both `DataLoader` and `torch.Tensor` (or `np.array`) can be used for the `evalua
 [[11]](https://arxiv.org/abs/2306.00608) Federici, Marco, David Ruhe, and Patrick Forré. "On the Effectiveness of Hybrid Mutual Information Estimation." arXiv preprint arXiv:2306.00608 (2023).
 
 [[12]](https://arxiv.org/abs/2303.06992) Brekelmans, Rob, et al. "Improving mutual information estimation with annealed and energy-based bounds." arXiv preprint arXiv:2303.06992 (2023).
+
+[[13]](https://arxiv.org/abs/cond-mat/0305641) Kraskov, Alexander, Harald Stögbauer, and Peter Grassberger. "Estimating mutual information." Physical review E 69.6 (2004): 066138.
 
 ## Contributing
 

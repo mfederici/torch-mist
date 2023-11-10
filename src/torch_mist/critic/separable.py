@@ -7,6 +7,7 @@ from torch import nn
 
 from .base import Critic
 from torch_mist.utils.indexing import select_off_diagonal
+from torch_mist.utils.shape import expand_to_same_shape
 
 
 class SeparableCritic(Critic):
@@ -33,7 +34,6 @@ class SeparableCritic(Critic):
         self,
         x: torch.Tensor,
         y: torch.Tensor,
-        k: Optional[int] = None,
     ) -> torch.Tensor:
         f_x = self.f_x(x)
         f_y = self.f_y(y)
@@ -41,18 +41,11 @@ class SeparableCritic(Critic):
         if f_x.ndim < f_y.ndim:
             f_x = f_x.unsqueeze(0)
 
+        f_x, f_y = expand_to_same_shape(f_x, f_y)
+
         assert (
             f_x.ndim == f_y.ndim
         ), f"f_x.ndim={f_x.ndim}, f_y.ndim={f_y.ndim}"
 
-        # hack to expand to the same shape without specifying the number of repeats using broadcasting
-        f_x = f_x + f_y * 0
-        f_y = f_y + f_x * 0
-
-        if k is None:
-            K = torch.einsum("...b, ...b -> ...", f_x, f_y)
-        else:
-            # Select the k off diagonal elements
-            off_diagonal_f_y = select_off_diagonal(f_y, k)
-            K = torch.einsum("...bc,bc->...b", off_diagonal_f_y, f_x)
+        K = torch.einsum("...a, ...a -> ...", f_x, f_y)
         return K / self.temperature

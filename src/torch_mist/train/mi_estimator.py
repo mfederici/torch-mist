@@ -79,14 +79,16 @@ def _instantiate_optimizer(
     lr_annealing: bool = False,
     warmup_percentage: float = 0.2,
 ) -> Tuple[Optimizer, LRScheduler]:
-    opt_params = {"params": estimator.parameters()}
+    params = [
+        {"params": params}
+        for params in estimator.parameters()
+        if params.requires_grad
+    ]
 
     if optimizer_params is None:
         optimizer_params = {"lr": 5e-4}
 
-    opt_params.update(optimizer_params)
-
-    opt = optimizer_class([opt_params])
+    opt = optimizer_class(params, **optimizer_params)
 
     # Cosine annealing with initial linear warmup
     if lr_annealing:

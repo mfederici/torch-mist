@@ -1,10 +1,8 @@
-from typing import List, Iterator, Optional, Dict, Any, Union
+from typing import Optional
 
-import numpy as np
+from sklearn.base import TransformerMixin
 import torch
 from torch import nn
-
-from torch_mist.distributions.utils import conditional_transformed_normal
 
 
 class QuantizationFunction(nn.Module):
@@ -21,18 +19,54 @@ class LearnableQuantization(QuantizationFunction):
         raise NotImplementedError()
 
 
+class ClusterQuantization(QuantizationFunction):
+    def __init__(self, clustering: TransformerMixin):
+        super().__init__()
+        self.clustering = clustering
+
+    @property
+    def n_bins(self) -> int:
+        return self.clustering.n_clusters
+
+    def forward(self, x: torch.Tensor) -> torch.LongTensor:
+        device = x.device
+        if isinstance(x, torch.Tensor):
+            x = x.cpu()
+
+        shape = x.shape[:-1]
+        feature_dim = x.shape[-1]
+
+        return (
+            torch.LongTensor(self.clustering.predict(x.view(-1, feature_dim)))
+            .view(shape)
+            .to(device)
+        )
+
+
 class VectorQuantization(QuantizationFunction):
     def __init__(
         self,
-        input_dim: int,
-        n_bins: int,
+        input_dim: Optional[int] = None,
+        n_bins: Optional[int] = None,
+        vectors: Optional[torch.Tensor] = None,
     ):
         super().__init__()
 
-        # Vectors used for quantization
-        vectors = torch.zeros(n_bins, input_dim)
-        vectors.uniform_(-1 / n_bins, 1 / n_bins)
-        # self.vectors = nn.Parameter(vectors)
+        if vectors is None:
+            if n_bins is None or input_dim is None:
+                raise ValueError(
+                    "Either `vectors` or `n_bins` and `input_dim` need to be specified"
+                )
+
+            # Vectors used for quantization
+            vectors = torch.zeros(n_bins, input_dim)
+            vectors.uniform_(-1 / n_bins, 1 / n_bins)
+            # self.vectors = nn.Parameter(vectors)
+        else:
+            if not (n_bins is None or input_dim is None):
+                raise ValueError(
+                    "Either `vectors` or `n_bins` and `input_dim` need to be specified"
+                )
         self.register_buffer("vectors", vectors)
 
     def codebook_lookup(self, x: torch.Tensor) -> torch.Tensor:
@@ -101,76 +135,3 @@ class FixedQuantization(QuantizationFunction):
             ).to(bins.device)
         ).sum(-1)
         return flat_bins.long()
-
-
-def vector_quantization(
-    input_dim: int,
-    n_bins: int,
-    hidden_dims: List[int],
-    quantization_dim: Optional[int] = None,
-) -> LearnableVectorQuantization:
-    assert len(hidden_dims) > 0, "hidden_dims must be a non-empty list"
-
-    from pyro.nn import DenseNN
-
-    if quantization_dim is None:
-        quantization_dim = 16
-
-    encoder = DenseNN(input_dim, hidden_dims, [quantization_dim])
-
-    quantization = LearnableVectorQuantization(
-        net=encoder, n_bins=n_bins, quantization_dim=quantization_dim
-    )
-
-    return quantization
-
-
-def vqvae_quantization(
-    input_dim: int,
-    n_bins: int,
-    hidden_dims: List[int],
-    x: Optional[Union[torch.Tensor, np.array]] = None,
-    dataloader: Optional[Iterator] = None,
-    quantization_dim: Optional[int] = None,
-    decoder_transform_params: Optional[Dict[str, Any]] = None,
-    beta: float = 0.2,
-    max_epochs: int = 1,
-    optimizer_class=torch.optim.Adam,
-    optimizer_params: Optional[Dict[str, Any]] = None,
-    batch_size: Optional[int] = None,
-    num_workers: int = 8,
-) -> LearnableVectorQuantization:
-    from torch_mist.quantization.vqvae import VQVAE
-    from torch_mist.train.vqvae import train_vqvae
-
-    if optimizer_params is None:
-        optimizer_params = {"lr": 1e-3}
-
-    quantization = vector_quantization(
-        input_dim=input_dim,
-        n_bins=n_bins,
-        hidden_dims=hidden_dims,
-        quantization_dim=quantization_dim,
-    )
-
-    decoder = conditional_transformed_normal(
-        input_dim=input_dim,
-        context_dim=quantization_dim,
-        transform_name="conditional_linear",
-        transform_params=decoder_transform_params,
-    )
-
-    model = VQVAE(encoder=quantization, decoder=decoder, beta=beta)
-
-    train_vqvae(
-        model=model,
-        dataloader=dataloader,
-        x=x,
-        max_epochs=max_epochs,
-        optimizer_class=optimizer_class,
-        optimizer_params=optimizer_params,
-        batch_size=batch_size,
-        num_workers=num_workers,
-    )
-
-    return quantization

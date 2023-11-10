@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "torch_mist"
-version = "0.1.2"
+version = "0.1.3"
 description = "Mutual Information Estimation toolkit based on pytorch"
 authors = ["Marco Federici"]
 license = "MIT"
@@ -26,6 +26,7 @@ jupyter = "^1.0.0"
 pandas = "^2.0.2"
 matplotlib = "^3.7.1"
 seaborn = "^0.12.2"
+torchvision = "^0.15.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -138,12 +138,7 @@ class ConditionalLinear(ConditionalTransformModule):
         return ConditionedLinear(params, epsilon=self.epsilon)
 
 
-def linear(
-    input_dim,
-    loc=None,
-    scale=None,
-    initial_scale=None,
-):
+def linear(input_dim, loc=None, scale=None, initial_scale=None, **kwargs):
     return Linear(input_dim, scale=scale, initial_scale=initial_scale, loc=loc)
 
 
@@ -153,7 +148,7 @@ def conditional_linear(
     hidden_dims=None,
     scale=None,
     initial_scale=None,
-    skip_connection=False,
+    **kwargs
 ):
     if hidden_dims is None:
         hidden_dims = [input_dim * 10, input_dim * 10]

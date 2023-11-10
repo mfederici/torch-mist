@@ -4,8 +4,16 @@ from typing import List, Union, Dict
 import torch
 from torch import nn
 
-from pyro.distributions import ConditionalDistribution, ConditionalTransform, ConditionalTransformedDistribution
-from torch.distributions import Distribution, Transform, TransformedDistribution
+from pyro.distributions import (
+    ConditionalDistribution,
+    ConditionalTransform,
+    ConditionalTransformedDistribution,
+)
+from torch.distributions import (
+    Distribution,
+    Transform,
+    TransformedDistribution,
+)
 
 
 class DistributionModule(Distribution, nn.Module, ABC):
@@ -23,23 +31,24 @@ class ConditionalDistributionModule(ConditionalDistribution, nn.Module, ABC):
         nn.Module.__init__(self)
 
 
-class ConditionalTransformedDistributionModule(ConditionalTransformedDistribution, nn.Module):
+class ConditionalTransformedDistributionModule(
+    ConditionalTransformedDistribution, nn.Module
+):
     def __init__(
-            self,
-            base_dist: Union[
-                ConditionalDistribution,
-                Distribution
-            ],
-            transforms: Union[
-                ConditionalTransform,
-                List[ConditionalTransform],
-                Dict[str, Union[ConditionalTransform, Transform]],
-                Transform,
-                List[Transform],
-                None
-            ]):
-
-        if isinstance(transforms, ConditionalTransform) or isinstance(transforms, Transform):
+        self,
+        base_dist: Union[ConditionalDistribution, Distribution],
+        transforms: Union[
+            ConditionalTransform,
+            List[ConditionalTransform],
+            Dict[str, Union[ConditionalTransform, Transform]],
+            Transform,
+            List[Transform],
+            None,
+        ],
+    ):
+        if isinstance(transforms, ConditionalTransform) or isinstance(
+            transforms, Transform
+        ):
             transforms = [transforms]
         elif isinstance(transforms, dict):
             transforms = [transforms[k] for k in sorted(transforms.keys())]
@@ -56,13 +65,19 @@ class ConditionalTransformedDistributionModule(ConditionalTransformedDistributio
         self.transforms = transforms
 
     def condition(self, context):
-        base_dist = (self.base_dist.condition(context) if isinstance(self.base_dist, ConditionalDistribution)
-                     else self.base_dist)
+        base_dist = (
+            self.base_dist.condition(context)
+            if isinstance(self.base_dist, ConditionalDistribution)
+            else self.base_dist
+        )
         transforms = [
             (
-                t.condition(context) if isinstance(t, ConditionalTransform)
+                t.condition(context)
+                if isinstance(t, ConditionalTransform)
                 else t
-            ) for t in self.transforms]
+            )
+            for t in self.transforms
+        ]
 
         return TransformedDistribution(base_dist, transforms)
 
@@ -70,30 +85,32 @@ class ConditionalTransformedDistributionModule(ConditionalTransformedDistributio
         pass
 
     def __repr__(self):
-        s = self.__class__.__name__ + '('
-        s += '\n  (base_dist): ' + str(self._base_dist_repr).replace('\n', '\n  ')
-        s += '\n  (transforms): ' + str(self.transforms).replace('\n', '\n  ')
-        s += '\n'
+        s = self.__class__.__name__ + "("
+        s += "\n  (base_dist): " + str(self._base_dist_repr).replace(
+            "\n", "\n  "
+        )
+        s += "\n  (transforms): " + str(self.transforms).replace("\n", "\n  ")
+        s += "\n"
         return s
 
 
 class TransformedDistributionModule(DistributionModule):
     def __init__(
-            self,
-            base_dist: Distribution,
-            transforms: Union[
-                Transform,
-                List[Transform],
-                Dict[str, Transform],
-                None
-            ]):
+        self,
+        base_dist: Distribution,
+        transforms: Union[
+            Transform, List[Transform], Dict[str, Transform], None
+        ],
+    ):
         super().__init__()
 
         self.base_dist = base_dist
 
-        if isinstance(transforms, ConditionalTransform) or isinstance(transforms, Transform):
+        if isinstance(transforms, ConditionalTransform) or isinstance(
+            transforms, Transform
+        ):
             transforms = [transforms]
-        elif hasattr(transforms, 'keys'):
+        elif hasattr(transforms, "keys"):
             transforms = [transforms[k] for k in sorted(transforms.keys())]
 
         self.transforms = nn.ModuleList(transforms)
@@ -101,19 +118,19 @@ class TransformedDistributionModule(DistributionModule):
     def rsample(self, sample_shape=torch.Size()):
         return TransformedDistribution(
             base_distribution=self.base_dist,
-            transforms=[t for t in self.transforms]
+            transforms=[t for t in self.transforms],
         ).rsample(sample_shape)
 
     def log_prob(self, value):
         return TransformedDistribution(
             base_distribution=self.base_dist,
             transforms=[t for t in self.transforms],
-            validate_args=False
+            validate_args=False,
         ).log_prob(value)
 
     def __repr__(self):
-        s = self.__class__.__name__+'('
-        s += '\n  (base_dist): '+str(self.base_dist).replace('\n', '\n  ')
-        s += '\n  (transforms): '+str(self.transforms).replace('\n', '\n  ')
-        s += '\n)'
+        s = self.__class__.__name__ + "("
+        s += "\n  (base_dist): " + str(self.base_dist).replace("\n", "\n  ")
+        s += "\n  (transforms): " + str(self.transforms).replace("\n", "\n  ")
+        s += "\n)"
         return s

@@ -7,6 +7,7 @@ import torch.nn as nn
 class MIEstimator(nn.Module):
     lower_bound: bool = False
     upper_bound: bool = False
+    infomax_gradient: bool = False
 
     @abstractmethod
     def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:

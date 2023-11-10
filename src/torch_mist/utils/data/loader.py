@@ -6,7 +6,7 @@ import torch
 from torch.distributions import Distribution
 from torch.utils.data import DataLoader, Dataset
 
-from torch_mist.distributions.joint import JointDistribution
+from torch_mist.distributions.joint.base import JointDistribution
 from torch_mist.utils.data.sampler import SameAttributeSampler
 
 
