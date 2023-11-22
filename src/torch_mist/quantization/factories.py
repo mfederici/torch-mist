@@ -92,7 +92,7 @@ def vqvae_quantization(
     num_workers: int = 8,
 ) -> LearnableVectorQuantization:
     from torch_mist.quantization.vqvae import VQVAE
-    from torch_mist.train.vqvae import train_vqvae
+    from torch_mist.utils.train import train_vqvae
 
     if optimizer_params is None:
         optimizer_params = {"lr": 1e-3}

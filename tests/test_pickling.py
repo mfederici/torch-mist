@@ -1,5 +1,6 @@
+import os
 import pickle
-
+import tempfile
 import torch
 from torch_mist.estimators import JS
 from torch_mist.critic import JointCritic
@@ -29,10 +30,12 @@ def test_pickle():
     print(mi_estimator)
 
     pickle.dumps(mi_estimator)
-    with open("js.pickle", "wb") as f:
+    filepath = os.path.join(tempfile.gettempdir(), "js.pickle")
+
+    with open(filepath, "wb") as f:
         pickle.dump(mi_estimator, f)
     print("Pickle dumps!")
 
-    with open("js.pickle", "rb") as f:
+    with open(filepath, "rb") as f:
         pickle.load(f)
     print("Pickle loads!")

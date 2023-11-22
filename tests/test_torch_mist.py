@@ -6,11 +6,11 @@ from torch.optim import Optimizer, Adam
 from pyro.distributions.transforms import conditional_affine_coupling
 
 from torch_mist.data.multivariate import JointMultivariateNormal
+from torch_mist.distributions.normal import ConditionalStandardNormalModule
 from torch_mist.distributions.transforms import (
     ConditionalTransformedDistributionModule,
     permute,
 )
-from torch_mist.distributions.factories import ConditionalStandardNormalModule
 from torch_mist.estimators import (
     MIEstimator,
     instantiate_estimator,
@@ -20,8 +20,8 @@ from torch_mist.estimators import (
 from torch_mist.quantization import FixedQuantization, vqvae_quantization
 from torch_mist.utils.data import DistributionDataLoader
 
-from torch_mist.utils.estimation import evaluate_mi
-from torch_mist.train.mi_estimator import train_mi_estimator
+from torch_mist.utils.evaluation import evaluate_mi
+from torch_mist.utils.train.mi_estimator import train_mi_estimator
 
 
 rho = 0.9

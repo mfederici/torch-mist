@@ -5,7 +5,7 @@ from torch_mist import estimate_mi
 from torch.utils.data import DataLoader
 
 from torch_mist.utils.data import SampleDataset
-from torch_mist.utils.batch_utils import unfold_samples
+from torch_mist.utils.batch import unfold_samples
 
 
 def test_inputs_train_mi_estimator():
@@ -41,7 +41,7 @@ def test_inputs_train_mi_estimator():
         {
             "params": {"x": x, "y": y},
             "should_fail": False,
-            "message": "Failed with x,y and batch",
+            "message": "Failed with x,y",
         },
         {
             "params": {"train_loader": train_loader, "x_dim": 1, "y_dim": 1},

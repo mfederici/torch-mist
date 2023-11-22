@@ -19,7 +19,6 @@ pytest-cov = "^4.1.0"
 pre-commit = "^3.4.0"
 
 [tool.poetry.group.docs.dependencies]
-#myst-nb = {version = "^0.17.2", python = "^3.8"}
 nbsphinx = "^0.9.3"
 sphinx-autoapi = "^3.0.0"
 sphinx-rtd-theme = "^1.2.2"

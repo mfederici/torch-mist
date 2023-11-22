@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-<img src="docs/_static/logo.png" onerror="this.onerror=null" width="200">
+<img src="https://github.com/mfederici/torch-mist/blob/main/docs/_static/logo.png?raw=true" onerror="this.onerror=null" width="200">
 
 
 Mutual Information Estimation toolkit based on pytorch. TO BE RELEASED SOON
@@ -42,11 +42,11 @@ print(f"Mutual information estimated value: {estimated_mi} nats")
 Additional flags that can be used to customize the estimators, training and evaluation procedure are included in the [documentation](https://torch-mist.readthedocs.io/en/latest).
 
 Alternatively, it is possible to manually instantiate, train and evaluate the mutual information estimators.
+
 ```python3
 from torch_mist.estimators import mine
-from torch_mist.train import train_mi_estimator
+from torch_mist.utils.train import train_mi_estimator
 from torch_mist.utils import evaluate_mi
-
 
 # Instantiate the mutual information estimator
 estimator = mine(
@@ -72,7 +72,6 @@ estimated_mi = evaluate_mi(
     y=y,
     batch_size=64
 )
-
 
 print(f"Mutual information estimated value: {estimated_mi} nats")
 ```
@@ -178,7 +177,7 @@ Most of the estimators included in this package are parametric and require a tra
 The `train_mi_estimator` utility function supports either row data `x` and `y` as `numpy.array` or `torch.Tensor`.
 
 ```python3
-from torch_mist.train import train_mi_estimator
+from torch_mist.utils.train import train_mi_estimator
 
 ######################################
 # Training using tensors for x and y #

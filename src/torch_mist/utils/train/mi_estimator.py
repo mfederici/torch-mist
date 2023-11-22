@@ -15,9 +15,9 @@ from torch.optim.lr_scheduler import (
 from torch.utils.data import random_split, DataLoader
 
 from torch_mist.estimators.base import MIEstimator
-from torch_mist.utils.batch_utils import unfold_samples
+from torch_mist.utils.batch import unfold_samples
 from torch_mist.utils.data.dataset import SampleDataset
-from torch_mist.utils.estimation import evaluate_mi
+from torch_mist.utils.evaluation import evaluate_mi
 
 
 def _instantiate_dataloaders(
