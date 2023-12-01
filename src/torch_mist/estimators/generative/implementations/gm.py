@@ -42,7 +42,8 @@ class GM(MIEstimator):
     def approx_log_p_x(self, x: torch.Tensor) -> torch.Tensor:
         log_q_x = self.q_X.log_prob(x)
         assert (
-            log_q_x.shape == x.shape[:-1] and isinstance(x, torch.FloatTensor)
+            log_q_x.shape == x.shape[:-1]
+            and not isinstance(x, torch.LongTensor)
         ) or (log_q_x.shape == x.shape and isinstance(x, torch.LongTensor))
         # The shape is [...]
         return log_q_x
@@ -51,7 +52,8 @@ class GM(MIEstimator):
     def approx_log_p_y(self, y: torch.Tensor) -> torch.Tensor:
         log_q_y = self.q_Y.log_prob(y)
         assert (
-            log_q_y.shape == y.shape[:-1] and isinstance(y, torch.FloatTensor)
+            log_q_y.shape == y.shape[:-1]
+            and not isinstance(y, torch.LongTensor)
         ) or (log_q_y.shape == y.shape and isinstance(y, torch.LongTensor))
         # The shape is [...]
         return log_q_y
@@ -64,7 +66,8 @@ class GM(MIEstimator):
         log_q_xy = self.q_XY.log_prob(x=x, y=y)
 
         assert (
-            log_q_xy.shape == y.shape[:-1] and isinstance(y, torch.FloatTensor)
+            log_q_xy.shape == y.shape[:-1]
+            and not isinstance(y, torch.LongTensor)
         ) or (log_q_xy.shape == y.shape and isinstance(y, torch.LongTensor))
 
         return log_q_xy
@@ -78,7 +81,7 @@ class GM(MIEstimator):
         mi = log_q_xy - log_q_y - log_q_x
 
         assert (
-            mi.shape == y.shape[:-1] and isinstance(y, torch.FloatTensor)
+            mi.shape == y.shape[:-1] and not isinstance(y, torch.LongTensor)
         ) or (mi.shape == y.shape and isinstance(y, torch.LongTensor))
 
         return mi
@@ -95,7 +98,7 @@ class GM(MIEstimator):
 
         loss = -log_q_xy - log_q_y - log_q_x
         assert (
-            loss.shape == y.shape[:-1] and isinstance(y, torch.FloatTensor)
+            loss.shape == y.shape[:-1] and not isinstance(y, torch.LongTensor)
         ) or (loss.shape == y.shape and isinstance(y, torch.LongTensor))
 
         return loss.mean()

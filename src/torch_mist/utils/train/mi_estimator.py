@@ -15,7 +15,7 @@ from torch.optim.lr_scheduler import (
 from torch.utils.data import random_split, DataLoader
 
 from torch_mist.estimators.base import MIEstimator
-from torch_mist.utils.batch import unfold_samples
+from torch_mist.utils.batch import unfold_samples, move_to_device
 from torch_mist.utils.data.dataset import SampleDataset
 from torch_mist.utils.evaluation import evaluate_mi
 
@@ -132,25 +132,28 @@ def _train_epoch(
     log = []
     trained_iterations = 0
     for samples in train_loader:
-        x, y = unfold_samples(samples)
+        variables = unfold_samples(samples)
+        variables = move_to_device(variables, device)
 
-        x = x.to(device)
-        y = y.to(device)
-
-        loss = estimator.loss(x, y)
+        loss = estimator.loss(**variables)
 
         if return_log:
-            estimation = estimator(x, y)
-            log.append(
-                {
-                    "loss": loss.item(),
-                    "iteration": iteration + trained_iterations,
-                    "value": estimation.item(),
-                    "lr": lr_scheduler.get_last_lr()[0],
-                    "split": "train",
-                    "epoch": epoch + 1,
+            estimation = estimator(**variables)
+
+            if isinstance(estimation, dict):
+                entry = {
+                    f"I({x_key};{y_key})": value.item()
+                    for (x_key, y_key), value in estimation.items()
                 }
-            )
+            else:
+                entry = {"I(x;y)": estimation}
+
+            entry["loss"] = loss.item()
+            entry["epoch"] = epoch + 1
+            entry["split"] = "train"
+            entry["iteration"] = (iteration + trained_iterations,)
+            entry["lr"] = (lr_scheduler.get_last_lr()[0],)
+            log.append(entry)
 
         opt.zero_grad()
         loss.backward()
@@ -243,17 +246,26 @@ def train_mi_estimator(
             valid_mi = evaluate_mi(
                 estimator=estimator, dataloader=valid_loader, device=device
             )
+
+            if return_log:
+                if isinstance(valid_mi, dict):
+                    entry = {
+                        f"I({x_key};{y_key})": value.item()
+                        for (x_key, y_key), value in valid_mi.items()
+                    }
+                else:
+                    entry = {"I(x;y)": valid_mi}
+
+                entry["epoch"] = epoch + 1
+                entry["split"] = "validation"
+                entry["iteration"] = iteration
+                log.append(entry)
+
+            if isinstance(valid_mi, dict):
+                valid_mi = sum(valid_mi.values())
+
             if tqdm_epochs:
                 tqdm_epochs.set_postfix_str(f"valid_mi: {valid_mi}")
-            if return_log:
-                log.append(
-                    {
-                        "value": valid_mi,
-                        "epoch": epoch + 1,
-                        "split": "validation",
-                        "iteration": iteration,
-                    }
-                )
 
             if early_stopping:
                 if estimator.lower_bound:

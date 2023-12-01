@@ -28,9 +28,11 @@ class BinnedMIEstimator(TransformedMIEstimator):
         )
 
         super().__init__(
-            f_x=Q_x,
-            f_y=Q_y,
             base_estimator=GM(
                 q_XY=q_XY,
             ),
+            transforms={
+                "x": Q_x,
+                "y": Q_y,
+            },
         )

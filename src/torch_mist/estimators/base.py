@@ -18,11 +18,6 @@ class MIEstimator(nn.Module):
     ) -> torch.Tensor:
         return self.log_ratio(x, y).mean()
 
-    def unnormalized_log_ratio(
-        self, x: torch.Tensor, y: torch.Tensor
-    ) -> torch.Tensor:
-        return self.log_ratio(x, y)
-
     @abstractmethod
     def loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         raise NotImplementedError()

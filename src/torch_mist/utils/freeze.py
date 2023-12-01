@@ -3,10 +3,12 @@ from typing import Any
 from torch import nn
 
 
-def freeze(function: Any):
+def freeze(function: Any) -> Any:
     if isinstance(function, nn.Module):
         for param in function.parameters():
             param.requires_grad = False
+
+    return function
 
 
 def n_trainable_parameters(function: Any) -> int:

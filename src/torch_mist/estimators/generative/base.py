@@ -65,7 +65,7 @@ class ConditionalGenerativeMIEstimator(GenerativeMIEstimator):
 
         assert (
             log_q_y_given_x.shape == y.shape[:-1]
-            and isinstance(y, torch.FloatTensor)
+            and not isinstance(y, torch.LongTensor)
         ) or (
             log_q_y_given_x.shape == y.shape
             and isinstance(y, torch.LongTensor)

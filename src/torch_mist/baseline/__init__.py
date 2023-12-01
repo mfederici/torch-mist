@@ -6,6 +6,5 @@ from .base import (
     InterpolatedBaseline,
     AlphaTUBABaseline,
     ExponentialMovingAverage,
-    LearnableJointBaseline,
 )
-from .factories import baseline_nn, joint_baseline_nn
+from .factories import baseline_nn

@@ -17,7 +17,7 @@ class PQ(TransformedMIEstimator):
         freeze(Q_y)
 
         super().__init__(
-            f_y=Q_y,
+            transforms={"y": Q_y},
             base_estimator=DoE(
                 q_Y_given_X=q_QY_given_X,
                 q_Y=JointCategorical(

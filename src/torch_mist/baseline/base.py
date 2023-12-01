@@ -105,25 +105,6 @@ class LearnableBaseline(Baseline):
         return self.net(x).squeeze(-1)
 
 
-class LearnableJointBaseline(LearnableBaseline):
-    def forward(
-        self,
-        f_: torch.Tensor,
-        x: torch.Tensor,
-        y: Optional[torch.Tensor] = None,
-    ) -> torch.Tensor:
-        n_dims = x.ndim
-        # Find the maximum shape
-        max_shape = [max(x.shape[i], y.shape[i]) for i in range(n_dims - 1)]
-        # Expand x and y to the maximum shape
-        x = x.expand(max_shape + [-1])
-        y = y.expand(max_shape + [-1])
-
-        assert x.shape[:-1] == y.shape[:-1]
-        xy = torch.cat([x, y], -1)
-        return self.net(xy).squeeze(-1)
-
-
 class InterpolatedBaseline(Baseline):
     def __init__(
         self, baseline_1: Baseline, baseline_2: Baseline, alpha: float

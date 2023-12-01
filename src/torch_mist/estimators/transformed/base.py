@@ -1,6 +1,7 @@
-from typing import Optional, Callable, Any
+from typing import Optional, Callable, Any, Dict, Union, List
 
 import torch
+from torch import nn
 
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.utils.caching import (
@@ -11,49 +12,105 @@ from torch_mist.utils.caching import (
 from torch_mist.utils.freeze import is_frozen
 
 
+class DummyModule(nn.Module):
+    def __init__(self, f: Callable[[Any], Any]):
+        super().__init__()
+        self.f = f
+
+    def forward(self, *args, **kwargs):
+        return self.f(*args, **kwargs)
+
+    def __repr__(self):
+        return str(self.f)
+
+
 class TransformedMIEstimator(MIEstimator):
     def __init__(
         self,
         base_estimator: MIEstimator,
-        f_x: Optional[Callable[[Any], Any]] = None,
-        f_y: Optional[Callable[[Any], Any]] = None,
+        transforms: Dict[str, Callable[[Any], Any]],
     ):
         super().__init__()
-
-        if not base_estimator.infomax_gradient and (
-            not is_frozen(f_x) or not is_frozen(f_y)
-        ):
-            raise ValueError(
-                "f_x and f_y can be trained together with the estimator only when the estimator provides a valid infomax gradient."
-                f"The estimator {base_estimator.__class__} does not. You can use a different estimator or freeze f_x and f_y."
-            )
 
         self.infomax_gradient = base_estimator.infomax_gradient
 
         self.base_estimator = base_estimator
-        self.f_x = f_x
-        self.f_y = f_y
+        self.transforms = nn.ModuleDict()
+
+        for variable, transform in transforms.items():
+            if not base_estimator.infomax_gradient and (
+                not is_frozen(transform)
+            ):
+                raise ValueError(
+                    "Transforms can be trained together with the estimator only when the estimator provides a valid infomax gradient."
+                    f"The estimator {base_estimator.__class__} does not. You can use a different estimator or the transform form {variable}."
+                )
+
+            if not isinstance(transform, nn.Module):
+                transform = DummyModule(transform)
+
+            self.transforms[variable] = transform
 
     @cached
-    def transform(self, x: Any, y: Any):
-        if self.f_x:
-            x = self.f_x(x)
-        if self.f_y:
-            y = self.f_y(y)
-        return x, y
+    def transform(self, **variables) -> Dict[str, torch.Tensor]:
+        transformed_variables = {}
+        for variable, transform in self.transforms.items():
+            transformed_variables[variable] = transform(variables[variable])
+        return transformed_variables
 
     @reset_cache_before_call
-    def loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        x, y = self.transform(x, y)
-        return self.base_estimator.loss(x, y)
+    def loss(self, *args, **variables) -> torch.Tensor:
+        if len(args) != 0 and len(args) != 2:
+            raise ValueError(
+                "The loss method can be called by passing two arguments or by specifying multiple named named arguments."
+            )
+        if len(args) == 2:
+            if len(variables) > 0:
+                raise ValueError(
+                    "The loss method can be called by passing two arguments or by specifying multiple named named arguments."
+                )
+            variables["x"] = args[0]
+            variables["y"] = args[1]
+
+        variables.update(self.transform(**variables))
+        return self.base_estimator.loss(**variables)
 
     def expected_log_ratio(
-        self, x: torch.Tensor, y: torch.Tensor
-    ) -> torch.Tensor:
-        x, y = self.transform(x, y)
-        return self.base_estimator.expected_log_ratio(x, y)
+        self, *args, **variables
+    ) -> Union[torch.Tensor, List[torch.Tensor]]:
+        if len(args) != 0 and len(args) != 2:
+            raise ValueError(
+                "The expected_log_ratio method can be called by passing two arguments or by specifying multiple named named arguments."
+            )
+        if len(args) == 2:
+            if len(variables) > 0:
+                raise ValueError(
+                    "The expected_log_ratio method can be called by passing two arguments or by specifying multiple named named arguments."
+                )
+            variables["x"] = args[0]
+            variables["y"] = args[1]
+
+        variables.update(self.transform(**variables))
+        return self.base_estimator.expected_log_ratio(**variables)
 
     @reset_cache_after_call
-    def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        x, y = self.transform(x, y)
-        return self.base_estimator.log_ratio(x, y)
+    def log_ratio(
+        self, *args, **variables
+    ) -> Union[torch.Tensor, List[torch.Tensor]]:
+        if len(args) != 0 and len(args) != 2:
+            raise ValueError(
+                "The log_ratio method can be called by passing two arguments or by specifying multiple named named arguments."
+            )
+        if len(args) == 2:
+            if len(variables) > 0:
+                raise ValueError(
+                    "The log_ratio method can be called by passing two arguments or by specifying multiple named named arguments."
+                )
+            variables["x"] = args[0]
+            variables["y"] = args[1]
+
+        variables.update(self.transform(**variables))
+        return self.base_estimator.log_ratio(**variables)
+
+    def forward(self, *args, **kwargs) -> torch.Tensor:
+        return self.expected_log_ratio(*args, **kwargs)

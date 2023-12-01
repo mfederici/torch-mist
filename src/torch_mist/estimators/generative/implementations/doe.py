@@ -27,7 +27,8 @@ class DoE(ConditionalGenerativeMIEstimator):
     ) -> torch.Tensor:
         log_q_y = self.q_Y.log_prob(y)
         assert (
-            log_q_y.shape == y.shape[:-1] and isinstance(y, torch.FloatTensor)
+            log_q_y.shape == y.shape[:-1]
+            and not isinstance(y, torch.LongTensor)
         ) or (log_q_y.shape == y.shape and isinstance(y, torch.LongTensor))
         return log_q_y
 
@@ -43,7 +44,7 @@ class DoE(ConditionalGenerativeMIEstimator):
         loss = -log_q_y - log_q_y_given_x
 
         assert (
-            loss.shape == y.shape[:-1] and isinstance(y, torch.FloatTensor)
+            loss.shape == y.shape[:-1] and not isinstance(y, torch.LongTensor)
         ) or (loss.shape == y.shape and isinstance(y, torch.LongTensor))
 
         return loss.mean()

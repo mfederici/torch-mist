@@ -2,7 +2,7 @@ import inspect
 from typing import List
 
 from torch_mist.baseline.base import ConstantBaseline
-from torch_mist.baseline.factories import joint_baseline_nn, baseline_nn
+from torch_mist.baseline.factories import baseline_nn
 from torch_mist.critic.base import JOINT_CRITIC, SEPARABLE_CRITIC
 from torch_mist.critic.factories import critic_nn
 from torch_mist.estimators.discriminative.implementations import (
@@ -67,28 +67,25 @@ def flo(
     critic_type: str = JOINT_CRITIC,
     **kwargs,
 ) -> FLO:
-    baseline_params = {}
-    critic_params = {}
+    critic = critic_nn(
+        x_dim=x_dim,
+        y_dim=y_dim,
+        hidden_dims=hidden_dims,
+        critic_type=critic_type,
+        **kwargs,
+    )
 
-    for param_name, param_value in kwargs:
-        if param_name in inspect.signature(joint_baseline_nn).parameters:
-            baseline_params[param_name] = param_value
-        else:
-            critic_params[param_name] = param_value
-
-    baseline = joint_baseline_nn(
-        x_dim=x_dim, y_dim=y_dim, hidden_dims=hidden_dims, **baseline_params
+    amortized_critic = critic_nn(
+        x_dim=x_dim,
+        y_dim=y_dim,
+        hidden_dims=hidden_dims,
+        critic_type=critic_type,
+        **kwargs,
     )
 
     return FLO(
-        critic=critic_nn(
-            x_dim=x_dim,
-            y_dim=y_dim,
-            hidden_dims=hidden_dims,
-            critic_type=critic_type,
-            **critic_params,
-        ),
-        baseline=baseline,
+        critic=critic,
+        amortized_critic=amortized_critic,
         neg_samples=neg_samples,
     )
 
