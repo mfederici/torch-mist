@@ -1,3 +1,4 @@
+import inspect
 from typing import List, Union, Dict
 
 from pyro.distributions import ConditionalTransform, ConditionalDistribution
@@ -20,12 +21,24 @@ def make_transforms(
     input_dim: int,
     transform_name: str = "conditional_linear",
     n_transforms: int = 1,
-    **kwargs
+    **kwargs,
 ) -> List[Union[Transform, ConditionalTransform]]:
     assert n_transforms > 0, "n_transforms must be greater than 0"
     transforms = []
 
     transform_factory = fetch_transform(transform_name)
+
+    # Check the arguments
+    kwargs_to_delete = []
+    for arg_name in kwargs:
+        if not (arg_name in inspect.signature(transform_factory).parameters):
+            print(
+                f"Warning: parameter {arg_name} ignored for {transform_name}."
+            )
+            kwargs_to_delete.append(arg_name)
+
+    for arg_name in kwargs_to_delete:
+        del kwargs[arg_name]
 
     for transform in range(n_transforms):
         transform = transform_factory(input_dim=input_dim, **kwargs)
@@ -38,7 +51,7 @@ def transformed_normal(
     input_dim: int,
     transform_name: str = "linear",
     n_transforms: int = 1,
-    **kwargs
+    **kwargs,
 ) -> Distribution:
     assert n_transforms > 0, "n_transforms must be greater than 0"
 
@@ -46,7 +59,7 @@ def transformed_normal(
         input_dim=input_dim,
         transform_name=transform_name,
         n_transforms=n_transforms,
-        **kwargs
+        **kwargs,
     )
 
     return TransformedNormalModule(
@@ -60,7 +73,7 @@ def conditional_transformed_normal(
     context_dim: int,
     transform_name: str = "conditional_linear",
     n_transforms: int = 1,
-    **kwargs
+    **kwargs,
 ) -> ConditionalDistribution:
     assert n_transforms > 0, "n_transforms must be greater than 0"
 
@@ -69,7 +82,7 @@ def conditional_transformed_normal(
         context_dim=context_dim,
         transform_name=transform_name,
         n_transforms=n_transforms,
-        **kwargs
+        **kwargs,
     )
 
     return ConditionalTransformedNormalModule(
@@ -81,7 +94,7 @@ def joint_transformed_normal(
     input_dims: Dict[str, int],
     transform_name: str = "conditional_linear",
     n_transforms: int = 1,
-    **kwargs
+    **kwargs,
 ) -> JointDistribution:
     assert n_transforms > 0, "n_transforms must be greater than 0"
 
@@ -91,7 +104,7 @@ def joint_transformed_normal(
         input_dim=input_dim,
         transform_name=transform_name,
         n_transforms=n_transforms,
-        **kwargs
+        **kwargs,
     )
 
     return JointTransformedNormalModule(

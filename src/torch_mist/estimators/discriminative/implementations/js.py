@@ -24,7 +24,7 @@ class JS(BaselineDiscriminativeMIEstimator):
         )
 
     @reset_cache_before_call
-    def loss(
+    def batch_loss(
         self,
         x: torch.Tensor,
         y: torch.Tensor,
@@ -34,5 +34,5 @@ class JS(BaselineDiscriminativeMIEstimator):
         # Compute the critic on the negatives. It has shape [M, ...] with M as the number of negative samples
         f_ = self.critic_on_negatives(x=x, y=y)
 
-        loss = F.softplus(-f).mean() + F.softplus(f_).mean()
+        loss = F.softplus(-f) + F.softplus(f_).mean(0)
         return loss

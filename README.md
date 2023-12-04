@@ -61,7 +61,6 @@ train_log = train_mi_estimator(
     x=x,
     y=y,
     batch_size=64,
-    return_log=True,
     verbose=True
 )
 
@@ -189,8 +188,6 @@ train_log = train_mi_estimator(
     y=y,
     batch_size=64,
     valid_percentage=0.1,
-    return_log=True,
-    verbose=True
 )
 ```
 Alternatively, it is possible to use a `torch.utils.DataLoader` that returns eiter batches of pairs `(batch_x, batch_y)`
@@ -234,8 +231,6 @@ train_log = train_mi_estimator(
     estimator=estimator,
     train_loader=train_loader,
     valid_loader=valid_loader,
-    return_log=True,
-    verbose=True
 )
 ```
 The two options result in the same training procedure, but we recommend using `DataLoader` for larger datasets.

@@ -18,6 +18,8 @@ from torch_mist.estimators.base import MIEstimator
 from torch_mist.utils.batch import unfold_samples, move_to_device
 from torch_mist.utils.data.dataset import SampleDataset
 from torch_mist.utils.evaluation import evaluate_mi
+from torch_mist.utils.logging.logger.base import Logger
+from torch_mist.utils.logging.logger.pandas import PandasLogger
 
 
 def _instantiate_dataloaders(
@@ -123,49 +125,28 @@ def _train_epoch(
     train_loader: DataLoader,
     opt: Optimizer,
     lr_scheduler: LRScheduler,
-    epoch: int,
-    iteration: int,
     device: Union[str, torch.device],
-    return_log: bool,
+    logger: Optional[Logger] = None,
     tqdm_iteration: Optional[tqdm] = None,
-) -> List[Dict[str, Any]]:
-    log = []
-    trained_iterations = 0
+    fast_train: bool = False,
+):
     for samples in train_loader:
         variables = unfold_samples(samples)
         variables = move_to_device(variables, device)
 
         loss = estimator.loss(**variables)
-
-        if return_log:
-            estimation = estimator(**variables)
-
-            if isinstance(estimation, dict):
-                entry = {
-                    f"I({x_key};{y_key})": value.item()
-                    for (x_key, y_key), value in estimation.items()
-                }
-            else:
-                entry = {"I(x;y)": estimation}
-
-            entry["loss"] = loss.item()
-            entry["epoch"] = epoch + 1
-            entry["split"] = "train"
-            entry["iteration"] = (iteration + trained_iterations,)
-            entry["lr"] = (lr_scheduler.get_last_lr()[0],)
-            log.append(entry)
+        if not fast_train and logger:
+            estimator(**variables)
 
         opt.zero_grad()
         loss.backward()
         opt.step()
         lr_scheduler.step()
-        trained_iterations += 1
+        logger.step()
 
         if tqdm_iteration:
             tqdm_iteration.update(1)
             tqdm_iteration.set_postfix_str(f"loss: {loss}")
-
-    return log
 
 
 def train_mi_estimator(
@@ -184,11 +165,12 @@ def train_mi_estimator(
     lr_annealing: bool = False,
     warmup_percentage: float = 0.2,
     verbose: bool = True,
-    return_log: bool = True,
+    logger: Optional[Union[Logger, bool]] = None,
     early_stopping: bool = True,
     patience: int = 3,
     delta: float = 0.001,
-) -> Optional[pd.DataFrame]:
+    fast_train: bool = False,
+) -> Optional[Any]:
     train_loader, valid_loader = _instantiate_dataloaders(
         x=x,
         y=y,
@@ -211,10 +193,18 @@ def train_mi_estimator(
 
     estimator.train()
     estimator = estimator.to(device)
-    log = []
+
+    if logger is None:
+        logger = PandasLogger()
+
+    if logger:
+        # If no method is logged, add the loss and the expected_log_ratio
+        if len(logger._logged_methods) == 0:
+            logger.log_method(estimator, "mutual_information")
+            logger.log_method(estimator, "loss")
 
     best_mi = 0
-    iteration = 0
+    initial_patience = patience
     tqdm_epochs = (
         tqdm(total=max_epochs, desc="Epoch", position=1) if verbose else None
     )
@@ -228,38 +218,42 @@ def train_mi_estimator(
         if tqdm_epochs:
             tqdm_iteration.reset()
 
-        train_log = _train_epoch(
-            estimator=estimator,
-            train_loader=train_loader,
-            opt=opt,
-            lr_scheduler=lr_scheduler,
-            return_log=return_log,
-            tqdm_iteration=tqdm_iteration,
-            device=device,
-            epoch=epoch,
-            iteration=iteration,
-        )
-        log += train_log
-        iteration += len(train_log)
-
-        if valid_loader is not None:
-            valid_mi = evaluate_mi(
-                estimator=estimator, dataloader=valid_loader, device=device
+        if logger:
+            with logger.train():
+                logger.new_epoch()
+                _train_epoch(
+                    estimator=estimator,
+                    train_loader=train_loader,
+                    opt=opt,
+                    lr_scheduler=lr_scheduler,
+                    logger=logger,
+                    tqdm_iteration=tqdm_iteration,
+                    device=device,
+                    fast_train=fast_train,
+                )
+        else:
+            _train_epoch(
+                estimator=estimator,
+                train_loader=train_loader,
+                opt=opt,
+                lr_scheduler=lr_scheduler,
+                tqdm_iteration=tqdm_iteration,
+                device=device,
+                fast_train=fast_train,
             )
 
-            if return_log:
-                if isinstance(valid_mi, dict):
-                    entry = {
-                        f"I({x_key};{y_key})": value.item()
-                        for (x_key, y_key), value in valid_mi.items()
-                    }
-                else:
-                    entry = {"I(x;y)": valid_mi}
-
-                entry["epoch"] = epoch + 1
-                entry["split"] = "validation"
-                entry["iteration"] = iteration
-                log.append(entry)
+        if valid_loader is not None:
+            if logger:
+                with logger.valid():
+                    valid_mi = evaluate_mi(
+                        estimator=estimator,
+                        dataloader=valid_loader,
+                        device=device,
+                    )
+            else:
+                valid_mi = evaluate_mi(
+                    estimator=estimator, dataloader=valid_loader, device=device
+                )
 
             if isinstance(valid_mi, dict):
                 valid_mi = sum(valid_mi.values())
@@ -267,28 +261,30 @@ def train_mi_estimator(
             if tqdm_epochs:
                 tqdm_epochs.set_postfix_str(f"valid_mi: {valid_mi}")
 
-            if early_stopping:
-                if estimator.lower_bound:
-                    improvement = valid_mi - best_mi
-                elif estimator.upper_bound:
-                    improvement = best_mi - valid_mi
-                else:
-                    improvement = delta
-
+            if (
+                early_stopping
+                and estimator.upper_bound
+                or estimator.lower_bound
+            ):
+                improvement = (
+                    (valid_mi - best_mi)
+                    if estimator.upper_bound
+                    else (best_mi - valid_mi)
+                )
                 if improvement >= delta:
                     # Improvement
                     best_mi = valid_mi
+                    patience = initial_patience
                 else:
                     patience -= 1
 
-        if patience < 0:
-            if verbose:
-                print("No improvements on validation, stopping.")
-            break
+                if patience < 0:
+                    if verbose:
+                        print("No improvements on validation, stopping.")
+                    break
 
         if tqdm_epochs:
             tqdm_epochs.update(1)
 
-    if return_log:
-        log = pd.DataFrame(log)
-        return log
+    if logger:
+        return logger.get_log()

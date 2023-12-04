@@ -32,8 +32,7 @@ class DoE(ConditionalGenerativeMIEstimator):
         ) or (log_q_y.shape == y.shape and isinstance(y, torch.LongTensor))
         return log_q_y
 
-    @reset_cache_before_call
-    def loss(
+    def batch_loss(
         self,
         x: torch.Tensor,
         y: torch.Tensor,
@@ -47,7 +46,7 @@ class DoE(ConditionalGenerativeMIEstimator):
             loss.shape == y.shape[:-1] and not isinstance(y, torch.LongTensor)
         ) or (loss.shape == y.shape and isinstance(y, torch.LongTensor))
 
-        return loss.mean()
+        return loss
 
     def __repr__(self):
         s = self.__class__.__name__ + "(\n"

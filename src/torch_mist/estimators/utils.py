@@ -14,10 +14,10 @@ class FlippedMIEstimator(MIEstimator):
     def loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         return self.estimator.loss(y, x)
 
-    def expected_log_ratio(
+    def mutual_information(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
-        return self.estimator.expected_log_ratio(y, x)
+        return self.estimator.mutual_information(y, x)
 
 
 def flip_estimator(estimator: MIEstimator) -> MIEstimator:

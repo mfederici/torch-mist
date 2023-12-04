@@ -58,8 +58,7 @@ class TransformedMIEstimator(MIEstimator):
             transformed_variables[variable] = transform(variables[variable])
         return transformed_variables
 
-    @reset_cache_before_call
-    def loss(self, *args, **variables) -> torch.Tensor:
+    def batch_loss(self, *args, **variables) -> torch.Tensor:
         if len(args) != 0 and len(args) != 2:
             raise ValueError(
                 "The loss method can be called by passing two arguments or by specifying multiple named named arguments."
@@ -73,27 +72,8 @@ class TransformedMIEstimator(MIEstimator):
             variables["y"] = args[1]
 
         variables.update(self.transform(**variables))
-        return self.base_estimator.loss(**variables)
+        return self.base_estimator.batch_loss(**variables)
 
-    def expected_log_ratio(
-        self, *args, **variables
-    ) -> Union[torch.Tensor, List[torch.Tensor]]:
-        if len(args) != 0 and len(args) != 2:
-            raise ValueError(
-                "The expected_log_ratio method can be called by passing two arguments or by specifying multiple named named arguments."
-            )
-        if len(args) == 2:
-            if len(variables) > 0:
-                raise ValueError(
-                    "The expected_log_ratio method can be called by passing two arguments or by specifying multiple named named arguments."
-                )
-            variables["x"] = args[0]
-            variables["y"] = args[1]
-
-        variables.update(self.transform(**variables))
-        return self.base_estimator.expected_log_ratio(**variables)
-
-    @reset_cache_after_call
     def log_ratio(
         self, *args, **variables
     ) -> Union[torch.Tensor, List[torch.Tensor]]:
@@ -113,4 +93,4 @@ class TransformedMIEstimator(MIEstimator):
         return self.base_estimator.log_ratio(**variables)
 
     def forward(self, *args, **kwargs) -> torch.Tensor:
-        return self.expected_log_ratio(*args, **kwargs)
+        return self.mutual_information(*args, **kwargs)

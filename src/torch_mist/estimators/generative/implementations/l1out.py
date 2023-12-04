@@ -75,7 +75,6 @@ class L1Out(ConditionalGenerativeMIEstimator):
 
         return log_p_y
 
-    @reset_cache_after_call
     def log_ratio(
         self,
         x: torch.Tensor,
@@ -91,8 +90,7 @@ class L1Out(ConditionalGenerativeMIEstimator):
 
         return log_ratio
 
-    @reset_cache_before_call
-    def loss(
+    def batch_loss(
         self,
         x: torch.Tensor,
         y: torch.Tensor,
@@ -104,4 +102,4 @@ class L1Out(ConditionalGenerativeMIEstimator):
             loss.shape == y.shape[:-1] and isinstance(y, torch.FloatTensor)
         ) or (loss.shape == y.shape and isinstance(y, torch.LongTensor))
 
-        return loss.mean()
+        return loss

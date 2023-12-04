@@ -7,6 +7,8 @@ from torch.optim import Optimizer, Adam
 
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.estimators.factories import instantiate_estimator
+from torch_mist.utils.logging.logger.base import Logger
+from torch_mist.utils.logging.logger.pandas import PandasLogger
 from torch_mist.utils.train.mi_estimator import train_mi_estimator
 from torch_mist.utils.evaluation import evaluate_mi
 
@@ -24,7 +26,7 @@ def estimate_mi(
     optimizer_class: Type[Optimizer] = Adam,
     optimizer_params: Optional[Dict[str, Any]] = None,
     verbose: bool = True,
-    return_log: bool = True,
+    logger: Optional[Union[Logger, bool]] = None,
     lr_annealing: bool = False,
     warmup_percentage: float = 0.2,
     batch_size: Optional[int] = 64,
@@ -34,6 +36,7 @@ def estimate_mi(
     patience: int = 3,
     delta: float = 0.001,
     return_estimator: bool = False,
+    fast_train: bool = False,
     **kwargs,
 ) -> Union[
     float,
@@ -75,7 +78,7 @@ def estimate_mi(
         optimizer_class=optimizer_class,
         optimizer_params=optimizer_params,
         verbose=verbose,
-        return_log=return_log,
+        logger=logger,
         lr_annealing=lr_annealing,
         warmup_percentage=warmup_percentage,
         batch_size=batch_size,
@@ -83,6 +86,7 @@ def estimate_mi(
         patience=patience,
         delta=delta,
         num_workers=num_workers,
+        fast_train=fast_train,
     )
 
     if verbose:
@@ -96,19 +100,21 @@ def estimate_mi(
         )
         test_loader = train_loader
 
-    mi_value = evaluate_mi(
-        estimator=estimator,
-        x=x,
-        y=y,
-        dataloader=test_loader,
-        batch_size=evaluation_batch_size,
-        device=device,
-        num_workers=num_workers,
-    )
+    if logger:
+        with logger.test():
+            mi_value = evaluate_mi(
+                estimator=estimator,
+                x=x,
+                y=y,
+                dataloader=test_loader,
+                batch_size=evaluation_batch_size,
+                device=device,
+                num_workers=num_workers,
+            )
 
-    if return_log and return_estimator:
+    if not (train_log is None) and return_estimator:
         return mi_value, estimator, train_log
-    elif return_log:
+    elif not (train_log is None):
         return mi_value, train_log
     elif return_estimator:
         return mi_value, estimator

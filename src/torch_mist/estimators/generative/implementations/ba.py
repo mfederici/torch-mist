@@ -29,12 +29,11 @@ class BA(ConditionalGenerativeMIEstimator):
         self.register_buffer("entropy_y", entropy_y)
 
     @reset_cache_after_call
-    def expected_log_ratio(
+    def mutual_information(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
         entropy_y_given_x = -self.approx_log_p_y_given_x(x=x, y=y).mean()
         return self.entropy_y - entropy_y_given_x
 
-    @reset_cache_before_call
-    def loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        return -self.approx_log_p_y_given_x(x=x, y=y).mean()
+    def batch_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        return -self.approx_log_p_y_given_x(x=x, y=y)

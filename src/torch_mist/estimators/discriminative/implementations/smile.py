@@ -28,13 +28,13 @@ class SMILE(CombinedDiscriminativeMIEstimator):
         )
         self.tau = tau
 
-    def _approx_log_partition(
+    def batch_approx_log_partition(
         self,
         x: torch.Tensor,
         y: torch.Tensor,
         f_: torch.Tensor,
     ) -> torch.Tensor:
-        return super()._approx_log_partition(
+        return super().batch_approx_log_partition(
             x=x, y=y, f_=torch.clamp(f_, min=-self.tau, max=self.tau)
         )
 

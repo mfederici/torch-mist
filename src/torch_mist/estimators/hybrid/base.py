@@ -22,15 +22,15 @@ class HybridMIEstimator(MIEstimator):
         self.train_generative_estimator = train_generative_estimator
         self.train_discriminative_estimator = train_discriminative_estimator
 
-    def expected_log_ratio(
+    def mutual_information(
         self,
         x: torch.Tensor,
         y: torch.Tensor,
     ) -> torch.Tensor:
-        e1 = self.generative_estimator.expected_log_ratio(x, y)
+        e1 = self.generative_estimator.mutual_information(x, y)
         proposal = self.generative_estimator.q_Y_given_x(x=x)
         self.discriminative_estimator.proposal = proposal
-        e2 = self.discriminative_estimator.expected_log_ratio(x, y)
+        e2 = self.discriminative_estimator.mutual_information(x, y)
 
         return e1 + e2
 

@@ -80,7 +80,6 @@ def _test_estimator(
         lr_annealing=False,
         batch_size=batch_size,
         verbose=False,
-        return_log=True,
     )
 
     # Compute the estimate

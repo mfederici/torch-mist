@@ -45,16 +45,8 @@ class DiscriminativeMIEstimator(MIEstimator):
         assert f.ndim == y.ndim - 1
         return f
 
-    @cached
-    def critic_on_negatives(
-        self, x: torch.Tensor, y: torch.Tensor
-    ) -> torch.Tensor:
-        if isinstance(self.proposal, EmpiricalDistribution):
-            assert y is not None
-            self.proposal.add_samples(y)
-
+    def get_n_negatives(self, N: int):
         neg_samples = self.neg_samples
-        N = x.shape[0]
 
         # Negative neg_samples values are interpreted as difference from the batch size (-1 is all but one in the batch)
         if neg_samples <= 0:
@@ -66,6 +58,18 @@ class DiscriminativeMIEstimator(MIEstimator):
 
         # At least one negative sample
         neg_samples = max(neg_samples, 1)
+        return neg_samples
+
+    @cached
+    def critic_on_negatives(
+        self, x: torch.Tensor, y: torch.Tensor
+    ) -> torch.Tensor:
+        if isinstance(self.proposal, EmpiricalDistribution):
+            assert y is not None
+            self.proposal.add_samples(y)
+
+        N = x.shape[0]
+        neg_samples = self.get_n_negatives(N)
 
         # If we are sampling using the empirical distribution and the critic is separable
         # We can use an efficient implementation
@@ -133,19 +137,23 @@ class DiscriminativeMIEstimator(MIEstimator):
         # and y_ is sampled from r(y|x), which is set to the empirical p(y) unless a proposal is specified
         f_ = self.critic_on_negatives(x, y)
 
-        log_Z = self._approx_log_partition(x, y, f_)
+        log_Z = self.batch_approx_log_partition(x, y, f_)
 
-        assert log_Z.numel() == 1
+        N = x.shape[0]
+        assert log_Z.shape[0] == self.get_n_negatives(N)
+        assert (
+            not isinstance(x, torch.LongTensor)
+            and log_Z.shape[1:] == x.shape[:-1]
+        ) or (isinstance(x, torch.LongTensor) and log_Z.shape[1:] == x.shape)
 
-        return log_Z
+        return log_Z.mean(0)
 
     @abstractmethod
-    def _approx_log_partition(
+    def batch_approx_log_partition(
         self, x: torch.Tensor, y: torch.Tensor, f_: torch.Tensor
     ):
         raise NotImplementedError()
 
-    @reset_cache_after_call
     def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         assert x.ndim == y.ndim
         # Approximate the log-ratio p(y|x)/p(y) on samples from p(x,y).
@@ -154,7 +162,7 @@ class DiscriminativeMIEstimator(MIEstimator):
         # Evaluate the unnormalized_log_ratio f(x,y) on the samples from p(x, y), with shape [...]
         unnormalized_log_ratio = self.unnormalized_log_ratio(x, y)
 
-        # Compute the log-normalization term, with shape [...]
+        # Compute the log-normalization term, with shape [M, ...]
         log_partition = self.approx_log_partition(x, y)
 
         log_ratio = unnormalized_log_ratio - log_partition
@@ -162,9 +170,8 @@ class DiscriminativeMIEstimator(MIEstimator):
 
         return log_ratio
 
-    @reset_cache_before_call
-    def loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        return -self.log_ratio(x, y).mean()
+    def batch_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        return -self.log_ratio(x, y)
 
     def __repr__(self):
         s = self.__class__.__name__ + "(\n"
@@ -194,8 +201,8 @@ class CombinedDiscriminativeMIEstimator(DiscriminativeMIEstimator):
         self.train_estimator = train_estimator
         self.eval_estimator = eval_estimator
 
-    def loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        return self.train_estimator.loss(x, y)
+    def batch_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        return self.train_estimator.batch_loss(x, y)
 
     def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         return self.eval_estimator.log_ratio(x, y)
@@ -215,21 +222,21 @@ class BaselineDiscriminativeMIEstimator(DiscriminativeMIEstimator):
 
         self.baseline = baseline
 
-    def _approx_log_partition(
+    def batch_approx_log_partition(
         self,
         x: torch.Tensor,
         y: torch.Tensor,
         f_: torch.Tensor,
     ) -> torch.Tensor:
-        # Compute the baseline. It has shape [...]
-        b = self.baseline(f_, x, y)
+        # Compute the baseline. It has shape [1,...]
+        b = self.baseline(f_, x, y).unsqueeze(0)
         assert (
-            b.ndim == f_.ndim - 1
+            b.ndim == f_.ndim
         ), f"Baseline has ndim {b.ndim} while f_ has ndim {f_.ndim}"
 
-        log_norm = (f_ - b.unsqueeze(0)).exp().mean(0) + b - 1.0
+        log_norm = (f_ - b).exp() + b - 1.0
 
-        return log_norm.mean()
+        return log_norm
 
     def __repr__(self):
         s = self.__class__.__name__ + "(\n"
