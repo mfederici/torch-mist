@@ -18,8 +18,9 @@ from torch_mist.estimators.base import MIEstimator
 from torch_mist.utils.batch import unfold_samples, move_to_device
 from torch_mist.utils.data.dataset import SampleDataset
 from torch_mist.utils.evaluation import evaluate_mi
-from torch_mist.utils.logging.logger.base import Logger
+from torch_mist.utils.logging.logger.base import Logger, DummyLogger
 from torch_mist.utils.logging.logger.pandas import PandasLogger
+from torch_mist.utils.logging.logger.utils import instantiate_mi_logger
 
 
 def _instantiate_dataloaders(
@@ -135,7 +136,9 @@ def _train_epoch(
         variables = move_to_device(variables, device)
 
         loss = estimator.loss(**variables)
-        if not fast_train and logger:
+
+        # Compute the ratio only if necessary
+        if not fast_train and not isinstance(logger, DummyLogger):
             estimator(**variables)
 
         opt.zero_grad()
@@ -194,14 +197,8 @@ def train_mi_estimator(
     estimator.train()
     estimator = estimator.to(device)
 
-    if logger is None:
-        logger = PandasLogger()
-
-    if logger:
-        # If no method is logged, add the loss and the expected_log_ratio
-        if len(logger._logged_methods) == 0:
-            logger.log_method(estimator, "mutual_information")
-            logger.log_method(estimator, "loss")
+    # If the logger is specified, we use it, if it is None, use the PandasLogger, if false, instantiate a DummyLogger
+    logger = instantiate_mi_logger(estimator, logger)
 
     best_mi = 0
     initial_patience = patience
@@ -218,41 +215,25 @@ def train_mi_estimator(
         if tqdm_epochs:
             tqdm_iteration.reset()
 
-        if logger:
-            with logger.train():
-                logger.new_epoch()
-                _train_epoch(
-                    estimator=estimator,
-                    train_loader=train_loader,
-                    opt=opt,
-                    lr_scheduler=lr_scheduler,
-                    logger=logger,
-                    tqdm_iteration=tqdm_iteration,
-                    device=device,
-                    fast_train=fast_train,
-                )
-        else:
+        with logger.train():
+            logger.new_epoch()
             _train_epoch(
                 estimator=estimator,
                 train_loader=train_loader,
                 opt=opt,
                 lr_scheduler=lr_scheduler,
+                logger=logger,
                 tqdm_iteration=tqdm_iteration,
                 device=device,
                 fast_train=fast_train,
             )
 
         if valid_loader is not None:
-            if logger:
-                with logger.valid():
-                    valid_mi = evaluate_mi(
-                        estimator=estimator,
-                        dataloader=valid_loader,
-                        device=device,
-                    )
-            else:
+            with logger.valid():
                 valid_mi = evaluate_mi(
-                    estimator=estimator, dataloader=valid_loader, device=device
+                    estimator=estimator,
+                    dataloader=valid_loader,
+                    device=device,
                 )
 
             if isinstance(valid_mi, dict):
@@ -272,7 +253,7 @@ def train_mi_estimator(
                     else (best_mi - valid_mi)
                 )
                 if improvement >= delta:
-                    # Improvement
+                    # Improvement, update best and reset the patience
                     best_mi = valid_mi
                     patience = initial_patience
                 else:
@@ -286,5 +267,4 @@ def train_mi_estimator(
         if tqdm_epochs:
             tqdm_epochs.update(1)
 
-    if logger:
-        return logger.get_log()
+    return logger.get_log()

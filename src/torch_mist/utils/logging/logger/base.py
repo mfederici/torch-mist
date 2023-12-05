@@ -117,3 +117,11 @@ class Logger:
 
     def get_log(self) -> Optional[Any]:
         return None
+
+
+class DummyLogger(Logger):
+    def _log(self, data: Dict[str, Any]):
+        pass
+
+    def _reset(self):
+        pass

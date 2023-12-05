@@ -8,7 +8,7 @@ from torch.optim import Optimizer, Adam
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.estimators.factories import instantiate_estimator
 from torch_mist.utils.logging.logger.base import Logger
-from torch_mist.utils.logging.logger.pandas import PandasLogger
+from torch_mist.utils.logging.logger.utils import instantiate_mi_logger
 from torch_mist.utils.train.mi_estimator import train_mi_estimator
 from torch_mist.utils.evaluation import evaluate_mi
 
@@ -66,6 +66,9 @@ def estimate_mi(
     if evaluation_batch_size is None:
         evaluation_batch_size = batch_size
 
+    # If the logger is specified, we use it, if it is None, use the PandasLogger, if false, instantiate a DummyLogger
+    logger = instantiate_mi_logger(estimator, logger)
+
     train_log = train_mi_estimator(
         estimator=estimator,
         x=x,
@@ -100,17 +103,16 @@ def estimate_mi(
         )
         test_loader = train_loader
 
-    if logger:
-        with logger.test():
-            mi_value = evaluate_mi(
-                estimator=estimator,
-                x=x,
-                y=y,
-                dataloader=test_loader,
-                batch_size=evaluation_batch_size,
-                device=device,
-                num_workers=num_workers,
-            )
+    with logger.test():
+        mi_value = evaluate_mi(
+            estimator=estimator,
+            x=x,
+            y=y,
+            dataloader=test_loader,
+            batch_size=evaluation_batch_size,
+            device=device,
+            num_workers=num_workers,
+        )
 
     if not (train_log is None) and return_estimator:
         return mi_value, estimator, train_log
