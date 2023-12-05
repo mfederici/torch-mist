@@ -20,7 +20,7 @@ from torch_mist.utils.data.dataset import SampleDataset
 from torch_mist.utils.evaluation import evaluate_mi
 from torch_mist.utils.logging.logger.base import Logger, DummyLogger
 from torch_mist.utils.logging.logger.pandas import PandasLogger
-from torch_mist.utils.logging.logger.utils import instantiate_mi_logger
+from torch_mist.utils.logging.logger.utils import instantiate_logger
 
 
 def _instantiate_dataloaders(
@@ -197,8 +197,10 @@ def train_mi_estimator(
     estimator.train()
     estimator = estimator.to(device)
 
-    # If the logger is specified, we use it, if it is None, use the PandasLogger, if false, instantiate a DummyLogger
-    logger = instantiate_mi_logger(estimator, logger)
+    # If the logger is specified, we use it adding loss and mutual_information logs if not already specified
+    # if it is None, use the default PandasLogger,
+    # if False, instantiate a DummyLogger, which does not store any quantity
+    logger = instantiate_logger(estimator, logger)
 
     best_mi = 0
     initial_patience = patience

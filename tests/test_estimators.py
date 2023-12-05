@@ -297,8 +297,8 @@ def test_quantized_mi_estimators():
             hidden_dims=hidden_dims,
             quantization_dim=quantization_dim,
             n_bins=n_bins,
-            decoder_transform_params={"scale": 0.1},
             batch_size=batch_size,
+            beta=0.01,
         ),
     ]
 

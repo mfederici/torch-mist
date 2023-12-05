@@ -5,8 +5,9 @@ import torch
 from sklearn.cluster import KMeans
 
 from torch_mist.distributions.factories import conditional_transformed_normal
-from torch_mist.quantization import LearnableVectorQuantization, VQVAE
+from torch_mist.quantization.functions import LearnableVectorQuantization
 from torch_mist.quantization.functions import ClusterQuantization
+from torch_mist.quantization.vqvae import VQVAE
 
 
 def vector_quantization(
@@ -47,7 +48,6 @@ def vqvae(
     hidden_dims: List[int],
     y_dim: Optional[int] = None,
     cross_modal: bool = False,
-    decoder_transform_params: Optional[dict] = None,
     beta: float = 0.2,
 ) -> VQVAE:
     assert (
@@ -65,7 +65,7 @@ def vqvae(
         input_dim=x_dim if not cross_modal else y_dim,
         context_dim=quantization_dim,
         transform_name="conditional_linear",
-        transform_params=decoder_transform_params,
+        hidden_dims=hidden_dims,
     )
 
     return VQVAE(
@@ -83,7 +83,6 @@ def vqvae_quantization(
     data: Optional[Union[torch.Tensor, np.array]] = None,
     dataloader: Optional[Iterator] = None,
     quantization_dim: Optional[int] = None,
-    decoder_transform_params: Optional[Dict[str, Any]] = None,
     beta: float = 0.2,
     max_epochs: int = 1,
     optimizer_class=torch.optim.Adam,
@@ -91,8 +90,7 @@ def vqvae_quantization(
     batch_size: Optional[int] = None,
     num_workers: int = 8,
 ) -> LearnableVectorQuantization:
-    from torch_mist.quantization.vqvae import VQVAE
-    from torch_mist.utils.train import train_vqvae
+    from torch_mist.utils.train.model import train_model
 
     if optimizer_params is None:
         optimizer_params = {"lr": 1e-3}
@@ -108,12 +106,13 @@ def vqvae_quantization(
         input_dim=input_dim,
         context_dim=quantization_dim,
         transform_name="conditional_linear",
-        transform_params=decoder_transform_params,
+        hidden_dims=hidden_dims,
+        n_transforms=1,
     )
 
     model = VQVAE(encoder=quantization, decoder=decoder, beta=beta)
 
-    train_vqvae(
+    train_model(
         model=model,
         dataloader=dataloader,
         data=data,
@@ -122,6 +121,7 @@ def vqvae_quantization(
         optimizer_params=optimizer_params,
         batch_size=batch_size,
         num_workers=num_workers,
+        logger=False,
     )
 
     return quantization
