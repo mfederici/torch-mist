@@ -4,9 +4,8 @@ import torch
 from pyro.distributions import ConditionalDistribution
 from torch.distributions import Distribution
 
-from torch_mist.distributions import joint_transformed_normal
+from torch_mist.distributions.factories import joint_transformed_normal
 from torch_mist.distributions.joint.base import JointDistribution
-from torch_mist.distributions.joint.wrapper import TorchJointDistribution
 from torch_mist.estimators.generative.implementations import (
     BA,
     CLUB,

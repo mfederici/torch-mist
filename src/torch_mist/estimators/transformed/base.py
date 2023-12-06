@@ -41,8 +41,8 @@ class TransformedMIEstimator(MIEstimator):
             if not base_estimator.infomax_gradient and (
                 not is_frozen(transform)
             ):
-                raise ValueError(
-                    "Transforms can be trained together with the estimator only when the estimator provides a valid infomax gradient."
+                print(
+                    "Warning: Transforms can be trained together with the estimator only when the estimator provides a valid infomax gradient."
                     f"The estimator {base_estimator.__class__} does not. You can use a different estimator or the transform form {variable}."
                 )
 

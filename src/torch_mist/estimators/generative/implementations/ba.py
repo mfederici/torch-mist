@@ -15,6 +15,7 @@ from torch_mist.utils.caching import (
 
 class BA(ConditionalGenerativeMIEstimator):
     upper_bound: bool = True
+    infomax_gradient: bool = True
 
     def __init__(
         self,
