@@ -1,24 +1,24 @@
 from abc import abstractmethod
+from typing import Dict
 
 import torch
 import torch.nn as nn
-
-from torch_mist.utils.caching import (
-    reset_cache_before_call,
-    reset_cache_after_call,
-)
 
 
 class MIEstimator(nn.Module):
     lower_bound: bool = False
     upper_bound: bool = False
-    infomax_gradient: bool = False
+    infomax_gradient: Dict[str, bool] = {"x": False, "y": False}
 
     @abstractmethod
     def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         raise NotImplementedError()
 
-    @reset_cache_after_call
+    def unnormalized_log_ratio(
+        self, x: torch.Tensor, y: torch.Tensor
+    ) -> torch.Tensor:
+        return self.normalized_log_ratio(x, y)
+
     def mutual_information(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
@@ -33,7 +33,6 @@ class MIEstimator(nn.Module):
     def batch_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         raise NotImplementedError()
 
-    @reset_cache_before_call
     def loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         batch_loss = self.batch_loss(x=x, y=y)
         assert (

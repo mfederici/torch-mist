@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict
 
 import torch
 
@@ -7,15 +7,11 @@ from pyro.distributions import ConditionalDistribution
 from torch_mist.estimators.generative.base import (
     ConditionalGenerativeMIEstimator,
 )
-from torch_mist.utils.caching import (
-    reset_cache_after_call,
-    reset_cache_before_call,
-)
 
 
 class BA(ConditionalGenerativeMIEstimator):
     upper_bound: bool = True
-    infomax_gradient: bool = True
+    infomax_gradient: Dict[str, bool] = {"x": True, "y": False}
 
     def __init__(
         self,
@@ -29,7 +25,6 @@ class BA(ConditionalGenerativeMIEstimator):
         assert entropy_y.ndim == 0
         self.register_buffer("entropy_y", entropy_y)
 
-    @reset_cache_after_call
     def mutual_information(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:

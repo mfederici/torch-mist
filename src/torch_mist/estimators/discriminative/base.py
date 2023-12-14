@@ -1,5 +1,6 @@
 from abc import abstractmethod
-from typing import Optional, Union
+from typing import Union, Dict
+from functools import lru_cache
 
 import torch
 from pyro.distributions import ConditionalDistribution
@@ -10,34 +11,29 @@ from torch_mist.distributions.empirical import EmpiricalDistribution
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.critic import Critic
 from torch_mist.critic import SeparableCritic
-from torch_mist.utils.caching import (
-    cached,
-    reset_cache_before_call,
-    reset_cache_after_call,
-)
 from torch_mist.utils.indexing import select_off_diagonal
 
 
 class DiscriminativeMIEstimator(MIEstimator):
     lower_bound: bool = True
-    infomax_gradient: bool = True
+    infomax_gradient: Dict[str, bool] = {"x": True, "y": True}
 
     def __init__(
         self,
         critic: Critic,
         neg_samples: int = 1,
-        proposal: Optional[
-            Union[Distribution, ConditionalDistribution]
-        ] = None,
     ):
         super().__init__()
         self.critic = critic
         self.neg_samples = neg_samples
-        if proposal is None:
-            proposal = EmpiricalDistribution()
-        self.proposal = proposal
+        self._proposal = EmpiricalDistribution()
 
-    @cached
+    def set_proposal(
+        self, proposal: Union[Distribution, ConditionalDistribution]
+    ):
+        self._proposal = proposal
+
+    @lru_cache(maxsize=1)
     def unnormalized_log_ratio(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
@@ -60,24 +56,24 @@ class DiscriminativeMIEstimator(MIEstimator):
         neg_samples = max(neg_samples, 1)
         return neg_samples
 
-    @cached
+    @lru_cache(maxsize=1)
     def critic_on_negatives(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
-        if isinstance(self.proposal, EmpiricalDistribution):
+        if isinstance(self._proposal, EmpiricalDistribution):
             assert y is not None
-            self.proposal.add_samples(y)
+            self._proposal.add_samples(y)
 
         N = x.shape[0]
         neg_samples = self.get_n_negatives(N)
 
         # If we are sampling using the empirical distribution and the critic is separable
         # We can use an efficient implementation
-        if isinstance(self.proposal, Distribution) and isinstance(
+        if isinstance(self._proposal, Distribution) and isinstance(
             self.critic, SeparableCritic
         ):
             # Efficient implementation for separable critic with empirical distribution (negatives from the same batch)
-            if isinstance(self.proposal, EmpiricalDistribution):
+            if isinstance(self._proposal, EmpiricalDistribution):
                 # Keep only neg_samples negatives for each positive (off-diagonal)
                 if neg_samples < N:
                     # Override the default self.critic(x,y) for efficient computation
@@ -89,14 +85,14 @@ class DiscriminativeMIEstimator(MIEstimator):
                     )
                 else:
                     # Take the M stored samples from y (from the empirical). Shape [M, 1, ...,Y_DIM]
-                    y_ = self.proposal._samples[:neg_samples].unsqueeze(1)
+                    y_ = self._proposal._samples[:neg_samples].unsqueeze(1)
                     # Compute the critic on all pairs
                     f_ = self.critic(x, y_)
             else:
                 # Efficient implementation for separable critic with unconditional proposal
                 # Here we re-use the same samples y'~ r(y) for all the batch
                 # Sample from the proposal r(y) [M', 1, ..., Y_DIM] with M' as the number of neg_samples
-                y_ = self.proposal.sample(
+                y_ = self._proposal.sample(
                     sample_shape=torch.Size([neg_samples])
                 ).unsqueeze(1)
 
@@ -104,10 +100,10 @@ class DiscriminativeMIEstimator(MIEstimator):
                 f_ = self.critic(x, y_)
         else:
             # Sample from the proposal r(y|x) [M, ..., Y_DIM] with M as the number of neg_samples
-            if isinstance(self.proposal, ConditionalDistribution):
-                proposal = self.proposal.condition(x)
+            if isinstance(self._proposal, ConditionalDistribution):
+                proposal = self._proposal.condition(x)
             else:
-                proposal = self.proposal
+                proposal = self._proposal
 
             y_ = proposal.sample(sample_shape=torch.Size([neg_samples]))
             # The shape of the samples from the proposal distribution is [M, ..., Y_DIM]
@@ -124,8 +120,8 @@ class DiscriminativeMIEstimator(MIEstimator):
             f_.shape[1:] == x.shape[:-1]
         ), f"Negatives have shape {f_.shape} shape, while x has shape {x.shape}"
 
-        if isinstance(self.proposal, EmpiricalDistribution):
-            self.proposal.update()
+        if isinstance(self._proposal, EmpiricalDistribution):
+            self._proposal.update()
 
         return f_
 
@@ -200,6 +196,13 @@ class CombinedDiscriminativeMIEstimator(DiscriminativeMIEstimator):
 
         self.train_estimator = train_estimator
         self.eval_estimator = eval_estimator
+        self.infomax_gradient = train_estimator.infomax_gradient
+
+    def set_proposal(
+        self, proposal: Union[Distribution, ConditionalDistribution]
+    ):
+        self.train_estimator.set_proposal(proposal)
+        self.eval_estimator.set_proposal(proposal)
 
     def batch_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         return self.train_estimator.batch_loss(x, y)

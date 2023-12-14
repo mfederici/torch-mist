@@ -1,4 +1,5 @@
-from typing import Optional
+from typing import Optional, Dict
+from functools import lru_cache
 
 import torch
 from torch.distributions import Distribution
@@ -7,10 +8,11 @@ from pyro.distributions import ConditionalDistribution
 from torch_mist.estimators.generative.base import (
     ConditionalGenerativeMIEstimator,
 )
-from torch_mist.utils.caching import cached, reset_cache_before_call
 
 
 class DoE(ConditionalGenerativeMIEstimator):
+    infomax_gradient: Dict[str, bool] = {"x": True, "y": False}
+
     def __init__(
         self,
         q_Y_given_X: ConditionalDistribution,
@@ -21,7 +23,7 @@ class DoE(ConditionalGenerativeMIEstimator):
         )
         self.q_Y = q_Y
 
-    @cached
+    @lru_cache(maxsize=1)
     def approx_log_p_y(
         self, y: torch.Tensor, x: Optional[torch.Tensor] = None
     ) -> torch.Tensor:

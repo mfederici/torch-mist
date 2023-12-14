@@ -1,3 +1,5 @@
+from typing import Dict
+
 import torch
 from pyro.distributions import ConditionalDistribution
 
@@ -5,6 +7,8 @@ from torch_mist.estimators.generative.implementations.l1out import L1Out
 
 
 class CLUB(L1Out):
+    infomax_gradient: Dict[str, bool] = {"x": True, "y": False}
+
     def __init__(
         self, q_Y_given_X: ConditionalDistribution, neg_samples: int = 0
     ):

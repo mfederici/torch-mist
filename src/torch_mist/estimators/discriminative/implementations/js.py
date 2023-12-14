@@ -8,7 +8,6 @@ from torch_mist.critic import Critic
 from torch_mist.estimators.discriminative.base import (
     BaselineDiscriminativeMIEstimator,
 )
-from torch_mist.utils.caching import reset_cache_before_call
 
 
 class JS(BaselineDiscriminativeMIEstimator):
@@ -23,7 +22,6 @@ class JS(BaselineDiscriminativeMIEstimator):
             baseline=ConstantBaseline(value=0.0),
         )
 
-    @reset_cache_before_call
     def batch_loss(
         self,
         x: torch.Tensor,

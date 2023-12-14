@@ -1,17 +1,15 @@
 from abc import abstractmethod
+from functools import lru_cache
 
 import torch
 from pyro.distributions import ConditionalDistribution
 from torch.distributions import Distribution
 
 from torch_mist.estimators.base import MIEstimator
-from torch_mist.utils.caching import (
-    cached,
-)
 
 
 class GenerativeMIEstimator(MIEstimator):
-    @cached
+    @lru_cache(maxsize=1)
     def approx_log_p_y_given_x(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
@@ -47,14 +45,14 @@ class ConditionalGenerativeMIEstimator(GenerativeMIEstimator):
         super().__init__()
         self.q_Y_given_X = q_Y_given_X
 
-    @cached
+    @lru_cache(maxsize=1)
     def q_Y_given_x(self, x: torch.Tensor) -> Distribution:
         # q(Y|X=x)
         q_Y_given_x = self.q_Y_given_X.condition(x)
 
         return q_Y_given_x
 
-    @cached
+    @lru_cache(maxsize=1)
     def approx_log_p_y_given_x(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:

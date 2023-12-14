@@ -17,6 +17,12 @@ class HybridMIEstimator(MIEstimator):
         super().__init__()
         self.generative_estimator = generative_estimator
         self.discriminative_estimator = discriminative_estimator
+        informax_gradient = generative_estimator.infomax_gradient
+        informax_gradient = {
+            key: value and discriminative_estimator.infomax_gradient[key]
+            for key, value in informax_gradient.items()
+        }
+        self.infomax_gradient = informax_gradient
 
     def unnormalized_log_ratio(
         self,
@@ -30,7 +36,7 @@ class HybridMIEstimator(MIEstimator):
     def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         log_ratio = self.generative_estimator.log_ratio(x, y)
         proposal = self.generative_estimator.q_Y_given_x(x=x)
-        self.discriminative_estimator.proposal = proposal
+        self.discriminative_estimator.set_proposal(proposal)
         log_ratio += self.discriminative_estimator.log_ratio(x, y)
         return log_ratio
 
@@ -43,6 +49,6 @@ class HybridMIEstimator(MIEstimator):
             e2 = 0.0
         else:
             proposal = self.generative_estimator.q_Y_given_x(x=x)
-            self.discriminative_estimator.proposal = proposal
+            self.discriminative_estimator.set_proposal(proposal)
             e2 = self.discriminative_estimator.batch_loss(x, y)
         return e1 + e2

@@ -1,15 +1,11 @@
 from typing import Optional, Union
+from functools import lru_cache
 
 import torch
 from torch.distributions import Distribution
 
 from torch_mist.distributions.joint.base import JointDistribution
 from torch_mist.estimators import MIEstimator
-from torch_mist.utils.caching import (
-    cached,
-    reset_cache_after_call,
-    reset_cache_before_call,
-)
 
 
 class GM(MIEstimator):
@@ -38,7 +34,7 @@ class GM(MIEstimator):
         else:
             return self.q_XY.marginal("y")
 
-    @cached
+    @lru_cache(maxsize=1)
     def approx_log_p_x(self, x: torch.Tensor) -> torch.Tensor:
         log_q_x = self.q_X.log_prob(x)
         assert (
@@ -48,7 +44,7 @@ class GM(MIEstimator):
         # The shape is [...]
         return log_q_x
 
-    @cached
+    @lru_cache(maxsize=1)
     def approx_log_p_y(self, y: torch.Tensor) -> torch.Tensor:
         log_q_y = self.q_Y.log_prob(y)
         assert (
@@ -58,7 +54,7 @@ class GM(MIEstimator):
         # The shape is [...]
         return log_q_y
 
-    @cached
+    @lru_cache(maxsize=1)
     def approx_log_p_xy(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
@@ -72,7 +68,6 @@ class GM(MIEstimator):
 
         return log_q_xy
 
-    @reset_cache_after_call
     def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         log_q_xy = self.approx_log_p_xy(x=x, y=y)
         log_q_y = self.approx_log_p_y(y=y)
@@ -86,7 +81,6 @@ class GM(MIEstimator):
 
         return mi
 
-    @reset_cache_before_call
     def batch_loss(
         self,
         x: torch.Tensor,

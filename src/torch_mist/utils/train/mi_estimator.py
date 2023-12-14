@@ -121,7 +121,7 @@ def _instantiate_optimizer(
     return opt, lr_scheduler
 
 
-def _train_epoch(
+def train_epoch(
     estimator: MIEstimator,
     train_loader: DataLoader,
     opt: Optimizer,
@@ -131,25 +131,26 @@ def _train_epoch(
     tqdm_iteration: Optional[tqdm] = None,
     fast_train: bool = False,
 ):
-    for samples in train_loader:
-        variables = unfold_samples(samples)
-        variables = move_to_device(variables, device)
+    with logger.epoch():
+        for samples in train_loader:
+            variables = unfold_samples(samples)
+            variables = move_to_device(variables, device)
 
-        loss = estimator.loss(**variables)
+            with logger.iteration():
+                loss = estimator.loss(**variables)
 
-        # Compute the ratio only if necessary
-        if not fast_train and not isinstance(logger, DummyLogger):
-            estimator(**variables)
+                # Compute the ratio only if necessary
+                if not fast_train and not isinstance(logger, DummyLogger):
+                    estimator(**variables)
 
-        opt.zero_grad()
-        loss.backward()
-        opt.step()
-        lr_scheduler.step()
-        logger.step()
+                opt.zero_grad()
+                loss.backward()
+                opt.step()
+                lr_scheduler.step()
 
-        if tqdm_iteration:
-            tqdm_iteration.update(1)
-            tqdm_iteration.set_postfix_str(f"loss: {loss}")
+            if tqdm_iteration:
+                tqdm_iteration.update(1)
+                tqdm_iteration.set_postfix_str(f"loss: {loss}")
 
 
 def train_mi_estimator(
@@ -200,6 +201,7 @@ def train_mi_estimator(
     # If the logger is specified, we use it adding loss and mutual_information logs if not already specified
     # if it is None, use the default PandasLogger,
     # if False, instantiate a DummyLogger, which does not store any quantity
+    default_logger = logger is None
     logger = instantiate_logger(estimator, logger)
 
     best_mi = 0
@@ -218,8 +220,7 @@ def train_mi_estimator(
             tqdm_iteration.reset()
 
         with logger.train():
-            logger.new_epoch()
-            _train_epoch(
+            train_epoch(
                 estimator=estimator,
                 train_loader=train_loader,
                 opt=opt,
@@ -251,7 +252,7 @@ def train_mi_estimator(
             ):
                 improvement = (
                     (valid_mi - best_mi)
-                    if estimator.upper_bound
+                    if estimator.lower_bound
                     else (best_mi - valid_mi)
                 )
                 if improvement >= delta:
@@ -269,4 +270,9 @@ def train_mi_estimator(
         if tqdm_epochs:
             tqdm_epochs.update(1)
 
-    return logger.get_log()
+    log = logger.get_log()
+
+    if default_logger:
+        logger.clear()
+
+    return log

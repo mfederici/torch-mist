@@ -1,10 +1,11 @@
+from functools import lru_cache
+
 import torch
 
 from torch_mist.critic import Critic
 from torch_mist.estimators.discriminative.base import (
     DiscriminativeMIEstimator,
 )
-from torch_mist.utils.caching import cached
 
 
 class FLO(DiscriminativeMIEstimator):
@@ -20,7 +21,7 @@ class FLO(DiscriminativeMIEstimator):
         )
         self.amortized_critic = amortized_critic
 
-    @cached
+    @lru_cache(maxsize=1)
     def amortized_estimate(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:

@@ -1,14 +1,10 @@
-from typing import Optional, Callable, Any, Dict, Union, List
+from typing import Callable, Any, Dict, Union, List
+from functools import lru_cache
 
 import torch
 from torch import nn
 
 from torch_mist.estimators.base import MIEstimator
-from torch_mist.utils.caching import (
-    reset_cache_before_call,
-    reset_cache_after_call,
-    cached,
-)
 from torch_mist.utils.freeze import is_frozen
 
 
@@ -38,7 +34,7 @@ class TransformedMIEstimator(MIEstimator):
         self.transforms = nn.ModuleDict()
 
         for variable, transform in transforms.items():
-            if not base_estimator.infomax_gradient and (
+            if not base_estimator.infomax_gradient[variable] and (
                 not is_frozen(transform)
             ):
                 print(
@@ -51,7 +47,7 @@ class TransformedMIEstimator(MIEstimator):
 
             self.transforms[variable] = transform
 
-    @cached
+    @lru_cache(maxsize=1)
     def transform(self, **variables) -> Dict[str, torch.Tensor]:
         transformed_variables = {}
         for variable, transform in self.transforms.items():

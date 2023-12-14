@@ -1,4 +1,6 @@
 import math
+from typing import Dict
+
 import torch
 
 from pyro.distributions import ConditionalDistribution
@@ -6,14 +8,12 @@ from pyro.distributions import ConditionalDistribution
 from torch_mist.estimators.generative.base import (
     ConditionalGenerativeMIEstimator,
 )
-from torch_mist.utils.caching import (
-    reset_cache_after_call,
-    reset_cache_before_call,
-)
 from torch_mist.utils.indexing import select_off_diagonal
 
 
 class L1Out(ConditionalGenerativeMIEstimator):
+    infomax_gradient: Dict[str, bool] = {"x": True, "y": False}
+
     def __init__(
         self, q_Y_given_X: ConditionalDistribution, neg_samples: int = -1
     ):
