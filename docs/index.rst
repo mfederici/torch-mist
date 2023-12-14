@@ -18,5 +18,6 @@ Torch Mist Documentation
    notebooks/generative.ipynb
    notebooks/transformed.ipynb
    notebooks/quantized.ipynb
+   notebooks/hybrid.ipynb
 
 
