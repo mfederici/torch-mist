@@ -48,24 +48,23 @@ def train_model(
     logger = instantiate_logger(model, logger)
 
     with logger.train():
-        logger.new_epoch()
-        for epoch in range(max_epochs):
-            for samples in dataloader:
-                if isinstance(samples, dict):
-                    if "x" not in samples:
-                        raise ValueError("Expected 'x' key in samples")
-                    data = samples["x"]
-                elif isinstance(samples, torch.Tensor):
-                    data = samples
-                else:
-                    raise ValueError(
-                        f"Unknown sample type {type(samples)}, expected dict containing keys 'x' and 'y' or torch.Tensor"
-                    )
-
-                opt.zero_grad()
-                model.loss(data).backward()
-                opt.step()
-                logger.step()
+        with logger.epoch():
+            for epoch in range(max_epochs):
+                for samples in dataloader:
+                    if isinstance(samples, dict):
+                        if "x" not in samples:
+                            raise ValueError("Expected 'x' key in samples")
+                        data = samples["x"]
+                    elif isinstance(samples, torch.Tensor):
+                        data = samples
+                    else:
+                        raise ValueError(
+                            f"Unknown sample type {type(samples)}, expected dict containing keys 'x' and 'y' or torch.Tensor"
+                        )
+                    with logger.iteration():
+                        opt.zero_grad()
+                        model.loss(data).backward()
+                        opt.step()
 
     train_log = logger.get_log()
     return train_log

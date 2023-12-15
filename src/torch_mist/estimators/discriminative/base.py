@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Union, Dict
+from typing import Union, Dict, Optional
 from functools import lru_cache
 
 import torch
