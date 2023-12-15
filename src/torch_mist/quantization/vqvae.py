@@ -50,7 +50,7 @@ class VQVAE(nn.Module):
         indices = self.encoder.codebook_lookup(z)
 
         quantized = self.encoder.vectors[indices]
-        z_q = z + (quantized - z).detach_all()
+        z_q = z + (quantized - z).detach()
 
         assert (
             z_q.shape == z.shape == quantized.shape
@@ -120,7 +120,7 @@ class VQVAE(nn.Module):
                 + (1 - self.gamma) * mean_vector
             )
 
-        commitment_loss = torch.mean((quantized.detach_all() - z) ** 2)
+        commitment_loss = torch.mean((quantized.detach() - z) ** 2)
         # codebook_loss = torch.mean((quantized - z.detach())**2)
         loss = (
             reconstruction_loss + self.beta * commitment_loss
