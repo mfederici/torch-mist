@@ -1,10 +1,12 @@
 from abc import abstractmethod
 from functools import lru_cache
+from typing import Any
 
 import torch
 from pyro.distributions import ConditionalDistribution
 from torch.distributions import Distribution
 
+from torch_mist.distributions.cached import CachedConditionalDistribution
 from torch_mist.estimators.base import MIEstimator
 
 
@@ -43,20 +45,17 @@ class GenerativeMIEstimator(MIEstimator):
 class ConditionalGenerativeMIEstimator(GenerativeMIEstimator):
     def __init__(self, q_Y_given_X: ConditionalDistribution):
         super().__init__()
+        # Add caching to the conditioning for efficiency
+        assert isinstance(q_Y_given_X, ConditionalDistribution)
+        if not isinstance(q_Y_given_X, CachedConditionalDistribution):
+            q_Y_given_X = CachedConditionalDistribution(q_Y_given_X)
         self.q_Y_given_X = q_Y_given_X
-
-    @lru_cache(maxsize=1)
-    def q_Y_given_x(self, x: torch.Tensor) -> Distribution:
-        # q(Y|X=x)
-        q_Y_given_x = self.q_Y_given_X.condition(x)
-
-        return q_Y_given_x
 
     @lru_cache(maxsize=1)
     def approx_log_p_y_given_x(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
-        q_Y_given_x = self.q_Y_given_x(x=x)
+        q_Y_given_x = self.q_Y_given_X.condition(x)
 
         # Compute log q(Y=y|X=x)]
         log_q_y_given_x = q_Y_given_x.log_prob(y)

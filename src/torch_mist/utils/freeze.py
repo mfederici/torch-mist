@@ -23,7 +23,7 @@ def n_trainable_parameters(function: Any) -> int:
         return 0
 
 
-def is_frozen(function: Any) -> bool:
+def is_trainable(function: Any) -> bool:
     if isinstance(function, nn.Module):
         return n_trainable_parameters(function) == 0
     else:

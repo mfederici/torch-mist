@@ -5,19 +5,10 @@ import torch
 from torch import nn
 
 from torch_mist.estimators.base import MIEstimator
-from torch_mist.utils.freeze import is_frozen
+from torch_mist.utils.freeze import is_trainable
+from torch_mist.estimators.transformed.utils import DummyModule
 
-
-class DummyModule(nn.Module):
-    def __init__(self, f: Callable[[Any], Any]):
-        super().__init__()
-        self.f = f
-
-    def forward(self, *args, **kwargs):
-        return self.f(*args, **kwargs)
-
-    def __repr__(self):
-        return str(self.f)
+ERROR_MESSAGE = "The TransformedMIEstimator can be called by passing two arguments or by specifying multiple named named arguments."
 
 
 class TransformedMIEstimator(MIEstimator):
@@ -35,11 +26,11 @@ class TransformedMIEstimator(MIEstimator):
 
         for variable, transform in transforms.items():
             if not base_estimator.infomax_gradient[variable] and (
-                not is_frozen(transform)
+                not is_trainable(transform)
             ):
                 print(
                     "Warning: Transforms can be trained together with the estimator only when the estimator provides a valid infomax gradient."
-                    f"The estimator {base_estimator.__class__} does not. You can use a different estimator or the transform form {variable}."
+                    f"The estimator {base_estimator.__class__} does not. You can use a different estimator or the transform for {variable}."
                 )
 
             if not isinstance(transform, nn.Module):
@@ -51,42 +42,42 @@ class TransformedMIEstimator(MIEstimator):
     def transform(self, **variables) -> Dict[str, torch.Tensor]:
         transformed_variables = {}
         for variable, transform in self.transforms.items():
-            transformed_variables[variable] = transform(variables[variable])
+            transformed_variable = transform(variables[variable])
+
+            # Detach the variables for which the gradient is not a valid infomax gradient
+            if not self.infomax_gradient[variable]:
+                transformed_variable = transformed_variable.detach()
+            transformed_variables[variable] = transformed_variable
+
         return transformed_variables
 
-    def batch_loss(self, *args, **variables) -> torch.Tensor:
+    def _unfold_variables(self, *args, **variables) -> Dict[str, Any]:
         if len(args) != 0 and len(args) != 2:
-            raise ValueError(
-                "The loss method can be called by passing two arguments or by specifying multiple named named arguments."
-            )
+            raise ValueError(ERROR_MESSAGE)
         if len(args) == 2:
             if len(variables) > 0:
-                raise ValueError(
-                    "The loss method can be called by passing two arguments or by specifying multiple named named arguments."
-                )
+                raise ValueError(ERROR_MESSAGE)
             variables["x"] = args[0]
             variables["y"] = args[1]
 
+        return variables
+
+    def batch_loss(self, *args, **variables) -> torch.Tensor:
+        variables = self._unfold_variables(*args, **variables)
         variables.update(self.transform(**variables))
         return self.base_estimator.batch_loss(**variables)
 
     def log_ratio(
         self, *args, **variables
     ) -> Union[torch.Tensor, List[torch.Tensor]]:
-        if len(args) != 0 and len(args) != 2:
-            raise ValueError(
-                "The log_ratio method can be called by passing two arguments or by specifying multiple named named arguments."
-            )
-        if len(args) == 2:
-            if len(variables) > 0:
-                raise ValueError(
-                    "The log_ratio method can be called by passing two arguments or by specifying multiple named named arguments."
-                )
-            variables["x"] = args[0]
-            variables["y"] = args[1]
-
+        variables = self._unfold_variables(*args, **variables)
         variables.update(self.transform(**variables))
         return self.base_estimator.log_ratio(**variables)
+
+    def unnormalized_log_ratio(self, *args, **variables) -> torch.Tensor:
+        variables = self._unfold_variables(*args, **variables)
+        variables.update(self.transform(**variables))
+        return self.base_estimator.unnormalized_log_ratio(**variables)
 
     def forward(self, *args, **kwargs) -> torch.Tensor:
         return self.mutual_information(*args, **kwargs)

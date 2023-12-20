@@ -1,4 +1,4 @@
-from typing import Type, Optional, Dict, Any, Union, Tuple, List
+from typing import Type, Optional, Dict, Any, Union, Tuple, List, Callable
 
 import torch
 import pandas as pd
@@ -14,9 +14,16 @@ from torch.optim.lr_scheduler import (
 )
 from torch.utils.data import random_split, DataLoader
 
+from torch_mist.estimators import TransformedMIEstimator
 from torch_mist.estimators.base import MIEstimator
+from torch_mist.estimators.hybrid import PQHybridMIEstimator
 from torch_mist.utils.batch import unfold_samples, move_to_device
+from torch_mist.utils.data import sample_same_attributes
 from torch_mist.utils.data.dataset import SampleDataset
+from torch_mist.utils.data.loader import (
+    sample_same_value,
+    SameAttributeDataLoader,
+)
 from torch_mist.utils.evaluation import evaluate_mi
 from torch_mist.utils.logging.logger.base import Logger, DummyLogger
 from torch_mist.utils.logging.logger.pandas import PandasLogger
@@ -24,6 +31,7 @@ from torch_mist.utils.logging.logger.utils import instantiate_logger
 
 
 def _instantiate_dataloaders(
+    estimator: MIEstimator,
     x: Optional[torch.Tensor] = None,
     y: Optional[torch.Tensor] = None,
     train_loader: Optional[Any] = None,
@@ -31,6 +39,7 @@ def _instantiate_dataloaders(
     valid_percentage: float = 0.1,
     batch_size: Optional[int] = None,
     num_workers: int = 8,
+    device: Union[str, torch.device] = "cpu",
 ) -> Tuple[DataLoader, Optional[DataLoader]]:
     if (x is None) != (y is None):
         raise ValueError(
@@ -69,6 +78,35 @@ def _instantiate_dataloaders(
             num_workers=num_workers,
             shuffle=True,
         )
+
+    # Check if we need to modify the dataloader to sample the same attributes
+    _estimator = estimator
+    transforms = []
+    while isinstance(_estimator, TransformedMIEstimator):
+        transforms.append(_estimator.transforms["y"])
+        _estimator = estimator.base_estimator
+
+    # If required, change the data-loader to sample batches with the same attribute only
+    if isinstance(_estimator, PQHybridMIEstimator):
+
+        def compute_attributes(samples):
+            variables = unfold_samples(samples)
+            variables = move_to_device(variables, device)
+            assert "y" in variables
+            y = variables["y"]
+            for transform in transforms:
+                y = transform(y)
+            return _estimator.generative_estimator.transforms["y"](
+                y
+            ).data.cpu()
+
+        if not isinstance(train_loader, SameAttributeDataLoader):
+            train_loader = sample_same_value(train_loader, compute_attributes)
+
+        if not isinstance(valid_loader, SameAttributeDataLoader) and not (
+            valid_loader is None
+        ):
+            valid_loader = sample_same_value(valid_loader, compute_attributes)
 
     return train_loader, valid_loader
 
@@ -175,7 +213,10 @@ def train_mi_estimator(
     delta: float = 0.001,
     fast_train: bool = False,
 ) -> Optional[Any]:
+    # Create the training and validation dataloaders
     train_loader, valid_loader = _instantiate_dataloaders(
+        estimator=estimator,
+        device=device,
         x=x,
         y=y,
         train_loader=train_loader,

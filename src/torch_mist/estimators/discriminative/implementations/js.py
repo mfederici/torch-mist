@@ -29,8 +29,18 @@ class JS(BaselineDiscriminativeMIEstimator):
     ) -> Optional[torch.Tensor]:
         # Compute the critic on the positives. It has shape [...]
         f = self.unnormalized_log_ratio(x=x, y=y)
-        # Compute the critic on the negatives. It has shape [M, ...] with M as the number of negative samples
-        f_ = self.critic_on_negatives(x=x, y=y)
 
-        loss = F.softplus(-f) + F.softplus(f_).mean(0)
+        y_, w = self.sample_negatives(x, y)
+        f_ = self.critic(x, y_)
+
+        pos = F.softplus(-f)
+        neg = F.softplus(f_)
+
+        # Compute the expectation w.r.t the M negatives
+        if not (w is None):
+            neg = w * neg
+
+        neg = neg.mean(0)
+
+        loss = pos + neg
         return loss

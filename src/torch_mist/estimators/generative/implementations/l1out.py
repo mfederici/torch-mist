@@ -41,8 +41,8 @@ class L1Out(ConditionalGenerativeMIEstimator):
             x = select_off_diagonal(x, neg_samples)
 
         # Probability of all the other y in the same batch [M, N, ...]
-        p_y_given_X = self.q_Y_given_x(x=x)
-        log_p_y_given_x = p_y_given_X.log_prob(y.unsqueeze(1))
+        p_Y_given_x = self.q_Y_given_X.condition(x)
+        log_p_y_given_x = p_Y_given_x.log_prob(y.unsqueeze(1))
 
         if self.neg_samples == -1:
             D = torch.eye(N).to(y.device)

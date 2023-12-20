@@ -36,7 +36,12 @@ class FLO(DiscriminativeMIEstimator):
         f = self.unnormalized_log_ratio(x, y)
 
         # Evaluate the unnormalized_log_ratio f(x,y) on the samples from r(x, y), with shape [M, ...]
-        f_ = self.critic_on_negatives(x, y)
+        y_, w = self.sample_negatives(x, y)
+
+        # Evaluate the unnormalized_log_ratio f(x,y) on the samples from p(x)r(y|x)
+        # The tensor f_ has shape [M, N...] in which f_[i,j] contains critic(x[j], y_[i,j]).
+        # and y_ is sampled from r(y|x), which is set to the empirical p(y) unless a proposal is specified
+        f_ = self.critic(x, y_)
 
         assert f_.shape[1:] == f.shape
 
@@ -46,7 +51,11 @@ class FLO(DiscriminativeMIEstimator):
             u.ndim == f_.ndim - 1
         ), f"Baseline has ndim {u.ndim} while f_ has ndim {f_.ndim}"
 
-        loss = -u + (torch.logsumexp(f_, 0) - f + u).exp() / f_.shape[0] + 1
+        if not (w is None):
+            assert f_.shape == w.shape
+            f_ = f_ + w.log()
+
+        loss = -u + (u - f + torch.logsumexp(f_, 0)).exp() / f_.shape[0] + 1
 
         return loss
 

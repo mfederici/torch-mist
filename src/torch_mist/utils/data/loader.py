@@ -1,10 +1,15 @@
-from typing import Dict, Union
+from typing import Dict, Union, Callable, Any
 from collections.abc import Iterator
 
 import numpy as np
 import torch
 from torch.distributions import Distribution
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import (
+    DataLoader,
+    Dataset,
+    SequentialSampler,
+    BatchSampler,
+)
 
 from torch_mist.distributions.joint.base import JointDistribution
 from torch_mist.utils.data.sampler import SameAttributeSampler
@@ -93,3 +98,28 @@ def sample_same_attributes(
         worker_init_fn=dataloader.worker_init_fn,
         multiprocessing_context=dataloader.multiprocessing_context,
     )
+
+
+def sample_same_value(
+    dataloader: DataLoader,
+    func: Callable[[Any], Any],
+) -> DataLoader:
+    ordered_dataloader = DataLoader(
+        dataset=dataloader.dataset,
+        batch_size=dataloader.batch_size,
+        num_workers=dataloader.num_workers,
+        prefetch_factor=dataloader.prefetch_factor,
+        pin_memory=dataloader.pin_memory,
+        pin_memory_device=dataloader.pin_memory_device,
+        timeout=dataloader.timeout,
+        worker_init_fn=dataloader.worker_init_fn,
+        multiprocessing_context=dataloader.multiprocessing_context,
+    )
+
+    attributes = []
+    for batch in ordered_dataloader:
+        attributes.append(func(batch))
+
+    attributes = torch.cat(attributes, 0)
+
+    return sample_same_attributes(dataloader, attributes)

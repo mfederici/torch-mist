@@ -20,11 +20,9 @@ class InfoNCE(BaselineDiscriminativeMIEstimator):
             baseline=BatchLogMeanExp("first"),
         )
 
-    def batch_approx_log_partition(
-        self, x: torch.Tensor, y: torch.Tensor, f_: torch.tensor
-    ):
+    def _approx_log_partition(self, x: torch.Tensor, f_: torch.tensor):
         # We override the compute_log_normalization just for efficiency
         # The result would be the same as the TUBA implementation with BatchLogMeanExp('first') baseline
         # We override the compute_log_normalization for efficiency since e^(F(x,y))-b(x) = 1
-        log_norm = self.baseline(x=x, y=y, f_=f_).unsqueeze(0).expand(f_.shape)
+        log_norm = self.baseline(x=x, f_=f_).unsqueeze(0).expand(f_.shape)
         return log_norm

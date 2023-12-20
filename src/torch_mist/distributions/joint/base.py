@@ -120,13 +120,21 @@ class JointDistribution(nn.Module, Distribution, ConditionalDistribution):
 
     def entropy(self, *variables) -> torch.Tensor:
         valid_labels: List[str] = []
-        for variable in variables:
-            assert isinstance(variable, str)
-            if not (variable in self.variables):
+
+        if len(variables) == 0:
+            if len(self.variables) > 1:
                 raise ValueError(
-                    f"Can not compute H({variables})since the distribution is defined on p({','.join(self.variables)})"
+                    f"Please specify the variables for the entropy computation among {self.variables} "
                 )
-            valid_labels.append(variable)
+            valid_labels = self.variables
+        else:
+            for variable in variables:
+                assert isinstance(variable, str)
+                if not (variable in self.variables):
+                    raise ValueError(
+                        f"Can not compute H({variables}) since the distribution is defined on p({','.join(self.variables)})"
+                    )
+                valid_labels.append(variable)
         return self._entropy(valid_labels)
 
 

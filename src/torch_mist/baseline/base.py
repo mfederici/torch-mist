@@ -12,7 +12,6 @@ class Baseline(nn.Module):
         self,
         f_: torch.Tensor,
         x: torch.Tensor,
-        y: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         raise NotImplementedError()
 
@@ -26,7 +25,6 @@ class ConstantBaseline(Baseline):
         self,
         f_: torch.Tensor,
         x: torch.Tensor,
-        y: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         return torch.zeros(f_.shape[1:]).to(f_.device) + self.value
 
@@ -42,7 +40,6 @@ class ExponentialMovingAverage(Baseline):
         self,
         f_: torch.Tensor,
         x: torch.Tensor,
-        y: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         average = f_.exp().mean().detach()
         average = torch.clamp(average, min=1e-4, max=1e4)
@@ -74,7 +71,6 @@ class BatchLogMeanExp(Baseline):
         self,
         f_: torch.Tensor,
         x: torch.Tensor,
-        y: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         # log 1/M \sum e^f_ = logsumexp(f_) - log M
         if self.dims == "all":
@@ -100,7 +96,6 @@ class LearnableBaseline(Baseline):
         self,
         f_: torch.Tensor,
         x: torch.Tensor,
-        y: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         return self.net(x).squeeze(-1)
 
@@ -119,10 +114,9 @@ class InterpolatedBaseline(Baseline):
         self,
         f_: torch.Tensor,
         x: torch.Tensor,
-        y: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        b1 = self.baseline_1.forward(f_=f_, x=x, y=y)
-        b2 = self.baseline_2.forward(f_=f_, x=x, y=y)
+        b1 = self.baseline_1.forward(f_=f_, x=x)
+        b2 = self.baseline_2.forward(f_=f_, x=x)
 
         assert b1.shape == b2.shape
 
