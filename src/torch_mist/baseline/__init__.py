@@ -4,7 +4,6 @@ from .base import (
     LearnableBaseline,
     ConstantBaseline,
     InterpolatedBaseline,
-    AlphaTUBABaseline,
     ExponentialMovingAverage,
 )
 from .factories import baseline_nn

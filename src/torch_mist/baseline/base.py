@@ -139,14 +139,3 @@ class InterpolatedBaseline(Baseline):
             )
 
             return b
-
-
-class AlphaTUBABaseline(InterpolatedBaseline):
-    def __init__(self, x_dim: int, hidden_dims: List[int], alpha: float):
-        from torch_mist.baseline.factories import baseline_nn
-
-        baseline_1 = BatchLogMeanExp("first")
-        baseline_2 = baseline_nn(x_dim, hidden_dims)
-        super(AlphaTUBABaseline, self).__init__(
-            baseline_1=baseline_1, baseline_2=baseline_2, alpha=alpha
-        )

@@ -12,7 +12,6 @@ class CategoricalModule(Distribution, nn.Module):
         self,
         logits: torch.tensor,
         temperature: float = 1.0,
-        learnable: bool = False,
     ):
         nn.Module.__init__(self)
         Distribution.__init__(
@@ -20,10 +19,8 @@ class CategoricalModule(Distribution, nn.Module):
             event_shape=torch.Size([logits.shape[0]]),
             validate_args=False,
         )
-        if learnable:
-            self.logits = nn.Parameter(logits)
-        else:
-            self.register_buffer("logits", logits)
+
+        self.logits = nn.Parameter(logits)
         self.parametrization = LogitsMap()
         self.temperature = temperature
 

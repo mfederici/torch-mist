@@ -42,27 +42,21 @@ def kmeans_quantization(
 
 
 def vqvae(
-    x_dim: int,
+    input_dim: int,
     quantization_dim: int,
     n_bins: int,
     hidden_dims: List[int],
-    y_dim: Optional[int] = None,
-    cross_modal: bool = False,
     beta: float = 0.2,
 ) -> VQVAE:
-    assert (
-        not cross_modal or y_dim is not None
-    ), "If cross_modal is True, y_dim must be provided"
-
     quantization = vector_quantization(
-        input_dim=x_dim,
+        input_dim=input_dim,
         quantization_dim=quantization_dim,
         hidden_dims=hidden_dims,
         n_bins=n_bins,
     )
 
     decoder = conditional_transformed_normal(
-        input_dim=x_dim if not cross_modal else y_dim,
+        input_dim=input_dim,
         context_dim=quantization_dim,
         transform_name="conditional_linear",
         hidden_dims=hidden_dims,
@@ -71,7 +65,6 @@ def vqvae(
     return VQVAE(
         encoder=quantization,
         decoder=decoder,
-        cross_modal=cross_modal,
         beta=beta,
     )
 
@@ -95,22 +88,13 @@ def vqvae_quantization(
     if optimizer_params is None:
         optimizer_params = {"lr": 1e-3}
 
-    quantization = vector_quantization(
+    model = vqvae(
         input_dim=input_dim,
+        quantization_dim=quantization_dim,
         n_bins=n_bins,
         hidden_dims=hidden_dims,
-        quantization_dim=quantization_dim,
+        beta=beta,
     )
-
-    decoder = conditional_transformed_normal(
-        input_dim=input_dim,
-        context_dim=quantization_dim,
-        transform_name="conditional_linear",
-        hidden_dims=hidden_dims,
-        n_transforms=1,
-    )
-
-    model = VQVAE(encoder=quantization, decoder=decoder, beta=beta)
 
     train_model(
         model=model,
@@ -124,4 +108,4 @@ def vqvae_quantization(
         logger=False,
     )
 
-    return quantization
+    return model.quantization

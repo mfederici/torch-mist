@@ -7,8 +7,6 @@ from torch.distributions import Distribution
 from torch.utils.data import (
     DataLoader,
     Dataset,
-    SequentialSampler,
-    BatchSampler,
 )
 
 from torch_mist.distributions.joint.base import JointDistribution
@@ -114,6 +112,7 @@ def sample_same_value(
         timeout=dataloader.timeout,
         worker_init_fn=dataloader.worker_init_fn,
         multiprocessing_context=dataloader.multiprocessing_context,
+        shuffle=False,
     )
 
     attributes = []

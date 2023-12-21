@@ -25,5 +25,5 @@ class PQHybridMIEstimator(HybridMIEstimator):
         Q_y = self.generative_estimator.transforms["y"](y)
         # Check the labels are the same
         Q_y0 = Q_y[0]
-        assert torch.sum(Q_y0.unsqueeze(0) == Q_y) == Q_y.numel()
+        assert torch.sum(Q_y0.unsqueeze(0) == Q_y).item() == Q_y.numel(), Q_y
         return DiscriminativeMIEstimator.sample_negatives(self, x, y)

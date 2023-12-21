@@ -13,7 +13,9 @@ class ReweighedHybridMIEstimator(HybridMIEstimator):
         x: torch.Tensor,
         y: torch.Tensor,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
-        y_, _ = DiscriminativeMIEstimator.sample_negatives(x, y)
+        y_, old_w = self.discriminative_estimator.sample_negatives(x, y)
         # Re-weight the terms according to the weighs exp(log p(y|x)/p(y))
         w = self.generative_estimator.log_ratio(x.unsqueeze(0), y_).exp()
+        if not (old_w is None):
+            w = w * old_w
         return y_, w

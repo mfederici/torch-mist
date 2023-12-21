@@ -74,11 +74,32 @@ def test_joint_dist():
     log_p_x = p_X.log_prob(samples["x"]).mean()
     log_p_y_x = p_Y_X.condition(samples["x"]).log_prob(samples["y"]).mean()
 
+    print("joint", p_XY)
+    print("conditional", p_Y_X)
+    print("marginal", p_X)
+
     assert np.isclose(log_p_xy, log_p_x + log_p_y_x, atol=1e-3)
 
     assert np.isclose(h_x, h_x_, atol=1e-3)
 
     assert np.isclose(h_x, -log_p_x, atol=1e-2)
+
+    # Make sure we get an error if we condition on variables on which the support is not defined
+    failed = False
+    try:
+        p_XY.conditional("v")
+    except ValueError as v:
+        print(v)
+        failed = True
+    assert failed
+
+    failed = False
+    try:
+        p_XY.condition(v=torch.zeros(10, 3))
+    except ValueError as v:
+        print(v)
+        failed = True
+    assert failed
 
     p_XY = MultivariateCorrelatedNormalMixture(n_dim=3)
     p_X = p_XY.marginal("x")

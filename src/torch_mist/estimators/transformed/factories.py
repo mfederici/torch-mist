@@ -22,7 +22,7 @@ def binned(
 
 
 def pq(
-    Q_y: QuantizationFunction,
+    Q_y: Optional[QuantizationFunction],
     x_dim: Optional[int] = None,
     hidden_dims: Optional[List[int]] = None,
     q_QY_given_X: Optional[ConditionalDistribution] = None,

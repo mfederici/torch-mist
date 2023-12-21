@@ -1,7 +1,6 @@
-from typing import Type, Optional, Dict, Any, Union, Tuple, List, Callable
+from typing import Type, Optional, Dict, Any, Union, Tuple
 
 import torch
-import pandas as pd
 from torch.optim import Optimizer
 from tqdm.autonotebook import tqdm
 from torch.optim import Adam
@@ -12,103 +11,15 @@ from torch.optim.lr_scheduler import (
     ConstantLR,
     LRScheduler,
 )
-from torch.utils.data import random_split, DataLoader
+from torch.utils.data import DataLoader
 
-from torch_mist.estimators import TransformedMIEstimator
 from torch_mist.estimators.base import MIEstimator
-from torch_mist.estimators.hybrid import PQHybridMIEstimator
 from torch_mist.utils.batch import unfold_samples, move_to_device
-from torch_mist.utils.data import sample_same_attributes
-from torch_mist.utils.data.dataset import SampleDataset
-from torch_mist.utils.data.loader import (
-    sample_same_value,
-    SameAttributeDataLoader,
-)
+
 from torch_mist.utils.evaluation import evaluate_mi
 from torch_mist.utils.logging.logger.base import Logger, DummyLogger
-from torch_mist.utils.logging.logger.pandas import PandasLogger
 from torch_mist.utils.logging.logger.utils import instantiate_logger
-
-
-def _instantiate_dataloaders(
-    estimator: MIEstimator,
-    x: Optional[torch.Tensor] = None,
-    y: Optional[torch.Tensor] = None,
-    train_loader: Optional[Any] = None,
-    valid_loader: Optional[Any] = None,
-    valid_percentage: float = 0.1,
-    batch_size: Optional[int] = None,
-    num_workers: int = 8,
-    device: Union[str, torch.device] = "cpu",
-) -> Tuple[DataLoader, Optional[DataLoader]]:
-    if (x is None) != (y is None):
-        raise ValueError(
-            "Either both x and y need to be specified or neither."
-        )
-
-    if not ((x is None) ^ (train_loader is None)):
-        raise ValueError(
-            "Either both x and y or the train_loader need to be specified."
-        )
-    if not (x is None):
-        if batch_size is None:
-            raise ValueError("Please specify a value for batch_size.")
-
-        # Make the dataloaders from the samples
-        dataset = SampleDataset({"x": x, "y": y})
-        if valid_percentage > 0:
-            if not (valid_loader is None):
-                raise ValueError(
-                    "The valid_loader can't be specified when x and y are used"
-                )
-
-            n_valid = int(len(dataset) * valid_percentage)
-            dataset, val_set = random_split(
-                dataset, [len(dataset) - n_valid, n_valid]
-            )
-            valid_loader = DataLoader(
-                val_set,
-                batch_size=batch_size,
-                num_workers=num_workers,
-            )
-
-        train_loader = DataLoader(
-            dataset,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            shuffle=True,
-        )
-
-    # Check if we need to modify the dataloader to sample the same attributes
-    _estimator = estimator
-    transforms = []
-    while isinstance(_estimator, TransformedMIEstimator):
-        transforms.append(_estimator.transforms["y"])
-        _estimator = estimator.base_estimator
-
-    # If required, change the data-loader to sample batches with the same attribute only
-    if isinstance(_estimator, PQHybridMIEstimator):
-
-        def compute_attributes(samples):
-            variables = unfold_samples(samples)
-            variables = move_to_device(variables, device)
-            assert "y" in variables
-            y = variables["y"]
-            for transform in transforms:
-                y = transform(y)
-            return _estimator.generative_estimator.transforms["y"](
-                y
-            ).data.cpu()
-
-        if not isinstance(train_loader, SameAttributeDataLoader):
-            train_loader = sample_same_value(train_loader, compute_attributes)
-
-        if not isinstance(valid_loader, SameAttributeDataLoader) and not (
-            valid_loader is None
-        ):
-            valid_loader = sample_same_value(valid_loader, compute_attributes)
-
-    return train_loader, valid_loader
+from torch_mist.utils.misc import _instantiate_dataloaders
 
 
 def _instantiate_optimizer(

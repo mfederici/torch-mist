@@ -114,7 +114,7 @@ def doe(
         )
 
     if q_Y is None:
-        if y_dim is None or hidden_dims is None:
+        if y_dim is None:
             raise ValueError(
                 "Either q_Y or y_dim and hidden_dims must be specified."
             )

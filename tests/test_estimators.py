@@ -1,11 +1,14 @@
+from copy import deepcopy
 from typing import Tuple, Dict, Type, Any
 
 import numpy as np
 import torch
 from torch.optim import Optimizer, Adam
 from pyro.distributions.transforms import conditional_affine_coupling
+from torch.utils.data import DataLoader
 
 from torch_mist.data.multivariate import JointMultivariateNormal
+from torch_mist.distributions import conditional_transformed_normal
 from torch_mist.distributions.normal import ConditionalStandardNormalModule
 from torch_mist.distributions.transforms import (
     ConditionalTransformedDistributionModule,
@@ -16,9 +19,25 @@ from torch_mist.estimators import (
     instantiate_estimator,
     CLUB,
     BA,
+    MultiMIEstimator,
+    js,
+    flip_estimator,
+    doe,
+    nwj,
+    pq,
 )
-from torch_mist.quantization import FixedQuantization, vqvae_quantization
-from torch_mist.utils.data import DistributionDataLoader
+from torch_mist.estimators.discriminative import DiscriminativeMIEstimator
+from torch_mist.estimators.hybrid import (
+    ResampledHybridMIEstimator,
+    ReweighedHybridMIEstimator,
+    PQHybridMIEstimator,
+)
+from torch_mist.quantization import (
+    FixedQuantization,
+    vqvae_quantization,
+    kmeans_quantization,
+)
+from torch_mist.utils.data import DistributionDataLoader, SampleDataset
 
 from torch_mist.utils.evaluation import evaluate_mi
 from torch_mist.utils.train.mi_estimator import train_mi_estimator
@@ -113,6 +132,15 @@ def test_discriminative_estimators():
             y_dim=y_dim,
             hidden_dims=hidden_dims,
             neg_samples=neg_samples,
+        ),
+        flip_estimator(
+            instantiate_estimator(
+                estimator_name="nwj",
+                x_dim=x_dim,
+                y_dim=y_dim,
+                hidden_dims=hidden_dims,
+                neg_samples=neg_samples,
+            )
         ),
         instantiate_estimator(
             estimator_name="infonce",
@@ -331,6 +359,68 @@ def test_quantized_mi_estimators():
         )
 
 
+def test_hybrid_estimators():
+    # Seed everything
+    np.random.seed(0)
+    torch.manual_seed(0)
+
+    train_samples, test_samples, true_mi, entropy_y = _make_data()
+    q_Y_given_X = conditional_transformed_normal(
+        input_dim=y_dim,
+        context_dim=x_dim,
+        hidden_dims=hidden_dims,
+        scale=(1 - rho**2) ** 0.1 + 0.1,
+    )
+
+    generative_estimator = doe(
+        x_dim=x_dim,
+        y_dim=y_dim,
+        q_Y_given_X=q_Y_given_X,
+        marginal_transform_name="linear",
+    )
+
+    discriminative_estimator = nwj(
+        x_dim=x_dim,
+        y_dim=y_dim,
+        hidden_dims=hidden_dims,
+        neg_samples=neg_samples,
+    )
+
+    pq_estimator = pq(
+        x_dim=x_dim,
+        Q_y=kmeans_quantization(train_samples["y"], n_bins=n_bins),
+        hidden_dims=hidden_dims,
+        temperature=1,
+    )
+
+    estimators = [
+        ResampledHybridMIEstimator(
+            generative_estimator=deepcopy(generative_estimator),
+            discriminative_estimator=deepcopy(discriminative_estimator),
+        ),
+        ReweighedHybridMIEstimator(
+            generative_estimator=deepcopy(generative_estimator),
+            discriminative_estimator=deepcopy(discriminative_estimator),
+        ),
+        PQHybridMIEstimator(
+            pq_estimator=pq_estimator,
+            discriminative_estimator=deepcopy(discriminative_estimator),
+        ),
+    ]
+
+    for estimator in estimators:
+        print(estimator)
+        _test_estimator(
+            estimator=estimator,
+            train_samples=train_samples,
+            test_samples=test_samples,
+            true_mi=true_mi,
+            optimizer_params=optimizer_params,
+            optimizer_class=optimizer_class,
+            atol=atol,
+        )
+
+
 def test_flow_generative():
     # Seed everything
     np.random.seed(42)
@@ -386,3 +476,52 @@ def test_flow_generative():
     assert np.isclose(
         mi_estimate, true_mi, atol=atol
     ), f"Estimate {mi_estimate} is not close to true value {true_mi}."
+
+
+def test_multi_estimator():
+    train_samples, test_samples, true_mi, entropy_y = _make_data()
+
+    # Create a new de-correlated variable
+    train_samples["z"] = torch.roll(train_samples["x"], 1, 0)
+    test_samples["z"] = torch.roll(test_samples["x"], 1, 0)
+
+    train_loader = DataLoader(
+        SampleDataset(train_samples), batch_size=batch_size, num_workers=4
+    )
+    test_loader = DataLoader(
+        SampleDataset(test_samples), batch_size=batch_size, num_workers=4
+    )
+
+    estimator = MultiMIEstimator(
+        estimators={
+            ("x", "y"): js(
+                x_dim=x_dim,
+                y_dim=y_dim,
+                hidden_dims=hidden_dims,
+                neg_samples=neg_samples,
+            ),
+            ("x", "z"): js(
+                x_dim=x_dim,
+                y_dim=y_dim,
+                hidden_dims=hidden_dims,
+                neg_samples=neg_samples,
+            ),
+        }
+    )
+
+    train_mi_estimator(
+        estimator,
+        train_loader=train_loader,
+        max_epochs=5,
+        verbose=False,
+    )
+
+    mi_estimate = evaluate_mi(estimator, dataloader=test_loader)
+
+    assert np.isclose(
+        mi_estimate["I(x;y)"], true_mi, atol=atol
+    ), f"Estimate {mi_estimate} is not close to true value {true_mi}."
+
+    assert np.isclose(
+        mi_estimate["I(x;z)"], 0, atol=atol
+    ), f"Estimate {mi_estimate} is not close to true value {0}."

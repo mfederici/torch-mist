@@ -36,7 +36,7 @@ class VQVAE(nn.Module):
         self.min_assignment = 0.1 / n_bins
 
     @property
-    def quantization(self) -> QuantizationFunction:
+    def quantization(self) -> LearnableVectorQuantization:
         return self.encoder
 
     def loss(

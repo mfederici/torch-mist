@@ -1,6 +1,7 @@
+import torch
 from pyro.distributions import ConditionalDistribution
 
-from torch_mist.distributions.joint.categorical import JointCategorical
+from torch_mist.distributions import CategoricalModule
 from torch_mist.estimators import DoE
 from torch_mist.estimators.transformed.base import TransformedMIEstimator
 from torch_mist.quantization.functions import QuantizationFunction
@@ -20,9 +21,8 @@ class PQ(TransformedMIEstimator):
             transforms={"y": Q_y},
             base_estimator=DoE(
                 q_Y_given_X=q_QY_given_X,
-                q_Y=JointCategorical(
-                    variables=["y"],
-                    bins=[Q_y.n_bins],
+                q_Y=CategoricalModule(
+                    logits=torch.zeros(Q_y.n_bins),
                     temperature=temperature,
                 ),
             ),
