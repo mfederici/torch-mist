@@ -74,11 +74,12 @@ def _instantiate_dataloaders(
     _estimator = estimator
     transforms = []
     while isinstance(_estimator, TransformedMIEstimator):
-        transforms.append(_estimator.transforms["y"])
+        transforms.append(_estimator.transforms)
         _estimator = estimator.base_estimator
 
     # If required, change the data-loader to sample batches with the same attribute only
     if isinstance(_estimator, PQHybridMIEstimator):
+        neg_samples = _estimator.neg_samples
 
         def compute_attributes(samples):
             variables = unfold_samples(samples)
@@ -86,17 +87,21 @@ def _instantiate_dataloaders(
             assert "y" in variables
             y = variables["y"]
             for transform in transforms:
-                y = transform(y)
-            return _estimator.generative_estimator.transforms["y"](
+                y = transform["y->y"](y)
+            return _estimator.generative_estimator.transforms["y->y"](
                 y
             ).data.cpu()
 
         if not isinstance(train_loader, SameAttributeDataLoader):
-            train_loader = sample_same_value(train_loader, compute_attributes)
+            train_loader = sample_same_value(
+                train_loader, compute_attributes, neg_samples=neg_samples
+            )
 
         if not isinstance(valid_loader, SameAttributeDataLoader) and not (
             valid_loader is None
         ):
-            valid_loader = sample_same_value(valid_loader, compute_attributes)
+            valid_loader = sample_same_value(
+                valid_loader, compute_attributes, neg_samples=neg_samples
+            )
 
     return train_loader, valid_loader

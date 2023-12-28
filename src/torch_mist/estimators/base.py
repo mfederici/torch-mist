@@ -17,7 +17,7 @@ class MIEstimator(nn.Module):
     def unnormalized_log_ratio(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
-        return self.normalized_log_ratio(x, y)
+        return self.log_ratio(x, y)
 
     def mutual_information(
         self, x: torch.Tensor, y: torch.Tensor

@@ -47,7 +47,7 @@ rho = 0.9
 x_dim = y_dim = 1
 batch_size = 64
 n_bins = 32
-neg_samples = 16
+neg_samples = 15
 max_epochs = 1
 
 optimizer_params = {"lr": 1e-3}
@@ -388,7 +388,7 @@ def test_hybrid_estimators():
 
     pq_estimator = pq(
         x_dim=x_dim,
-        Q_y=kmeans_quantization(train_samples["y"], n_bins=n_bins),
+        Q_y=kmeans_quantization(train_samples["y"], n_bins=8),
         hidden_dims=hidden_dims,
         temperature=1,
     )

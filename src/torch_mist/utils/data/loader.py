@@ -64,6 +64,7 @@ class SameAttributeDataLoader(DataLoader):
         dataset: Dataset,
         attributes: Union[torch.Tensor, np.ndarray],
         batch_size: int,
+        neg_samples: int,
         **kwargs
     ):
         if len(dataset) != len(attributes):
@@ -74,7 +75,9 @@ class SameAttributeDataLoader(DataLoader):
         super().__init__(
             dataset,
             batch_sampler=SameAttributeSampler(
-                attributes=attributes, batch_size=batch_size
+                attributes=attributes,
+                batch_size=batch_size,
+                neg_samples=neg_samples,
             ),
             **kwargs
         )
@@ -83,8 +86,10 @@ class SameAttributeDataLoader(DataLoader):
 def sample_same_attributes(
     dataloader: DataLoader,
     attributes: Union[torch.Tensor, np.ndarray],
+    neg_samples: int,
 ) -> DataLoader:
     return SameAttributeDataLoader(
+        neg_samples=neg_samples,
         dataset=dataloader.dataset,
         attributes=attributes,
         batch_size=dataloader.batch_size,
@@ -101,6 +106,7 @@ def sample_same_attributes(
 def sample_same_value(
     dataloader: DataLoader,
     func: Callable[[Any], Any],
+    neg_samples: int,
 ) -> DataLoader:
     ordered_dataloader = DataLoader(
         dataset=dataloader.dataset,
@@ -121,4 +127,6 @@ def sample_same_value(
 
     attributes = torch.cat(attributes, 0)
 
-    return sample_same_attributes(dataloader, attributes)
+    return sample_same_attributes(
+        dataloader, attributes, neg_samples=neg_samples
+    )

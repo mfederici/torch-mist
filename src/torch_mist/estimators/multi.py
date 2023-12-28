@@ -14,6 +14,20 @@ class MultiMIEstimator(MIEstimator):
         for (x_key, y_key), estimator in estimators.items():
             key = f"{x_key};{y_key}"
             self.estimators[key] = estimator
+            if x_key in self.infomax_gradient:
+                self.infomax_gradient[x_key] = (
+                    self.infomax_gradient[x_key]
+                    and estimator.infomax_gradient["x"]
+                )
+            else:
+                self.infomax_gradient[x_key] = estimator.infomax_gradient["x"]
+            if y_key in self.infomax_gradient:
+                self.infomax_gradient[y_key] = (
+                    self.infomax_gradient[y_key]
+                    and estimator.infomax_gradient["y"]
+                )
+            else:
+                self.infomax_gradient[y_key] = estimator.infomax_gradient["y"]
 
     def broadcast_function(
         self, function_name: str, **variables

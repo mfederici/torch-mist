@@ -1,5 +1,0 @@
-class_path: core.data.datamodule.MultiOmniglotDataModule
-init_args:
-  n_images: 1
-  num_workers: 12
-  batch_size: 128

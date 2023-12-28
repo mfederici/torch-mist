@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from functools import lru_cache
+from typing import Optional, Tuple
 
 import torch
 
@@ -29,14 +30,17 @@ class HybridMIEstimator(DiscriminativeMIEstimator):
         }
         self.infomax_gradient = informax_gradient
 
+    def unnormalized_discriminative_log_ratio(self, x, y):
+        f = self.critic(x, y)
+        assert f.ndim == y.ndim - 1
+        return f
+
     @lru_cache(maxsize=1)
     def unnormalized_log_ratio(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
-        f = self.critic(x, y)
-        assert f.ndim == y.ndim - 1
-
         partial_log_ratio = self.generative_estimator.log_ratio(x, y)
+        f = self.unnormalized_discriminative_log_ratio(x, y)
 
         assert f.shape == partial_log_ratio.shape
         return f + partial_log_ratio
@@ -49,7 +53,7 @@ class HybridMIEstimator(DiscriminativeMIEstimator):
     @abstractmethod
     def sample_negatives(
         self, x: torch.Tensor, y: torch.Tensor
-    ) -> torch.Tensor:
+    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         raise NotImplementedError()
 
     def batch_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
@@ -69,32 +73,3 @@ class HybridMIEstimator(DiscriminativeMIEstimator):
             batch_loss += self.generative_estimator.batch_loss(x, y)
 
         return batch_loss
-
-
-class ReWeighedHybridMIEstimator(HybridMIEstimator):
-    @lru_cache(maxsize=1)
-    def approx_log_partition(
-        self,
-        x: torch.Tensor,
-        y: torch.Tensor,
-    ) -> torch.Tensor:
-        y_ = self.sample_negatives(x, y)
-
-        # Evaluate the unnormalized_log_ratio f(x,y) on the samples from p(x)r(y|x)
-        # The tensor f_ has shape [M, N...] in which f_[i,j] contains critic(x[j], y_[i,j]).
-        # and y_ is sampled from r(y|x), which is set to the empirical p(y) unless a proposal is specified
-        f_ = self.critic(x, y_)
-
-        log_Z = self.discriminative_estimator._approx_log_partition(x, f_)
-
-        weights = self.generative_estimator.log_ratio(x.unsqueeze(0), y_).exp()
-        assert log_Z.shape == weights.shape
-        log_Z = log_Z * weights.detach()
-
-        assert log_Z.shape[0] == self.n_negatives_to_use(x.shape[0])
-        assert (
-            not isinstance(x, torch.LongTensor)
-            and log_Z.shape[1:] == x.shape[:-1]
-        ) or (isinstance(x, torch.LongTensor) and log_Z.shape[1:] == x.shape)
-
-        return log_Z.mean(0)
