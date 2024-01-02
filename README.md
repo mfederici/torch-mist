@@ -5,11 +5,16 @@
 [![Documentation Status](https://readthedocs.org/projects/torch-mist/badge/?version=latest)](https://torch-mist.readthedocs.io/en/latest/?badge=latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+![example workflow](https://github.com/mfederici/torch-mist/actions/workflows/ci.yml/badge.svg)
 
 <img src="https://github.com/mfederici/torch-mist/blob/main/docs/_static/logo.png?raw=true" onerror="this.onerror=null" width="200">
 
 
-Mutual Information Estimation toolkit based on pytorch. TO BE RELEASED SOON
+Mutual Information Estimation toolkit based on pytorch. 
+Please refer to the [documentation](https://torch-mist.readthedocs.io/en/latest/index.html) for additional details regarding
+[installation](https://torch-mist.readthedocs.io/en/latest/notebooks/installation.html), [usage](https://torch-mist.readthedocs.io/en/latest/notebooks/usage.html),
+tutorials and pracical use-case example.
+
 
 ## Installation
 
@@ -169,7 +174,33 @@ And the following hyperparameters:
 
 #### Hybrid estimators
 The `torch_mist` package allows to combine Generative and Discriminative estimators in a single hybrid estimators as proposed in [[11]](#references)[[12]](#references).
-COMING SOON
+ Hybrid mutual information estimators combine the flexibility of discriminative mutual information estimators with the lower 
+variance of generative estimators. 
+```python
+from torch_mist.estimators.hybrid import ResampledHybridMIEstimator
+from torch_mist.estimators import nwj, doe
+
+# Use the proposal r(y|x) to sample negatives instead of p(y)
+estimator = ResampledHybridMIEstimator(
+    # Difference of Entropies generative estimator
+    generative_estimator=doe(
+        x_dim=x.shape[-1],
+        y_dim=y.shape[-1],
+        hidden_dims=[32, 32],
+    ),
+    # NWJ discriminative estimator
+    discriminative_estimator=nwj(
+        x_dim=x.shape[-1],
+        y_dim=y.shape[-1],
+        hidden_dims=[32, 32],
+        neg_samples=16
+    )
+)
+
+```
+Further details on the available hybrid mutual information estimators and additional details are reported in the 
+[tutorial](https://torch-mist.readthedocs.io/en/latest/notebooks/hybrid.html#) available in the [documentation](https://torch-mist.readthedocs.io/en/latest/index.html).
+
 
 ### Training and Evaluation
 Most of the estimators included in this package are parametric and require a training procedure for accurate estimation.

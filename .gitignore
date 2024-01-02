@@ -5,3 +5,5 @@ dist
 .coverage
 coverage.xml
 docs/.pytest_cache
+outputs
+wandb

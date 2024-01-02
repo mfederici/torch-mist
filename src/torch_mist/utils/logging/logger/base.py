@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import os
 from abc import abstractmethod
 from typing import Any, Callable, Optional, Union, List, Tuple, Dict
+
+from torch import nn
+from wandb.wandb_torch import torch
 
 from torch_mist.utils.logging.contexts import (
     LoggingContext,
@@ -12,9 +16,10 @@ from torch_mist.utils.misc import args_to_kwargs
 
 
 class Logger:
-    def __init__(self):
+    def __init__(self, log_dir: str = "."):
         self._logged_methods = {}
         self._context = {}
+        self.log_dir = log_dir
 
     def context(self, context_name: str, context_value: Any) -> LoggingContext:
         return LoggingContext(self, context_name, context_value)
@@ -108,6 +113,15 @@ class Logger:
 
     def get_log(self) -> Optional[Any]:
         return None
+
+    @abstractmethod
+    def save_log(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def save_model(self, model: nn.Module, name: str):
+        filepath = os.path.join(self.log_dir, name)
+        torch.save(model, filepath)
 
     def __del__(self):
         self.clear()

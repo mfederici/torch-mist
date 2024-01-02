@@ -1,0 +1,6 @@
+defaults:
+  - _self_
+  - logger: pandas
+  - experiment: ???
+
+device: cpu

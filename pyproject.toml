@@ -28,6 +28,12 @@ matplotlib = "^3.7.1"
 seaborn = "^0.12.2"
 torchvision = "^0.15.2"
 
+[tool.poetry.group.logging.dependencies]
+wandb = "^0.16.1"
+
+[tool.poetry.group.scripts.dependencies]
+wandb = "^0.16.1"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,2 @@
+_target_: torch_mist.utils.logging.logger.wandb.WandbLogger
+project: torch_mist

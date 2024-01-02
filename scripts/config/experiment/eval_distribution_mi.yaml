@@ -1,0 +1,26 @@
+# @package _global_
+defaults:
+  - /distribution: multimixture
+  - /mi_estimator: ???
+
+seed: 42
+
+metadata:
+  x_dim: 5
+  y_dim: 5
+  n_train_samples: 100000
+  n_test_samples: 10000
+
+params:
+  hidden_dims: [256, 128]
+  h_dim: 64
+  neg_samples: 1
+
+  train:
+    batch_size: 128
+    valid_percentage: 0.1
+    early_stopping: false
+    lr_annealing: false
+    max_epochs: 10
+  test:
+    batch_size: 128

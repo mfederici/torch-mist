@@ -21,6 +21,10 @@ def parse(conf: DictConfig):
     print("Instantiating the logger")
     logger = instantiate(conf.logger)
 
+    # Add the configuration to the run if the logger allows
+    if hasattr(logger, "add_config"):
+        logger.add_config(OmegaConf.to_container(conf, resolve=False))
+
     # Set the random seed
     if "seed" in conf:
         torch.manual_seed(conf.seed)
@@ -30,52 +34,54 @@ def parse(conf: DictConfig):
         if hasattr(conf.device, "tensor_cores"):
             torch.set_float32_matmul_precision(conf.device.matmul_precision)
 
-    # Instantiating the samples
+    # Instantiating the distribution
     print("Instantiating the Distributions")
     distribution = instantiate(conf.distribution, _convert_="all")
-    n_train = instantiate(conf.n_train, _convert_="all")
-    n_test = instantiate(conf.n_test, _convert_="all")
 
-    train_samples = distribution.sample(n_train)
-    test_samples = distribution.sample(n_test)
+    # Produce the samples
+    train_samples = distribution.sample([conf.metadata.n_train_samples])
+    test_samples = distribution.sample([conf.metadata.n_test_samples])
+    true_mi = distribution.mutual_information()
 
     # Instantiate the estimator
-    estimator = instantiate(conf.mi_estimator, _convert_="all")
+    mi_estimator = instantiate(conf.mi_estimator, _convert_="all")
 
     logged_methods = [
         ("log_ratio", compute_mean_std),
-        ("unnormalized_log_ratio", compute_mean_std),
-        ("approx_log_partition", compute_mean_std),
         ("batch_loss", compute_mean_std),
     ]
 
-    if isinstance(estimator, DiscriminativeMIEstimator):
+    if isinstance(mi_estimator, DiscriminativeMIEstimator):
         logged_methods += [
-            ("unnormalized_log_ratio", compute_mean_std),
             ("approx_log_partition", compute_mean_std),
+            ("unnormalized_log_ratio", compute_mean_std),
         ]
 
-    if isinstance(estimator, HybridMIEstimator):
+    if isinstance(mi_estimator, HybridMIEstimator):
         logged_methods.append(
             ("generative_estimator.log_ratio", compute_mean_std)
         )
 
-    with logger.logged_methods(logged_methods):
+    with logger.logged_methods(mi_estimator, logged_methods):
         train_mi_estimator(
-            estimator,
+            mi_estimator,
             x=train_samples["x"],
             y=train_samples["y"],
+            logger=logger,
             **conf.params.train,
         )
 
         with logger.test():
             results = evaluate_mi(
-                estimator,
+                mi_estimator,
                 x=test_samples["x"],
                 y=test_samples["y"],
                 **conf.params.test,
             )
-        print(results)
+
+        print(f"True mi: {true_mi}")
+        print(f"Estimated mi: {results}")
+        logger.save_log()
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Dict
+from typing import Dict, Union
 
 import torch
 import torch.nn as nn
@@ -21,7 +21,7 @@ class MIEstimator(nn.Module):
 
     def mutual_information(
         self, x: torch.Tensor, y: torch.Tensor
-    ) -> torch.Tensor:
+    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
         log_ratio = self.log_ratio(x, y)
         assert (
             not isinstance(x, torch.LongTensor)
@@ -41,7 +41,9 @@ class MIEstimator(nn.Module):
         ) or (isinstance(x, torch.LongTensor) and batch_loss.shape == x.shape)
         return batch_loss.mean()
 
-    def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, y: torch.Tensor
+    ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
         """
         Compute an estimation for I(x,y).
         Args:
