@@ -5,7 +5,7 @@
 [![Documentation Status](https://readthedocs.org/projects/torch-mist/badge/?version=latest)](https://torch-mist.readthedocs.io/en/latest/?badge=latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-![example workflow](https://github.com/mfederici/torch-mist/actions/workflows/ci.yml/badge.svg)
+![Build workflow](https://github.com/mfederici/torch-mist/actions/workflows/ci.yml/badge.svg)
 
 <img src="https://github.com/mfederici/torch-mist/blob/main/docs/_static/logo.png?raw=true" onerror="this.onerror=null" width="200">
 
