@@ -25,6 +25,6 @@ def n_trainable_parameters(function: Any) -> int:
 
 def is_trainable(function: Any) -> bool:
     if isinstance(function, nn.Module):
-        return n_trainable_parameters(function) == 0
+        return n_trainable_parameters(function) > 0
     else:
-        return True
+        return False

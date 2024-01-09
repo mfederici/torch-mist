@@ -1,6 +1,5 @@
 import math
 from abc import abstractmethod
-from typing import Optional, List
 
 import torch
 from torch import nn
@@ -10,8 +9,8 @@ class Baseline(nn.Module):
     @abstractmethod
     def forward(
         self,
-        f_: torch.Tensor,
         x: torch.Tensor,
+        f_: torch.Tensor,
     ) -> torch.Tensor:
         raise NotImplementedError()
 
@@ -19,14 +18,14 @@ class Baseline(nn.Module):
 class ConstantBaseline(Baseline):
     def __init__(self, value: float = 0):
         super(ConstantBaseline, self).__init__()
-        self.value = value
+        self.register_buffer("value", torch.FloatTensor([value]))
 
     def forward(
         self,
-        f_: torch.Tensor,
         x: torch.Tensor,
+        f_: torch.Tensor,
     ) -> torch.Tensor:
-        return torch.zeros(f_.shape[1:]).to(f_.device) + self.value
+        return self.value.expand(f_.shape[1:])
 
 
 class ExponentialMovingAverage(Baseline):
@@ -38,8 +37,8 @@ class ExponentialMovingAverage(Baseline):
 
     def forward(
         self,
-        f_: torch.Tensor,
         x: torch.Tensor,
+        f_: torch.Tensor,
     ) -> torch.Tensor:
         average = f_.exp().mean().detach()
         average = torch.clamp(average, min=1e-4, max=1e4)
@@ -57,7 +56,7 @@ class ExponentialMovingAverage(Baseline):
         ma = ema.log()
         for _ in range(x.ndim - 1):
             ma = ma.unsqueeze(0)
-        ma = ma.expand_as(x[..., 0])
+        ma = ma.expand_as(f_[0])
         return ma
 
 
@@ -69,8 +68,8 @@ class BatchLogMeanExp(Baseline):
 
     def forward(
         self,
-        f_: torch.Tensor,
         x: torch.Tensor,
+        f_: torch.Tensor,
     ) -> torch.Tensor:
         # log 1/M \sum e^f_ = logsumexp(f_) - log M
         if self.dims == "all":
@@ -82,7 +81,6 @@ class BatchLogMeanExp(Baseline):
         if self.dims == "all":
             for _ in range(x.ndim - 1):
                 b = b.unsqueeze(0)
-            b = b.expand_as(x[..., 0])
 
         return b
 
@@ -94,8 +92,8 @@ class LearnableBaseline(Baseline):
 
     def forward(
         self,
-        f_: torch.Tensor,
         x: torch.Tensor,
+        f_: torch.Tensor,
     ) -> torch.Tensor:
         return self.net(x).squeeze(-1)
 
@@ -112,11 +110,14 @@ class InterpolatedBaseline(Baseline):
 
     def forward(
         self,
-        f_: torch.Tensor,
         x: torch.Tensor,
+        f_: torch.Tensor,
     ) -> torch.Tensor:
         b1 = self.baseline_1.forward(f_=f_, x=x)
         b2 = self.baseline_2.forward(f_=f_, x=x)
+
+        b1 = b1.expand_as(b2)
+        b2 = b2.expand_as(b1)
 
         assert b1.shape == b2.shape
 

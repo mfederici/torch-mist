@@ -7,6 +7,7 @@ import torch
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.estimators.discriminative.base import DiscriminativeMIEstimator
 from torch_mist.utils.freeze import is_trainable
+from contextlib import contextmanager
 
 
 class HybridMIEstimator(DiscriminativeMIEstimator):
@@ -30,25 +31,25 @@ class HybridMIEstimator(DiscriminativeMIEstimator):
         }
         self.infomax_gradient = informax_gradient
 
-    def unnormalized_discriminative_log_ratio(self, x, y):
-        f = self.critic(x, y)
-        assert f.ndim == y.ndim - 1
-        return f
-
     @lru_cache(maxsize=1)
     def unnormalized_log_ratio(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
         partial_log_ratio = self.generative_estimator.log_ratio(x, y)
-        f = self.unnormalized_discriminative_log_ratio(x, y)
+        f = self.discriminative_estimator.unnormalized_log_ratio(x, y)
 
         assert f.shape == partial_log_ratio.shape
         return f + partial_log_ratio
 
-    def _approx_log_partition(
-        self, x: torch.Tensor, f_: torch.Tensor
-    ) -> torch.Tensor:
-        return self.discriminative_estimator._approx_log_partition(x, f_)
+    @lru_cache(maxsize=1)
+    def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        partial_log_ratio = self.generative_estimator.log_ratio(x, y)
+
+        with self.resampling_strategy():
+            log_rest = self.discriminative_estimator.log_ratio(x, y)
+
+        assert partial_log_ratio.shape == log_rest.shape
+        return partial_log_ratio + log_rest
 
     @abstractmethod
     def sample_negatives(
@@ -56,20 +57,43 @@ class HybridMIEstimator(DiscriminativeMIEstimator):
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
         raise NotImplementedError()
 
+    @contextmanager
+    def resampling_strategy(self):
+        # Store the original sampling scheme
+        original_method = self.discriminative_estimator.sample_negatives
+
+        # Replace it with the new one
+        self.discriminative_estimator.sample_negatives = self.sample_negatives
+        try:
+            yield
+        finally:
+            # Restore the original method
+            self.discriminative_estimator.sample_negatives = original_method
+
     def batch_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         # Compute only the discriminative loss component
         # Note that we can skip computing the log r(y|x)/p(y)
-        unnormalized_log_ratio = (
-            self.discriminative_estimator.unnormalized_log_ratio(x, y)
-        )
-        log_partition = self.approx_log_partition(x, y)
-
-        # The loss is the same as for generative estimators with the difference in the computation for the normalization
-        # constant
-        batch_loss = -(unnormalized_log_ratio - log_partition)
+        with self.resampling_strategy():
+            batch_loss = self.discriminative_estimator.batch_loss(x, y)
 
         # If the generative component is not trainable, there is no need to compute the log-ratio or the generative loss
-        if not is_trainable(self.generative_estimator):
+        if is_trainable(self.generative_estimator):
             batch_loss += self.generative_estimator.batch_loss(x, y)
 
         return batch_loss
+
+    def __repr__(self):
+        s = self.__class__.__name__ + "(\n"
+        s += (
+            "  (generative_estimator): "
+            + str(self.generative_estimator).replace("\n", "\n" + "  ")
+            + "\n"
+        )
+        s += (
+            "  (discriminative_estimator): "
+            + str(self.discriminative_estimator).replace("\n", "\n" + "  ")
+            + "\n"
+        )
+        s += ")"
+
+        return s

@@ -38,9 +38,6 @@ class SeparableCritic(Critic):
         f_x = self.f_x(x)
         f_y = self.f_y(y)
 
-        if f_x.ndim < f_y.ndim:
-            f_x = f_x.unsqueeze(0)
-
         f_x, f_y = expand_to_same_shape(f_x, f_y)
 
         assert (

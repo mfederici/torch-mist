@@ -22,9 +22,6 @@ class JointCritic(Critic):
         self.joint_net = joint_net
 
     def forward(self, x, y) -> torch.Tensor:
-        if x.ndim < y.ndim:
-            x = x.unsqueeze(0)
-
         x, y = expand_to_same_shape(x, y)
 
         # Concatenate x and y in order

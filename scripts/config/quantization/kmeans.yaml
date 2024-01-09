@@ -1,0 +1,2 @@
+_target_: torch_mist.quantization.kmeans_quantization
+n_bins: ${params.n_bins}

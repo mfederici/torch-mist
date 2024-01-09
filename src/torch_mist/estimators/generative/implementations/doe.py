@@ -39,16 +39,17 @@ class DoE(ConditionalGenerativeMIEstimator):
         x: torch.Tensor,
         y: torch.Tensor,
     ) -> torch.Tensor:
-        log_q_y_given_x = self.approx_log_p_y_given_x(x=x, y=y)
+        batch_loss = super().batch_loss(x, y)
         log_q_y = self.approx_log_p_y(x=x, y=y)
 
-        loss = -log_q_y - log_q_y_given_x
+        batch_loss = batch_loss - log_q_y
 
         assert (
-            loss.shape == y.shape[:-1] and not isinstance(y, torch.LongTensor)
-        ) or (loss.shape == y.shape and isinstance(y, torch.LongTensor))
+            batch_loss.shape == y.shape[:-1]
+            and not isinstance(y, torch.LongTensor)
+        ) or (batch_loss.shape == y.shape and isinstance(y, torch.LongTensor))
 
-        return loss
+        return batch_loss
 
     def __repr__(self):
         s = self.__class__.__name__ + "(\n"

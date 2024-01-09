@@ -1,0 +1,7 @@
+# @package _global_
+defaults:
+  - /mi_estimator@mi_estimator.discriminative_estimator: nwj
+  - /mi_estimator@mi_estimator.generative_estimator: doe
+
+mi_estimator:
+  _target_: torch_mist.estimators.hybrid.ReweighedHybridMIEstimator

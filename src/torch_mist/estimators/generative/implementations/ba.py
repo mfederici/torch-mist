@@ -10,7 +10,7 @@ from torch_mist.estimators.generative.base import (
 
 
 class BA(ConditionalGenerativeMIEstimator):
-    upper_bound: bool = True
+    lower_bound: bool = True
     infomax_gradient: Dict[str, bool] = {"x": True, "y": False}
 
     def __init__(
@@ -30,6 +30,3 @@ class BA(ConditionalGenerativeMIEstimator):
     ) -> torch.Tensor:
         entropy_y_given_x = -self.approx_log_p_y_given_x(x=x, y=y).mean()
         return self.entropy_y - entropy_y_given_x
-
-    def batch_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        return -self.approx_log_p_y_given_x(x=x, y=y)

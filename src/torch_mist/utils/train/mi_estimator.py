@@ -80,6 +80,7 @@ def train_epoch(
     tqdm_iteration: Optional[tqdm] = None,
     fast_train: bool = False,
 ):
+    estimator.train()
     with logger.epoch():
         for samples in train_loader:
             variables = unfold_samples(samples)
@@ -147,7 +148,6 @@ def train_mi_estimator(
         iterations_per_epoch=len(train_loader),
     )
 
-    estimator.train()
     estimator = estimator.to(device)
 
     # If the logger is specified, we use it adding loss and mutual_information logs if not already specified

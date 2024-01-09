@@ -14,10 +14,11 @@ class MIEstimator(nn.Module):
     def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         raise NotImplementedError()
 
+    @abstractmethod
     def unnormalized_log_ratio(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
-        return self.log_ratio(x, y)
+        raise NotImplementedError()
 
     def mutual_information(
         self, x: torch.Tensor, y: torch.Tensor

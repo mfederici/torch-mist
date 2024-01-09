@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 
+from torch_mist.baseline import Baseline
+
 CRITIC_TYPE = "critic_type"
 SEPARABLE_CRITIC = "separable"
 JOINT_CRITIC = "joint"

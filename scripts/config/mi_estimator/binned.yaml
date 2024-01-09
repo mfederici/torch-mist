@@ -1,0 +1,8 @@
+# @package _global_
+defaults:
+  - /quantization@mi_estimator.quantize_x: kmeans
+  - /quantization@mi_estimator.quantize_y: kmeans
+
+mi_estimator:
+  _target_: torch_mist.estimators.binned
+  temperature: ${params.temperature}

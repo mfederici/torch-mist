@@ -1,10 +1,8 @@
 from abc import abstractmethod
-from contextlib import contextmanager
 from typing import Dict, Tuple, Optional
 from functools import lru_cache
 
 import torch
-from torch.distributions import Distribution
 
 from torch_mist.baseline import Baseline
 from torch_mist.estimators.base import MIEstimator
@@ -26,18 +24,6 @@ class DiscriminativeMIEstimator(MIEstimator):
         self.critic = critic
         self.neg_samples = neg_samples
         self._y_buffer = SampleBuffer()
-
-    @contextmanager
-    def use_critic(self, critic: Critic):
-        # Save the original value
-        original_critic = self.critic
-        # Set the new temporary value
-        self.critic = critic
-        try:
-            yield
-        finally:
-            # Revert to the original value
-            self.critic = original_critic
 
     @lru_cache(maxsize=1)
     def unnormalized_log_ratio(
@@ -64,7 +50,7 @@ class DiscriminativeMIEstimator(MIEstimator):
 
     def sample_negatives(
         self, x: torch.Tensor, y: torch.Tensor
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+    ) -> Tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor]]:
         N = x.shape[0]
         neg_samples = self.n_negatives_to_use(N)
 
@@ -82,56 +68,67 @@ class DiscriminativeMIEstimator(MIEstimator):
 
         self._y_buffer.update()
 
-        return y_, None
+        return x.unsqueeze(0), y_, None
+
+    def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        # Approximate the log-ratio p(x,y)/r(x,y) on samples from p(x,y).
+        # x and y have shape [..., X_DIM] and [..., Y_DIM] respectively
+
+        assert x.ndim == y.ndim
+        # Sample x_ and y_ from r(x,y). w represents an optional log-weighting coefficient log[r(x,y)/q(x,y)] in case
+        # x_ and y_ are sampled from q(x,y) instead of r(x,y).
+        # By default we have r(x,y) = p(x)p(y) and shape [M, ..., X_DIM] and [M, ..., Y_DIM] respectively
+        x_, y_, log_w = self.sample_negatives(x, y)
+
+        # Evaluate the unnormalized_log_ratio f(x,y) on the samples from p(x, y), with shape [...]
+        unnormalized_log_ratio = self.unnormalized_log_ratio(x, y)
+
+        x_dim = x_.ndim + (1 if isinstance(x_, torch.LongTensor) else 0)
+        y_dim = y_.ndim + (1 if isinstance(y_, torch.LongTensor) else 0)
+
+        assert x_dim == y_dim
+
+        # Compute the log-normalization term log E{r(x,y)}[e^f(x,y)] on samples from r(x,y)
+        log_partition = self.approx_log_partition(x, y, x_, y_, log_w)
+
+        assert log_partition.shape == unnormalized_log_ratio.shape
+        log_ratio = unnormalized_log_ratio - log_partition
+
+        return log_ratio
+
+    @abstractmethod
+    def _approx_log_partition(
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
+        f_: torch.Tensor,
+        log_w: Optional[torch.Tensor],
+    ) -> torch.Tensor:
+        raise NotImplementedError()
 
     @lru_cache(maxsize=1)
     def approx_log_partition(
         self,
         x: torch.Tensor,
         y: torch.Tensor,
+        x_: torch.Tensor,
+        y_: torch.Tensor,
+        log_w: Optional[torch.Tensor],
     ) -> torch.Tensor:
-        y_, w = self.sample_negatives(x, y)
+        # Evaluate the unnormalized_log_ratio f(x_,y_) on the samples x_, y_ ~ r(x, y). It has shape [M, ...]
+        f_ = self.critic(x_, y_)
 
-        # Evaluate the unnormalized_log_ratio f(x,y) on the samples from p(x)r(y|x)
-        # The tensor f_ has shape [M, N...] in which f_[i,j] contains critic(x[j], y_[i,j]).
-        # and y_ is sampled from r(y|x), which is set to the empirical p(y) unless a proposal is specified
-        f_ = self.critic(x, y_)
+        # Compute the shape of the negatives (may require broadcasting)
+        x_dim = x_.ndim + (1 if isinstance(x_, torch.LongTensor) else 0)
+        negative_shape = torch.Size(
+            [max(x_.shape[i], y_.shape[i]) for i in range(x_dim - 1)]
+        )
+        assert f_.shape == negative_shape, f"{f_.shape}!={negative_shape}"
 
-        log_Z = self._approx_log_partition(x, f_)
+        log_Z = self._approx_log_partition(x=x, y=y, f_=f_, log_w=log_w)
+        assert log_Z.shape == x.shape[:-1]
 
-        if not (w is None):
-            assert w.shape == log_Z.shape
-            log_Z = w * log_Z
-
-        assert log_Z.shape[0] == self.n_negatives_to_use(x.shape[0])
-        assert (
-            not isinstance(x, torch.LongTensor)
-            and log_Z.shape[1:] == x.shape[:-1]
-        ) or (isinstance(x, torch.LongTensor) and log_Z.shape[1:] == x.shape)
-
-        return log_Z.mean(0)
-
-    @abstractmethod
-    def _approx_log_partition(
-        self, x: torch.Tensor, f_: torch.Tensor
-    ) -> torch.Tensor:
-        raise NotImplementedError()
-
-    def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        assert x.ndim == y.ndim
-        # Approximate the log-ratio p(y|x)/p(y) on samples from p(x,y).
-        # x and y have shape [..., X_DIM] and [..., Y_DIM] respectively
-
-        # Evaluate the unnormalized_log_ratio f(x,y) on the samples from p(x, y), with shape [...]
-        unnormalized_log_ratio = self.unnormalized_log_ratio(x, y)
-
-        # Compute the log-normalization term, with shape [M, ...]
-        log_partition = self.approx_log_partition(x, y)
-
-        log_ratio = unnormalized_log_ratio - log_partition
-        assert log_ratio.ndim == y.ndim - 1
-
-        return log_ratio
+        return log_Z
 
     def batch_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         return -self.log_ratio(x, y)
@@ -145,33 +142,6 @@ class DiscriminativeMIEstimator(MIEstimator):
         s += ")"
 
         return s
-
-
-class CombinedDiscriminativeMIEstimator(DiscriminativeMIEstimator):
-    def __init__(
-        self,
-        train_estimator: DiscriminativeMIEstimator,
-        eval_estimator: DiscriminativeMIEstimator,
-    ):
-        assert train_estimator.critic == eval_estimator.critic
-        assert train_estimator.neg_samples == eval_estimator.neg_samples
-
-        super().__init__(
-            critic=train_estimator.critic,
-            neg_samples=train_estimator.neg_samples,
-        )
-
-        self.train_estimator = train_estimator
-        self.eval_estimator = eval_estimator
-        self.infomax_gradient = train_estimator.infomax_gradient
-
-    def batch_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        return self.train_estimator.batch_loss(x, y)
-
-    def _approx_log_partition(
-        self, x: torch.Tensor, f_: torch.Tensor
-    ) -> torch.Tensor:
-        return self.eval_estimator._approx_log_partition(x, f_)
 
 
 class BaselineDiscriminativeMIEstimator(DiscriminativeMIEstimator):
@@ -191,17 +161,24 @@ class BaselineDiscriminativeMIEstimator(DiscriminativeMIEstimator):
     def _approx_log_partition(
         self,
         x: torch.Tensor,
+        y: torch.Tensor,
         f_: torch.Tensor,
+        log_w: Optional[torch.Tensor],
     ) -> torch.Tensor:
-        # Compute the baseline. It has shape [1,...]
-        b = self.baseline(f_, x).unsqueeze(0)
+        # Compute the baseline
+        b = self.baseline(x=x, f_=f_).unsqueeze(0)
         assert (
             b.ndim == f_.ndim
         ), f"Baseline has ndim {b.ndim} while f_ has ndim {f_.ndim}"
 
-        log_norm = (f_ - b).exp() + b - 1.0
+        # Add the log_weights if provided
+        if not (log_w is None):
+            assert log_w.ndim == f_.ndim
+            f_ = f_ + log_w
 
-        return log_norm
+        # Compute the log_partition, it has shape [...]
+        log_Z = (f_ - b).exp() + b - 1.0
+        return log_Z.mean(0)
 
     def __repr__(self):
         s = self.__class__.__name__ + "(\n"

@@ -2,32 +2,21 @@ from typing import Optional, List
 
 from pyro.distributions import ConditionalDistribution
 
-from torch_mist.estimators.transformed.implementations import (
-    PQ,
-    BinnedMIEstimator,
+from torch_mist.estimators.discriminative import DiscriminativeMIEstimator
+from torch_mist.estimators.hybrid import (
+    PQHybridMIEstimator,
 )
 from torch_mist.quantization import QuantizationFunction
 
 
-def binned(
-    quantize_x: Optional[QuantizationFunction] = None,
+def hybrid_pq(
+    discriminative_estimator: DiscriminativeMIEstimator,
+    x_dim: int,
     quantize_y: Optional[QuantizationFunction] = None,
-    temperature: float = 0.1,
-) -> BinnedMIEstimator:
-    return BinnedMIEstimator(
-        quantize_x=quantize_x,
-        quantize_y=quantize_y,
-        temperature=temperature,
-    )
-
-
-def pq(
-    quantize_y: Optional[QuantizationFunction],
-    x_dim: Optional[int] = None,
     hidden_dims: Optional[List[int]] = None,
     q_QY_given_X: Optional[ConditionalDistribution] = None,
     temperature: float = 0.1,
-) -> PQ:
+) -> PQHybridMIEstimator:
     from torch_mist.distributions.factories import conditional_categorical
 
     if q_QY_given_X is None:
@@ -42,8 +31,9 @@ def pq(
             temperature=temperature,
         )
 
-    return PQ(
-        q_QY_given_X=q_QY_given_X,
+    return PQHybridMIEstimator(
         quantize_y=quantize_y,
+        q_QY_given_X=q_QY_given_X,
+        discriminative_estimator=discriminative_estimator,
         temperature=temperature,
     )

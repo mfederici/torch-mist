@@ -44,7 +44,7 @@ class TransformedMIEstimator(MIEstimator):
             variable_to,
         ), transform in transforms_rename.items():
             if not base_estimator.infomax_gradient[variable_to] and (
-                not is_trainable(transform)
+                is_trainable(transform)
             ):
                 print(
                     "Warning: Transforms can be trained together with the estimator only when the estimator provides a valid infomax gradient."

@@ -10,18 +10,18 @@ class FlippedMIEstimator(TransformedMIEstimator):
         super().__init__(base_estimator=base_estimator)
 
     def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        return self.base_estimator.log_ratio(y, x)
+        return self.base_estimator.log_ratio(x=y, y=x)
 
     def unnormalized_log_ratio(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
-        return self.base_estimator.unnormalized_log_ratio(y, x)
+        return self.base_estimator.unnormalized_log_ratio(x=y, y=x)
 
     def batch_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        return self.base_estimator.batch_loss(y, x)
+        return self.base_estimator.batch_loss(x=y, y=x)
 
     def loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        return self.base_estimator.loss(y, x)
+        return self.base_estimator.loss(x=y, y=x)
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        return self.base_estimator.forward(y, x)
+        return self.base_estimator.forward(x=y, y=x)

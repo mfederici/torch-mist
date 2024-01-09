@@ -12,9 +12,19 @@ metadata:
   n_test_samples: 10000
 
 params:
-  hidden_dims: [256, 128]
-  h_dim: 64
+  hidden_dims: [128, 128, 64]
+
+  # Discriminative estimator parameters
   neg_samples: 1
+
+  # Generative estimator parameters
+  marginal_transform_name: spline_autoregressive
+  joint_transform_name: spline_autoregressive
+  conditional_transform_name: conditional_spline_autoregressive
+
+  # Quantized estimator parameters
+  n_bins: 32
+  temperature: 0.1
 
   train:
     batch_size: 128

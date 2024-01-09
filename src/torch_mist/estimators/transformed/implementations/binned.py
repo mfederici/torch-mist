@@ -1,7 +1,7 @@
 from typing import Optional
 
 from torch_mist.distributions.joint.categorical import JointCategorical
-from torch_mist.estimators import GM
+from torch_mist.estimators.generative.base import JointGenerativeMIEstimator
 from torch_mist.estimators.transformed.base import TransformedMIEstimator
 from torch_mist.quantization.functions import QuantizationFunction
 from torch_mist.utils.freeze import freeze
@@ -13,26 +13,29 @@ class BinnedMIEstimator(TransformedMIEstimator):
 
     def __init__(
         self,
-        Q_x: Optional[QuantizationFunction] = None,
-        Q_y: Optional[QuantizationFunction] = None,
+        quantize_x: Optional[QuantizationFunction] = None,
+        quantize_y: Optional[QuantizationFunction] = None,
         temperature: float = 1.0,
     ):
-        freeze(Q_x)
-        freeze(Q_y)
+        quantize_x = freeze(quantize_x)
+        quantize_y = freeze(quantize_y)
 
         q_XY = JointCategorical(
             variables=["x", "y"],
-            bins=[Q_x.n_bins, Q_y.n_bins],
+            bins=[quantize_x.n_bins, quantize_y.n_bins],
             temperature=temperature,
             name="q",
         )
 
+        transforms = {}
+        if quantize_x:
+            transforms["x"] = quantize_x
+        if quantize_y:
+            transforms["y"] = quantize_y
+
         super().__init__(
-            base_estimator=GM(
+            base_estimator=JointGenerativeMIEstimator(
                 q_XY=q_XY,
             ),
-            transforms={
-                "x": Q_x,
-                "y": Q_y,
-            },
+            transforms=transforms,
         )

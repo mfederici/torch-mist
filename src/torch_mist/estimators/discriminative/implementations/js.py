@@ -30,17 +30,19 @@ class JS(BaselineDiscriminativeMIEstimator):
         # Compute the critic on the positives. It has shape [...]
         f = self.unnormalized_log_ratio(x=x, y=y)
 
-        y_, w = self.sample_negatives(x, y)
-        f_ = self.critic(x, y_)
+        x_, y_, log_w = self.sample_negatives(x, y)
+        f_ = self.critic(x_, y_)
 
         pos = F.softplus(-f)
         neg = F.softplus(f_)
 
-        # Compute the expectation w.r.t the M negatives
-        if not (w is None):
-            neg = w * neg
+        # Compute the expectation w.r.t the M negatives (re-weighting if necessary)
+        if not (log_w is None):
+            neg = neg * log_w.exp()
 
         neg = neg.mean(0)
+
+        assert pos.shape == neg.shape
 
         loss = pos + neg
         return loss

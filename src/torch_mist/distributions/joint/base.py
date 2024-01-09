@@ -23,7 +23,7 @@ class JointDistribution(nn.Module, Distribution, ConditionalDistribution):
         self.variables = variables
         self.name = name
 
-    def __repr__(self):
+    def full_name(self):
         return f"{self.name}({','.join(self.variables)})"
 
     def _log_prob(self, **kwargs) -> torch.Tensor:

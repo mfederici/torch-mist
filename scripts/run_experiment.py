@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import hydra
 from hydra.utils import instantiate
-from omegaconf import OmegaConf, DictConfig
+from omegaconf import OmegaConf, DictConfig, open_dict
 import random
 
 from torch_mist.estimators.discriminative import DiscriminativeMIEstimator
@@ -43,8 +43,34 @@ def parse(conf: DictConfig):
     test_samples = distribution.sample([conf.metadata.n_test_samples])
     true_mi = distribution.mutual_information()
 
+    # Add the sampled x and y as parameters of the quantization scheme
+    extra_params = {}
+    if hasattr(conf.mi_estimator, "quantize_x"):
+        print("Training the quantization for x")
+        extra_params["quantize_x"] = instantiate(
+            conf.mi_estimator.quantize_x,
+            _convert_="all",
+            data=train_samples["x"],
+        )
+    if hasattr(conf.mi_estimator, "quantize_y"):
+        print("Training the quantization for y")
+        extra_params["quantize_y"] = instantiate(
+            conf.mi_estimator.quantize_y,
+            _convert_="all",
+            data=train_samples["y"],
+        )
+
     # Instantiate the estimator
-    mi_estimator = instantiate(conf.mi_estimator, _convert_="all")
+    print("Instantiating the Mutual Information Estimator")
+    mi_estimator = instantiate(
+        conf.mi_estimator, _convert_="all", **extra_params
+    )
+    print(mi_estimator)
+
+    n_parameters = 0
+    for param in mi_estimator.parameters():
+        n_parameters += param.numel()
+    print(f"{n_parameters} Parameters")
 
     logged_methods = [
         ("log_ratio", compute_mean_std),
@@ -58,9 +84,10 @@ def parse(conf: DictConfig):
         ]
 
     if isinstance(mi_estimator, HybridMIEstimator):
-        logged_methods.append(
-            ("generative_estimator.log_ratio", compute_mean_std)
-        )
+        logged_methods += [
+            ("generative_estimator.log_ratio", compute_mean_std),
+            ("discriminative_estimator.log_ratio", compute_mean_std),
+        ]
 
     with logger.logged_methods(mi_estimator, logged_methods):
         train_mi_estimator(
@@ -87,3 +114,5 @@ def parse(conf: DictConfig):
 if __name__ == "__main__":
     OmegaConf.register_new_resolver("eval", eval)
     parse()
+
+# TODO CHECK EVAL STUFF FOR FLO!

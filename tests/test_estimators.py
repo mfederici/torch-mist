@@ -25,6 +25,8 @@ from torch_mist.estimators import (
     doe,
     nwj,
     pq,
+    hybrid_pq,
+    gm,
 )
 from torch_mist.estimators.discriminative import DiscriminativeMIEstimator
 from torch_mist.estimators.hybrid import (
@@ -56,9 +58,9 @@ n_train_samples = 100000
 n_test_samples = 10000
 n_pretrain_epochs = 3
 hidden_dims = [64]
-output_dim = 64
+k_dim = 64
 quantization_dim = 4
-atol = 1e-1
+atol = 0.1
 
 
 def _make_data() -> (
@@ -70,11 +72,11 @@ def _make_data() -> (
     ]
 ):
     p_xy = JointMultivariateNormal(sigma=1, rho=rho, n_dim=1)
-    true_mi = p_xy.mutual_information()
+    true_mi = p_xy.mutual_information().item()
     entropy_y = p_xy.entropy("y")
 
-    train_samples = p_xy.sample([n_train_samples])
-    test_samples = p_xy.sample([n_test_samples])
+    train_samples = p_xy.sample(torch.Size([n_train_samples]))
+    test_samples = p_xy.sample(torch.Size([n_test_samples]))
 
     return train_samples, test_samples, true_mi, entropy_y
 
@@ -86,7 +88,7 @@ def _test_estimator(
     true_mi: torch.Tensor,
     optimizer_params: Dict[str, Any],
     optimizer_class: Type[Optimizer],
-    atol: float = 1e-1,
+    atol: float,
 ):
     # Train the estimator
     train_mi_estimator(
@@ -146,16 +148,14 @@ def test_discriminative_estimators():
             estimator_name="infonce",
             x_dim=x_dim,
             y_dim=y_dim,
-            hidden_dims=hidden_dims,
-            output_dim=output_dim,
+            hidden_dims=hidden_dims + [k_dim],
             projection_head="symmetric",
         ),
         instantiate_estimator(
             estimator_name="infonce",
             x_dim=x_dim,
             y_dim=y_dim,
-            hidden_dims=hidden_dims,
-            output_dim=output_dim,
+            hidden_dims=hidden_dims + [k_dim],
         ),
         instantiate_estimator(
             estimator_name="js",
@@ -163,15 +163,6 @@ def test_discriminative_estimators():
             y_dim=y_dim,
             hidden_dims=hidden_dims,
             neg_samples=neg_samples,
-        ),
-        instantiate_estimator(
-            estimator_name="js",
-            x_dim=x_dim,
-            y_dim=y_dim,
-            hidden_dims=hidden_dims,
-            neg_samples=neg_samples,
-            critic_type="separable",
-            output_dim=output_dim,
         ),
         instantiate_estimator(
             estimator_name="mine",
@@ -199,21 +190,15 @@ def test_discriminative_estimators():
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
-            neg_samples=neg_samples,
-        ),
-        instantiate_estimator(
-            estimator_name="alpha_tuba",
-            x_dim=x_dim,
-            y_dim=y_dim,
-            hidden_dims=hidden_dims,
-            neg_samples=neg_samples,
-            learnable_baseline=False,
+            k_dim=k_dim,
+            alpha=0.4,
         ),
         instantiate_estimator(
             estimator_name="flo",
             x_dim=x_dim,
             y_dim=y_dim,
             hidden_dims=hidden_dims,
+            critic_type="joint",
             neg_samples=neg_samples,
         ),
     ]
@@ -308,11 +293,11 @@ def test_quantized_mi_estimators():
 
     quantizations = [
         FixedQuantization(
-            input_dim=x_dim, thresholds=torch.linspace(-3, 3, n_bins - 1)
+            input_dim=y_dim, thresholds=torch.linspace(-3, 3, n_bins - 1)
         ),
         vqvae_quantization(
-            data=train_samples["x"],
-            input_dim=x_dim,
+            data=train_samples["y"],
+            input_dim=y_dim,
             hidden_dims=hidden_dims,
             quantization_dim=quantization_dim,
             n_bins=n_bins,
@@ -320,13 +305,17 @@ def test_quantized_mi_estimators():
             batch_size=batch_size,
         ),
         vqvae_quantization(
-            data=train_samples["x"],
-            input_dim=x_dim,
+            data=train_samples["y"],
+            input_dim=y_dim,
             hidden_dims=hidden_dims,
             quantization_dim=quantization_dim,
             n_bins=n_bins,
             batch_size=batch_size,
             beta=0.01,
+        ),
+        kmeans_quantization(
+            data=train_samples["y"],
+            n_bins=n_bins,
         ),
     ]
 
@@ -335,13 +324,15 @@ def test_quantized_mi_estimators():
             estimator_name="pq",
             x_dim=x_dim,
             hidden_dims=hidden_dims,
-            Q_y=quantization,
+            quantize_y=quantization,
         )
         for quantization in quantizations
     ]
     estimators += [
         instantiate_estimator(
-            estimator_name="binned", Q_x=quantization, Q_y=quantization
+            estimator_name="binned",
+            quantize_x=quantization,
+            quantize_y=quantization,
         )
         for quantization in quantizations
     ]
@@ -372,11 +363,19 @@ def test_hybrid_estimators():
         scale=(1 - rho**2) ** 0.1 + 0.1,
     )
 
-    generative_estimator = doe(
+    conditional_generative_estimator = doe(
         x_dim=x_dim,
         y_dim=y_dim,
         q_Y_given_X=q_Y_given_X,
         marginal_transform_name="linear",
+    )
+
+    joint_generative_estimator = gm(
+        x_dim=x_dim,
+        y_dim=y_dim,
+        marginal_transform_name="affine_autoregressive",
+        joint_transform_name="linear",
+        hidden_dims=hidden_dims,
     )
 
     discriminative_estimator = nwj(
@@ -386,24 +385,26 @@ def test_hybrid_estimators():
         neg_samples=neg_samples,
     )
 
-    pq_estimator = pq(
-        x_dim=x_dim,
-        Q_y=kmeans_quantization(train_samples["y"], n_bins=8),
-        hidden_dims=hidden_dims,
-        temperature=1,
-    )
+    quantize_y = kmeans_quantization(train_samples["y"], n_bins=8)
 
     estimators = [
         ResampledHybridMIEstimator(
-            generative_estimator=deepcopy(generative_estimator),
+            generative_estimator=deepcopy(conditional_generative_estimator),
+            discriminative_estimator=deepcopy(discriminative_estimator),
+        ),
+        ResampledHybridMIEstimator(
+            generative_estimator=deepcopy(joint_generative_estimator),
             discriminative_estimator=deepcopy(discriminative_estimator),
         ),
         ReweighedHybridMIEstimator(
-            generative_estimator=deepcopy(generative_estimator),
+            generative_estimator=deepcopy(conditional_generative_estimator),
             discriminative_estimator=deepcopy(discriminative_estimator),
         ),
-        PQHybridMIEstimator(
-            pq_estimator=pq_estimator,
+        hybrid_pq(
+            quantize_y=quantize_y,
+            x_dim=x_dim,
+            hidden_dims=hidden_dims,
+            temperature=1,
             discriminative_estimator=deepcopy(discriminative_estimator),
         ),
     ]

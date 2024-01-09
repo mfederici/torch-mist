@@ -12,17 +12,17 @@ class PQ(TransformedMIEstimator):
     def __init__(
         self,
         q_QY_given_X: ConditionalDistribution,
-        Q_y: QuantizationFunction,
+        quantize_y: QuantizationFunction,
         temperature: float = 1.0,
     ):
-        freeze(Q_y)
+        quantize_y = freeze(quantize_y)
 
         super().__init__(
-            transforms={"y": Q_y},
+            transforms={"y": quantize_y},
             base_estimator=DoE(
                 q_Y_given_X=q_QY_given_X,
                 q_Y=CategoricalModule(
-                    logits=torch.zeros(Q_y.n_bins),
+                    logits=torch.zeros(quantize_y.n_bins),
                     temperature=temperature,
                 ),
             ),

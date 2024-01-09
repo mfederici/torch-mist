@@ -4,7 +4,7 @@ from typing import List
 from torch_mist.baseline.base import ConstantBaseline
 from torch_mist.baseline.factories import baseline_nn
 from torch_mist.critic.base import JOINT_CRITIC, SEPARABLE_CRITIC
-from torch_mist.critic.factories import critic_nn
+from torch_mist.critic.factories import critic_nn, shared_critic_nns
 from torch_mist.estimators.discriminative.implementations import (
     AlphaTUBA,
     FLO,
@@ -23,14 +23,14 @@ def alpha_tuba(
     hidden_dims: List[int],
     alpha: float = 0.01,
     learnable_baseline: bool = True,
-    critic_type: str = JOINT_CRITIC,
-    neg_samples: int = -1,
+    critic_type: str = SEPARABLE_CRITIC,
+    neg_samples: int = 0,
     **kwargs,
 ) -> AlphaTUBA:
     baseline_params = {}
     critic_params = {}
 
-    for param_name, param_value in kwargs:
+    for param_name, param_value in kwargs.items():
         if param_name in inspect.signature(baseline_nn).parameters:
             baseline_params[param_name] = param_value
         else:
@@ -63,29 +63,25 @@ def flo(
     x_dim: int,
     y_dim: int,
     hidden_dims: List[int],
-    neg_samples: int = 1,
-    critic_type: str = JOINT_CRITIC,
+    neg_samples: int,
+    n_shared_layers: int = -1,
+    critic_type: str = SEPARABLE_CRITIC,
     **kwargs,
 ) -> FLO:
-    critic = critic_nn(
+    # Make two critics with shared architectures
+    critic, normalized_critic = shared_critic_nns(
         x_dim=x_dim,
         y_dim=y_dim,
         hidden_dims=hidden_dims,
+        n_shared_layers=n_shared_layers,
         critic_type=critic_type,
-        **kwargs,
-    )
-
-    amortized_critic = critic_nn(
-        x_dim=x_dim,
-        y_dim=y_dim,
-        hidden_dims=hidden_dims,
-        critic_type=critic_type,
+        n_critics=2,
         **kwargs,
     )
 
     return FLO(
         critic=critic,
-        amortized_critic=amortized_critic,
+        normalized_critic=normalized_critic,
         neg_samples=neg_samples,
     )
 

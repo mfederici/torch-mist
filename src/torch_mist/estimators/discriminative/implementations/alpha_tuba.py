@@ -14,7 +14,7 @@ class AlphaTUBA(BaselineDiscriminativeMIEstimator):
         self,
         critic: Critic,
         baseline: LearnableBaseline,
-        alpha: float = 0.5,
+        alpha: float = 0.01,
         neg_samples: int = -1,
     ):
         alpha_baseline = InterpolatedBaseline(
@@ -22,7 +22,6 @@ class AlphaTUBA(BaselineDiscriminativeMIEstimator):
             baseline_2=baseline,
             alpha=alpha,
         )
-
         super().__init__(
             critic=critic,
             baseline=alpha_baseline,

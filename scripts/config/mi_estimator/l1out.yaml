@@ -1,0 +1,5 @@
+_target_: torch_mist.estimators.l1out
+hidden_dims: ${params.hidden_dims}
+x_dim: ${metadata.x_dim}
+y_dim: ${metadata.y_dim}
+transform_name: ${params.conditional_transform_name}

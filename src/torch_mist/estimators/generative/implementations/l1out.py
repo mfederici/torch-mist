@@ -42,7 +42,7 @@ class L1Out(ConditionalGenerativeMIEstimator):
 
         # Probability of all the other y in the same batch [M, N, ...]
         p_Y_given_x = self.q_Y_given_X.condition(x)
-        log_p_y_given_x = p_Y_given_x.log_prob(y.unsqueeze(1))
+        log_p_y_given_x = p_Y_given_x.log_prob(y.unsqueeze(1) + x.detach() * 0)
 
         if self.neg_samples == -1:
             D = torch.eye(N).to(y.device)
@@ -74,32 +74,3 @@ class L1Out(ConditionalGenerativeMIEstimator):
         assert log_p_y.shape == y.shape[:-1]
 
         return log_p_y
-
-    def log_ratio(
-        self,
-        x: torch.Tensor,
-        y: torch.Tensor,
-    ) -> torch.Tensor:
-        log_p_y_x = self.approx_log_p_y_given_x(x=x, y=y)
-        log_p_y = self.approx_log_p_y(x=x, y=y)
-
-        assert (
-            log_p_y_x.ndim == log_p_y.ndim
-        ), f"log_p_y_x.ndim={log_p_y_x.ndim}, log_p_y.ndim={log_p_y.ndim}"
-        log_ratio = log_p_y_x - log_p_y
-
-        return log_ratio
-
-    def batch_loss(
-        self,
-        x: torch.Tensor,
-        y: torch.Tensor,
-    ) -> torch.Tensor:
-        log_q_y_given_x = self.approx_log_p_y_given_x(x=x, y=y)
-        loss = -log_q_y_given_x
-
-        assert (
-            loss.shape == y.shape[:-1] and isinstance(y, torch.FloatTensor)
-        ) or (loss.shape == y.shape and isinstance(y, torch.LongTensor))
-
-        return loss
