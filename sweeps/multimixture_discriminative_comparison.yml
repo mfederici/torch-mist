@@ -9,11 +9,6 @@ method: grid
 parameters:
   mi_estimator:
     values:
-      - hybrid_resampled
-      - hybrid_reweighed
-      - hybrid_pq
-  mi_estimator@mi_estimator.discriminative_estimator:
-    values:
       - nwj
       - mine
       - infoNCE

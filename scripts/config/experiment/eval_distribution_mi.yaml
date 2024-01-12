@@ -20,7 +20,7 @@ params:
   # Generative estimator parameters
   marginal_transform_name: spline_autoregressive
   joint_transform_name: spline_autoregressive
-  conditional_transform_name: conditional_spline_autoregressive
+  conditional_transform_name: conditional_linear
 
   # Quantized estimator parameters
   n_bins: 32
