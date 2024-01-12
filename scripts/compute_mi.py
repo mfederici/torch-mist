@@ -15,7 +15,7 @@ from torch_mist.utils.logging.metrics import compute_mean_std
 def parse(conf: DictConfig):
     # Instatiate the parameters and metadata if any
     if "params" in conf:
-        conf.params = instantiate(conf.params, _convert_="all")
+        conf.params = instantiate(conf.params)
 
     # Instantiate the loggers
     print("Instantiating the logger")
@@ -38,8 +38,9 @@ def parse(conf: DictConfig):
     print("Instantiating the Distributions")
     train_samples = instantiate(conf.data.train, _convert_="all")
     test_samples = instantiate(conf.data.test, _convert_="all")
-    if hasattr(conf.data, "true_mi"):
-        true_mi = instantiate(conf.data.true_mi, _convert_="all")
+    if hasattr(conf.data, "distribution"):
+        dist = instantiate(conf.data.distribution, _convert_="all")
+        true_mi = dist.mutual_information()
     else:
         true_mi = None
 

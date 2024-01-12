@@ -32,5 +32,8 @@ params:
     early_stopping: false
     lr_annealing: false
     max_epochs: 32
+    optimizer_class:
+      _partial_: true
+      _target_: torch.optim.AdamW
   test:
     batch_size: 128

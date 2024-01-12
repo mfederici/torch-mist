@@ -13,7 +13,5 @@ test:
   _target_: torch_mist.data.utils.prepare_samples
   distribution: ${..distribution}
   n_samples: ${metadata.n_test_samples}
-true_mi:
-  _target_: torch_mist.data.utils.compute_mi
-  distribution: ${..distribution}
+
 
