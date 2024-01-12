@@ -2,10 +2,10 @@ import os
 import tempfile
 from typing import Dict, Any, Optional
 import torch
+from torch import nn
 
-
-from torch_mist.utils.logging.logger.base import Logger
 import wandb
+from torch_mist.utils.logging.logger.base import Logger
 
 
 class WandbLogger(Logger):
@@ -20,9 +20,12 @@ class WandbLogger(Logger):
         self.run.config.update(config)
 
     def _log(self, data: Any, name: str, context: Dict[str, Any]):
-        name.replace(".", "/")
+        name = name.replace(".", "/")
         if isinstance(data, dict):
-            entry = {f"{name}/{key}": value for key, value in data.items()}
+            entry = {
+                f"{name}/{key.replace('.','/')}": value
+                for key, value in data.items()
+            }
         else:
             entry = {name: data}
 
@@ -47,11 +50,15 @@ class WandbLogger(Logger):
     def _reset_log(self):
         self.run = wandb.init(project=self.project)
 
-    def save_model(self, model, name):
+    def save_model(
+        self, model: nn.Module, name: str, artifact_name: Optional[str] = None
+    ):
         filepath = os.path.join(self.log_dir, name)
         torch.save(model, filepath)
 
-        artifact = wandb.Artifact(name, type="model")
+        if artifact_name is None:
+            artifact_name = name
+        artifact = wandb.Artifact(artifact_name, type="model")
         artifact.add_file(filepath)
         self.run.log_artifact(artifact)
 

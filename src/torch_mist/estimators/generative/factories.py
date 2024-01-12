@@ -12,6 +12,7 @@ from torch_mist.estimators.generative.implementations import (
     DoE,
     GM,
     L1Out,
+    DummyGenerativeMIEstimator,
 )
 
 
@@ -129,6 +130,10 @@ def doe(
         q_Y_given_X=q_Y_given_X,
         q_Y=q_Y,
     )
+
+
+def dummy_generative() -> DummyGenerativeMIEstimator:
+    return DummyGenerativeMIEstimator()
 
 
 def gm(

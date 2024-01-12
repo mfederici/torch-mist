@@ -6,3 +6,4 @@ from .mine import MINE
 from .nwj import NWJ
 from .smile import SMILE
 from .tuba import TUBA
+from .dummy import DummyDiscriminativeMIEstimator

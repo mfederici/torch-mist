@@ -32,18 +32,18 @@ class ResampledHybridMIEstimator(HybridMIEstimator):
         if isinstance(
             self.generative_estimator, ConditionalGenerativeMIEstimator
         ):
-            q_Y_given_x = self.generative_estimator.q_Y_given_X.condition(x)
-            # Sample from the proposal r(y|x) [M, ..., Y_DIM] with M as the number of neg_samples
-            y_ = q_Y_given_x.sample(sample_shape=torch.Size([neg_samples]))
-            # The shape of the samples from the proposal distribution is [M, ..., Y_DIM]
-            assert y_.ndim == x.ndim + 1 and y_.shape[0] == neg_samples
-            assert y_.shape[0] == neg_samples and y_.ndim == x.ndim + 1
-            x_ = x.unsqueeze(0)
+            # Replace the original proposal with the conditional q(y|x)
+            self.proposal = self.generative_estimator.q_Y_given_X.condition(x)
+            x_, y_, log_w = DiscriminativeMIEstimator.sample_negatives(
+                self, x, y
+            )
+
         # Sample from the joint distribution
         else:
             q_XY = self.generative_estimator.q_XY
             samples = q_XY.sample([neg_samples, *x.shape[:-1]])
             x_ = samples["x"]
             y_ = samples["y"]
+            log_w = None
 
-        return x_, y_, None
+        return x_, y_, log_w

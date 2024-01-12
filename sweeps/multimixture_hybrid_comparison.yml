@@ -1,0 +1,27 @@
+program: scripts/run_experiment.py
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - experiment=eval_distribution_mi
+  - ${args_no_hyphens}
+method: grid
+parameters:
+  mi_estimator:
+    values:
+      - hybrid_resampled
+      - hybrid_reweighed
+  mi_estimator@mi_estimator.discriminative_estimator:
+    values:
+      - nwj
+      - mine
+      - infoNCE
+      - js
+      - alpha_tuba
+      - smile
+      - flo
+  seed:
+    values:
+      - 7
+      - 42
+      - 404

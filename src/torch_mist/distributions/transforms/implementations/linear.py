@@ -136,28 +136,3 @@ class ConditionalLinear(ConditionalTransformModule):
     def condition(self, context):
         params = partial(self._params, context)
         return ConditionedLinear(params, epsilon=self.epsilon)
-
-
-def linear(input_dim, loc=None, scale=None, initial_scale=None, **kwargs):
-    return Linear(input_dim, scale=scale, initial_scale=initial_scale, loc=loc)
-
-
-def conditional_linear(
-    input_dim,
-    context_dim,
-    hidden_dims=None,
-    scale=None,
-    initial_scale=None,
-    **kwargs
-):
-    if hidden_dims is None:
-        hidden_dims = [input_dim * 10, input_dim * 10]
-    if scale is None:
-        nn = DenseNN(
-            input_dim=context_dim,
-            hidden_dims=hidden_dims,
-            param_dims=[input_dim, input_dim],
-        )
-    else:
-        nn = DenseNN(context_dim, hidden_dims, param_dims=[input_dim])
-    return ConditionalLinear(nn, scale=scale, initial_scale=initial_scale)

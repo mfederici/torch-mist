@@ -197,10 +197,8 @@ def train_mi_estimator(
             if tqdm_epochs:
                 tqdm_epochs.set_postfix_str(f"valid_mi: {valid_mi}")
 
-            if (
-                early_stopping
-                and estimator.upper_bound
-                or estimator.lower_bound
+            if early_stopping and (
+                estimator.upper_bound or estimator.lower_bound
             ):
                 improvement = (
                     (valid_mi - best_mi)

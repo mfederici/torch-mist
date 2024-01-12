@@ -8,7 +8,7 @@ from torch_mist.baseline import Baseline
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.critic import Critic
 from torch_mist.critic import SeparableCritic
-from torch_mist.estimators.discriminative.utils import SampleBuffer
+from torch_mist.distributions.empirical import EmpiricalDistribution
 
 
 class DiscriminativeMIEstimator(MIEstimator):
@@ -23,7 +23,7 @@ class DiscriminativeMIEstimator(MIEstimator):
         super().__init__()
         self.critic = critic
         self.neg_samples = neg_samples
-        self._y_buffer = SampleBuffer()
+        self.proposal = EmpiricalDistribution()
 
     @lru_cache(maxsize=1)
     def unnormalized_log_ratio(
@@ -54,19 +54,25 @@ class DiscriminativeMIEstimator(MIEstimator):
         N = x.shape[0]
         neg_samples = self.n_negatives_to_use(N)
 
-        self._y_buffer.add_samples(y)
+        if isinstance(self.proposal, EmpiricalDistribution):
+            self.proposal.add_samples(y)
 
-        if isinstance(self.critic, SeparableCritic) and neg_samples == N:
-            # Efficient implementation for separable critic with empirical distribution (negatives from the same batch)
-            y_ = self._y_buffer._samples[:N].unsqueeze(1)
+        # Efficient implementation for separable critic with empirical distribution (negatives from the same batch)
+        if (
+            isinstance(self.critic, SeparableCritic)
+            and neg_samples == N
+            and isinstance(self.proposal, EmpiricalDistribution)
+        ):
+            y_ = self.proposal._samples[:N].unsqueeze(1)
         else:
             # Sample from the proposal p(y) [M, ..., Y_DIM] with M as the number of neg_samples
-            y_ = self._y_buffer.sample(neg_samples)
+            y_ = self.proposal.sample(torch.Size([neg_samples]))
             # The shape of the samples from the proposal distribution is [M, ..., Y_DIM]
             assert y_.ndim == x.ndim + 1 and y_.shape[0] == neg_samples
             assert y_.shape[0] == neg_samples and y_.ndim == x.ndim + 1
 
-        self._y_buffer.update()
+        if isinstance(self.proposal, EmpiricalDistribution):
+            self.proposal.update()
 
         return x.unsqueeze(0), y_, None
 

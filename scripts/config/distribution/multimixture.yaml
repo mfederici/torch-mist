@@ -1,6 +1,0 @@
-_target_: torch_mist.data.multimixture.MultivariateCorrelatedNormalMixture
-rho: 0.95
-sigma: 0.1
-epsilon: 0.15
-delta: 1.5
-n_dim: ${metadata.x_dim}

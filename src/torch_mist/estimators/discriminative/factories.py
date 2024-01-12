@@ -14,6 +14,7 @@ from torch_mist.estimators.discriminative.implementations import (
     NWJ,
     SMILE,
     TUBA,
+    DummyDiscriminativeMIEstimator,
 )
 
 
@@ -120,6 +121,15 @@ def js(
             critic_type=critic_type,
             **kwargs,
         ),
+        neg_samples=neg_samples,
+    )
+
+
+def dummy_discriminative(
+    neg_samples: int = 1,
+    **kwargs,
+) -> DummyDiscriminativeMIEstimator:
+    return DummyDiscriminativeMIEstimator(
         neg_samples=neg_samples,
     )
 

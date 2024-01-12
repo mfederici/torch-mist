@@ -1,5 +1,5 @@
 import inspect
-from typing import Optional, Any, Union, Tuple
+from typing import Optional, Any, Union, Tuple, Dict
 
 import torch
 from torch.utils.data import DataLoader, random_split

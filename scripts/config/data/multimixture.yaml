@@ -1,0 +1,19 @@
+distribution:
+  _target_: torch_mist.data.multimixture.MultivariateCorrelatedNormalMixture
+  rho: 0.95
+  sigma: 0.1
+  epsilon: 0.15
+  delta: 1.5
+  n_dim: ${metadata.x_dim}
+train:
+  _target_: torch_mist.data.utils.prepare_samples
+  distribution: ${..distribution}
+  n_samples: ${metadata.n_train_samples}
+test:
+  _target_: torch_mist.data.utils.prepare_samples
+  distribution: ${..distribution}
+  n_samples: ${metadata.n_test_samples}
+true_mi:
+  _target_: torch_mist.data.utils.compute_mi
+  distribution: ${..distribution}
+

@@ -1,10 +1,8 @@
 from abc import abstractmethod
 from functools import lru_cache
-from typing import Any
 
 import torch
 from pyro.distributions import ConditionalDistribution
-from torch.distributions import Distribution
 
 from torch_mist.distributions import JointDistribution
 from torch_mist.distributions.cached import CachedConditionalDistribution
@@ -78,9 +76,12 @@ class ConditionalGenerativeMIEstimator(GenerativeMIEstimator):
 
     def batch_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         loss = -self.approx_log_p_y_given_x(x=x, y=y)
+
         assert (
-            loss.shape == y.shape[:-1] and isinstance(y, torch.FloatTensor)
-        ) or (loss.shape == y.shape and isinstance(y, torch.LongTensor))
+            loss.shape == y.shape[:-1] and not isinstance(y, torch.LongTensor)
+        ) or (
+            loss.shape == y.shape and isinstance(y, torch.LongTensor)
+        ), f"{isinstance(y, torch.FloatTensor)}. {loss.shape}!={y.shape[:-1]}"
         return loss
 
     def __repr__(self):

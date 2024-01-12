@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import hydra
 from hydra.utils import instantiate
-from omegaconf import OmegaConf, DictConfig, open_dict
+from omegaconf import OmegaConf, DictConfig
 import random
 
 from torch_mist.estimators.discriminative import DiscriminativeMIEstimator
@@ -36,12 +36,12 @@ def parse(conf: DictConfig):
 
     # Instantiating the distribution
     print("Instantiating the Distributions")
-    distribution = instantiate(conf.distribution, _convert_="all")
-
-    # Produce the samples
-    train_samples = distribution.sample([conf.metadata.n_train_samples])
-    test_samples = distribution.sample([conf.metadata.n_test_samples])
-    true_mi = distribution.mutual_information()
+    train_samples = instantiate(conf.data.train, _convert_="all")
+    test_samples = instantiate(conf.data.test, _convert_="all")
+    if hasattr(conf.data, "true_mi"):
+        true_mi = instantiate(conf.data.true_mi, _convert_="all")
+    else:
+        true_mi = None
 
     # Add the sampled x and y as parameters of the quantization scheme
     extra_params = {}
@@ -87,6 +87,8 @@ def parse(conf: DictConfig):
         logged_methods += [
             ("generative_estimator.log_ratio", compute_mean_std),
             ("discriminative_estimator.log_ratio", compute_mean_std),
+            ("generative_estimator.batch_loss", compute_mean_std),
+            ("discriminative_estimator.batch_loss", compute_mean_std),
         ]
 
     with logger.logged_methods(mi_estimator, logged_methods):
@@ -106,7 +108,8 @@ def parse(conf: DictConfig):
                 **conf.params.test,
             )
 
-        print(f"True mi: {true_mi}")
+        if not (true_mi is None):
+            print(f"True mi: {true_mi}")
         print(f"Estimated mi: {results}")
         logger.save_log()
 
@@ -114,5 +117,3 @@ def parse(conf: DictConfig):
 if __name__ == "__main__":
     OmegaConf.register_new_resolver("eval", eval)
     parse()
-
-# TODO CHECK EVAL STUFF FOR FLO!

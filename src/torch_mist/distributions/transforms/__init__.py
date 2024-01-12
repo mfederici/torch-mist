@@ -4,6 +4,6 @@ from .base import (
     TransformedDistributionModule,
     ConditionalTransformedDistributionModule,
 )
-from .linear import Linear, ConditionalLinear, linear, conditional_linear
-from .permute import Permute, permute
+from .implementations import *
+from .factories import *
 from .utils import fetch_transform

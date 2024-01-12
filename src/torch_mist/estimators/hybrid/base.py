@@ -35,18 +35,17 @@ class HybridMIEstimator(DiscriminativeMIEstimator):
     def unnormalized_log_ratio(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
-        partial_log_ratio = self.generative_estimator.log_ratio(x, y)
         f = self.discriminative_estimator.unnormalized_log_ratio(x, y)
+        partial_log_ratio = self.generative_estimator.log_ratio(x, y)
 
         assert f.shape == partial_log_ratio.shape
         return f + partial_log_ratio
 
     @lru_cache(maxsize=1)
     def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        partial_log_ratio = self.generative_estimator.log_ratio(x, y)
-
         with self.resampling_strategy():
             log_rest = self.discriminative_estimator.log_ratio(x, y)
+        partial_log_ratio = self.generative_estimator.log_ratio(x, y)
 
         assert partial_log_ratio.shape == log_rest.shape
         return partial_log_ratio + log_rest

@@ -7,3 +7,4 @@ from .normal import (
     JointTransformedNormalModule,
 )
 from .categorical import CategoricalModule, ConditionalCategoricalModule
+from .empirical import EmpiricalDistribution

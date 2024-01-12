@@ -216,6 +216,33 @@ def test_discriminative_estimators():
         )
 
 
+def test_dummy_estimators():
+    # Seed everything
+    np.random.seed(0)
+    torch.manual_seed(0)
+
+    train_samples, test_samples, true_mi, _ = _make_data()
+
+    estimators = [
+        instantiate_estimator(
+            estimator_name="dummy_generative",
+        ),
+        instantiate_estimator(estimator_name="dummy_discriminative"),
+    ]
+
+    for estimator in estimators:
+        print(estimator)
+        # Compute the estimate
+        mi_estimate = evaluate_mi(
+            estimator,
+            x=test_samples["x"],
+            y=test_samples["y"],
+            batch_size=batch_size,
+        )
+
+        assert np.isclose(mi_estimate, 0), f"Dummy Estimate: {mi_estimate}!=0"
+
+
 def test_generative_estimators():
     # Seed everything
     np.random.seed(0)
