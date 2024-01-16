@@ -4,18 +4,20 @@ defaults:
   - /mi_estimator: ???
 
 seed: 42
+device: cpu
 
 metadata:
   x_dim: 5
   y_dim: 5
-  n_train_samples: 100000
-  n_test_samples: 100000
+  n_train_samples: 145635
+  n_test_samples: 131072
 
 params:
-  hidden_dims: [128, 128, 64]
+  hidden_dims: [256, 128]
 
   # Discriminative estimator parameters
   neg_samples: 1
+  k_dim: 64
 
   # Generative estimator parameters
   marginal_transform_name: spline_autoregressive
@@ -32,8 +34,10 @@ params:
     early_stopping: false
     lr_annealing: false
     max_epochs: 32
+    device: ${device}
     optimizer_class:
       _partial_: true
       _target_: torch.optim.AdamW
   test:
     batch_size: 128
+    device: ${device}

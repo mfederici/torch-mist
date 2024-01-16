@@ -1,11 +1,11 @@
 from abc import abstractmethod
-from functools import lru_cache
 from typing import Optional, Tuple
 
 import torch
 
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.estimators.discriminative.base import DiscriminativeMIEstimator
+from torch_mist.utils.caching import cached
 from torch_mist.utils.freeze import is_trainable
 from contextlib import contextmanager
 
@@ -31,7 +31,7 @@ class HybridMIEstimator(DiscriminativeMIEstimator):
         }
         self.infomax_gradient = informax_gradient
 
-    @lru_cache(maxsize=1)
+    @cached
     def unnormalized_log_ratio(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
@@ -41,7 +41,7 @@ class HybridMIEstimator(DiscriminativeMIEstimator):
         assert f.shape == partial_log_ratio.shape
         return f + partial_log_ratio
 
-    @lru_cache(maxsize=1)
+    @cached
     def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         with self.resampling_strategy():
             log_rest = self.discriminative_estimator.log_ratio(x, y)

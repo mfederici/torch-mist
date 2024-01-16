@@ -1,10 +1,10 @@
 from typing import Callable, Any, Dict, Union, List, Tuple, Optional
-from functools import lru_cache
 
 import torch
 from torch import nn
 
 from torch_mist.estimators.base import MIEstimator
+from torch_mist.utils.caching import cached
 from torch_mist.utils.freeze import is_trainable
 from torch_mist.estimators.transformed.utils import DummyModule
 
@@ -69,7 +69,7 @@ class TransformedMIEstimator(MIEstimator):
                 variable_from
             ] = base_estimator.infomax_gradient[variable_to]
 
-    @lru_cache(maxsize=1)
+    @cached
     def transform(self, **variables) -> Dict[str, torch.Tensor]:
         transformed_variables = {}
         for variable_fromto, transform in self.transforms.items():
@@ -117,9 +117,7 @@ class TransformedMIEstimator(MIEstimator):
     def mutual_information(
         self, *args, **variables
     ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
-        variables = self._unfold_variables(*args, **variables)
-        variables.update(self.transform(**variables))
-        return self.base_estimator.mutual_information(**variables)
+        return self.log_ratio(**variables).mean()
 
     def forward(self, *args, **kwargs) -> torch.Tensor:
         return self.mutual_information(*args, **kwargs)

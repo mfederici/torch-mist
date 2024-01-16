@@ -11,7 +11,9 @@ from torch_mist.utils import train_mi_estimator, evaluate_mi
 from torch_mist.utils.logging.metrics import compute_mean_std
 
 
-@hydra.main(config_path="config", config_name="config.yaml")
+@hydra.main(
+    config_path="config", config_name="config.yaml", version_base="1.1"
+)
 def parse(conf: DictConfig):
     # Instatiate the parameters and metadata if any
     if "params" in conf:
@@ -73,35 +75,47 @@ def parse(conf: DictConfig):
         n_parameters += param.numel()
     print(f"{n_parameters} Parameters")
 
-    logged_methods = [
+    eval_logged_methods = [
         ("log_ratio", compute_mean_std),
         ("batch_loss", compute_mean_std),
     ]
 
     if isinstance(mi_estimator, DiscriminativeMIEstimator):
-        logged_methods += [
+        eval_logged_methods += [
             ("approx_log_partition", compute_mean_std),
             ("unnormalized_log_ratio", compute_mean_std),
         ]
 
     if isinstance(mi_estimator, HybridMIEstimator):
-        logged_methods += [
+        eval_logged_methods += [
             ("generative_estimator.log_ratio", compute_mean_std),
-            ("discriminative_estimator.log_ratio", compute_mean_std),
             ("generative_estimator.batch_loss", compute_mean_std),
             ("discriminative_estimator.batch_loss", compute_mean_std),
+            ("discriminative_estimator.log_ratio", compute_mean_std),
+            (
+                "discriminative_estimator.approx_log_partition",
+                compute_mean_std,
+            ),
+            (
+                "discriminative_estimator.unnormalized_log_ratio",
+                compute_mean_std,
+            ),
         ]
 
-    with logger.logged_methods(mi_estimator, logged_methods):
-        train_mi_estimator(
-            mi_estimator,
-            x=train_samples["x"],
-            y=train_samples["y"],
-            logger=logger,
-            **conf.params.train,
-        )
+    train_logged_methods = [("batch_loss", compute_mean_std)]
 
-        with logger.test():
+    train_mi_estimator(
+        mi_estimator,
+        x=train_samples["x"],
+        y=train_samples["y"],
+        logger=logger,
+        train_logged_methods=train_logged_methods,
+        eval_logged_methods=eval_logged_methods,
+        **conf.params.train,
+    )
+
+    with logger.test():
+        with logger.logged_methods(mi_estimator, eval_logged_methods):
             results = evaluate_mi(
                 mi_estimator,
                 x=test_samples["x"],
@@ -109,10 +123,10 @@ def parse(conf: DictConfig):
                 **conf.params.test,
             )
 
-        if not (true_mi is None):
-            print(f"True mi: {true_mi}")
-        print(f"Estimated mi: {results}")
-        logger.save_log()
+    if not (true_mi is None):
+        print(f"True mi: {true_mi}")
+    print(f"Estimated mi: {results}")
+    logger.save_log()
 
 
 if __name__ == "__main__":

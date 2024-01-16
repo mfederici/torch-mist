@@ -9,8 +9,13 @@ from torch_mist.utils.logging.logger.base import Logger
 
 
 class PandasLogger(Logger):
-    def __init__(self, log_dir: str = ".", log_name: Optional[str] = None):
-        super().__init__(log_dir=log_dir)
+    def __init__(
+        self,
+        log_dir: str = ".",
+        log_name: Optional[str] = None,
+        log_every: int = 10,
+    ):
+        super().__init__(log_dir=log_dir, log_every=log_every)
         self.__log = []
         if log_name is None:
             log_name = "log.csv"
@@ -18,13 +23,17 @@ class PandasLogger(Logger):
             log_name = log_name + ".csv"
         self.log_name = log_name
 
-    def _log(self, data: Any, name: str, context: Dict[str, Any]):
+    def _log(
+        self, data: Any, name: str, iteration: int, epoch: int, split: str
+    ):
         if not isinstance(data, Dict):
             data = {
                 "value": data,
             }
         data["name"] = name
-        data.update(context)
+        data["split"] = split
+        data["iteration"] = iteration
+        data["epoch"] = epoch
         self.__log.append(data)
 
     def get_log(self) -> pd.DataFrame:

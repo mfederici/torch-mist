@@ -6,8 +6,8 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 from torch_mist.utils.data.dataset import SampleDataset
-from torch_mist.utils.logging.logger.base import Logger
-from torch_mist.utils.logging.logger.utils import instantiate_logger
+from torch_mist.utils.logging import PandasLogger
+from torch_mist.utils.logging.logger.base import Logger, DummyLogger
 
 
 def train_model(
@@ -45,7 +45,10 @@ def train_model(
     # If the logger is specified, we use it adding loss and mutual_information logs if not already specified
     # if it is None, use the default PandasLogger,
     # if False, instantiate a DummyLogger, which does not store any quantity
-    logger = instantiate_logger(model, logger)
+    if logger is None:
+        logger = PandasLogger()
+    elif logger is False:
+        logger = DummyLogger()
 
     with logger.train():
         with logger.epoch():

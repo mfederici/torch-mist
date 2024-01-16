@@ -1,4 +1,4 @@
-from functools import lru_cache
+from typing import Any
 
 import torch
 from torch import nn
@@ -6,6 +6,7 @@ from torch.distributions import Distribution
 from pyro.distributions import ConditionalDistribution
 
 from torch_mist.distributions.transforms import ConditionalDistributionModule
+from torch_mist.utils.caching import cached
 
 
 class CachedConditionalDistribution(ConditionalDistributionModule):
@@ -13,12 +14,12 @@ class CachedConditionalDistribution(ConditionalDistributionModule):
         super().__init__()
         self.conditional_dist = conditional_dist
 
-    @lru_cache(maxsize=1)
-    def condition(self, *args, **kwargs) -> Distribution:
-        return self.conditional_dist.condition(*args, **kwargs)
+    @cached
+    def condition(self, condition: Any) -> Distribution:
+        return self.conditional_dist.condition(condition)
 
     def __repr__(self):
-        return self.conditional_dist.__repr__()
+        return "Cached_" + self.conditional_dist.__repr__()
 
 
 class CachedDistribution(Distribution, nn.Module):
@@ -32,7 +33,7 @@ class CachedDistribution(Distribution, nn.Module):
         )
         self.distribution = distribution
 
-    @lru_cache(maxsize=1)
+    @cached
     def log_prob(self, value: torch.Tensor) -> torch.Tensor:
         return self.distribution.log_prob(value)
 

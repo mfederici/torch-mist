@@ -6,6 +6,7 @@ from torch.distributions import Distribution
 
 from torch_mist.distributions.joint.base import JointDistribution
 from torch_mist.estimators.generative.base import JointGenerativeMIEstimator
+from torch_mist.utils.freeze import is_trainable
 
 
 class GM(JointGenerativeMIEstimator):
@@ -33,13 +34,17 @@ class GM(JointGenerativeMIEstimator):
         y: torch.Tensor,
     ) -> torch.Tensor:
         batch_loss = super().batch_loss(x=x, y=y)
-        log_q_y = self.approx_log_p_y(x=x, y=y)
-        log_q_x = self.approx_log_p_x(x=x, y=y)
 
-        batch_loss = batch_loss - log_q_y - log_q_x
+        if is_trainable(self.q_Y):
+            log_q_y = self.approx_log_p_y(x=x, y=y)
+            batch_loss = batch_loss - log_q_y
+
+        if is_trainable(self.q_X):
+            log_q_x = self.approx_log_p_x(x=x, y=y)
+            batch_loss = batch_loss - log_q_x
+
         assert (
-            batch_loss.shape == y.shape[:-1]
-            and not isinstance(y, torch.LongTensor)
-        ) or (batch_loss.shape == y.shape and isinstance(y, torch.LongTensor))
+            batch_loss.shape == y.shape[:-1] and torch.is_floating_point(y)
+        ) or (batch_loss.shape == y.shape and not torch.is_floating_point(y))
 
         return batch_loss

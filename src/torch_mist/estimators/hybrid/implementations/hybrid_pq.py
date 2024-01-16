@@ -7,6 +7,7 @@ from torch_mist.estimators.discriminative.base import DiscriminativeMIEstimator
 from torch_mist.estimators.hybrid.base import HybridMIEstimator
 from torch_mist.estimators.transformed.implementations.pq import PQ
 from torch_mist.quantization import QuantizationFunction
+from torch_mist.utils.caching import cached
 
 
 class PQHybridMIEstimator(HybridMIEstimator):
@@ -39,6 +40,7 @@ class PQHybridMIEstimator(HybridMIEstimator):
     def quantize_y(self) -> Callable[[torch.Tensor], torch.LongTensor]:
         return self.generative_estimator.transforms["y->y"]
 
+    @cached
     def sample_negatives(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor]]:

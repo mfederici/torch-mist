@@ -20,7 +20,11 @@ def shared_joint_critics(
     nonlinearity: nn.Module = nn.ReLU(True),
     n_shared_layers: int = -1,
     n_critics: int = 2,
+    **kwargs,
 ) -> Tuple[JointCritic, ...]:
+    if len(kwargs) > 0:
+        print(f"[Warning]: Parameters {kwargs} have been ignored")
+
     critic_nets = multi_head_dense_nn(
         input_dim=x_dim + y_dim,
         output_dim=1,
@@ -45,7 +49,11 @@ def shared_separable_critics(
     n_critics: int = 2,
     n_shared_layers: int = -1,
     k_dim: Optional[int] = None,
+    **kwargs,
 ) -> Tuple[SeparableCritic, ...]:
+    if len(kwargs) > 0:
+        print(f"[Warning]: Parameters {kwargs} have been ignored")
+
     if not (projection_head in POSSIBLE_HEADS):
         raise ValueError(
             f"projection_heads must be one of {POSSIBLE_HEADS}, got {projection_head}"

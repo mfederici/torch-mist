@@ -1,9 +1,10 @@
-from functools import lru_cache
 from typing import List, Callable, Optional, Tuple
 
 import torch
 import torch.nn as nn
 from pyro.nn import DenseNN
+
+from torch_mist.utils.caching import cached
 
 
 class Normalize(nn.Module):
@@ -16,7 +17,7 @@ class CachedModule(nn.Module):
         super().__init__()
         self.module = module
 
-    @lru_cache(maxsize=2)
+    @cached
     def forward(self, *args, **kwargs):
         return self.module.forward(*args, **kwargs)
 

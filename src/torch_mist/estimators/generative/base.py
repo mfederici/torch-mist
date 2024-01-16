@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from functools import lru_cache
 
 import torch
 from pyro.distributions import ConditionalDistribution
@@ -7,6 +6,7 @@ from pyro.distributions import ConditionalDistribution
 from torch_mist.distributions import JointDistribution
 from torch_mist.distributions.cached import CachedConditionalDistribution
 from torch_mist.estimators.base import MIEstimator
+from torch_mist.utils.caching import cached
 
 
 class GenerativeMIEstimator(MIEstimator):
@@ -30,8 +30,8 @@ class GenerativeMIEstimator(MIEstimator):
         x: torch.Tensor,
         y: torch.Tensor,
     ) -> torch.Tensor:
-        x_dim = x.ndim + (1 if isinstance(x, torch.LongTensor) else 0)
-        y_dim = y.ndim + (1 if isinstance(y, torch.LongTensor) else 0)
+        x_dim = x.ndim + (1 if not torch.is_floating_point(x) else 0)
+        y_dim = y.ndim + (1 if not torch.is_floating_point(y) else 0)
         assert x_dim == y_dim, f"x.ndim={x_dim}, y.ndim={y_dim}"
 
         # Compute the ratio using the primal KL bound
@@ -55,7 +55,7 @@ class ConditionalGenerativeMIEstimator(GenerativeMIEstimator):
             q_Y_given_X = CachedConditionalDistribution(q_Y_given_X)
         self.q_Y_given_X = q_Y_given_X
 
-    @lru_cache(maxsize=1)
+    @cached
     def approx_log_p_y_given_x(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
@@ -66,10 +66,9 @@ class ConditionalGenerativeMIEstimator(GenerativeMIEstimator):
 
         assert (
             log_q_y_given_x.shape == y.shape[:-1]
-            and not isinstance(y, torch.LongTensor)
+            and torch.is_floating_point(y)
         ) or (
-            log_q_y_given_x.shape == y.shape
-            and isinstance(y, torch.LongTensor)
+            log_q_y_given_x.shape == y.shape and not torch.is_floating_point(y)
         ), f"log_p_Y_X.shape={log_q_y_given_x.shape}, y.shape={y.shape}"
 
         return log_q_y_given_x
@@ -77,11 +76,9 @@ class ConditionalGenerativeMIEstimator(GenerativeMIEstimator):
     def batch_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         loss = -self.approx_log_p_y_given_x(x=x, y=y)
 
-        assert (
-            loss.shape == y.shape[:-1] and not isinstance(y, torch.LongTensor)
-        ) or (
-            loss.shape == y.shape and isinstance(y, torch.LongTensor)
-        ), f"{isinstance(y, torch.FloatTensor)}. {loss.shape}!={y.shape[:-1]}"
+        assert (loss.shape == y.shape[:-1] and torch.is_floating_point(y)) or (
+            loss.shape == y.shape and not torch.is_floating_point(y)
+        ), f"{torch.is_floating_point(y)}. {loss.shape}!={y.shape[:-1]}"
         return loss
 
     def __repr__(self):
@@ -112,7 +109,7 @@ class JointGenerativeMIEstimator(GenerativeMIEstimator):
     def q_Y(self):
         return self.q_XY.marginal("y")
 
-    @lru_cache(maxsize=1)
+    @cached
     def approx_log_p_xy(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
@@ -120,33 +117,30 @@ class JointGenerativeMIEstimator(GenerativeMIEstimator):
         log_q_xy = self.q_XY.log_prob(x=x, y=y)
 
         assert (
-            log_q_xy.shape == y.shape[:-1]
-            and not isinstance(y, torch.LongTensor)
-        ) or (log_q_xy.shape == y.shape and isinstance(y, torch.LongTensor))
+            log_q_xy.shape == y.shape[:-1] and torch.is_floating_point(y)
+        ) or (log_q_xy.shape == y.shape and not torch.is_floating_point(y))
 
         return log_q_xy
 
-    @lru_cache(maxsize=1)
+    @cached
     def approx_log_p_x(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         log_q_x = self.q_X.log_prob(x)
         assert (
-            log_q_x.shape == x.shape[:-1]
-            and not isinstance(x, torch.LongTensor)
-        ) or (log_q_x.shape == x.shape and isinstance(x, torch.LongTensor))
+            log_q_x.shape == x.shape[:-1] and torch.is_floating_point(x)
+        ) or (log_q_x.shape == x.shape and not torch.is_floating_point(x))
         # The shape is [...]
         return log_q_x
 
-    @lru_cache(maxsize=1)
+    @cached
     def approx_log_p_y(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         log_q_y = self.q_Y.log_prob(y)
         assert (
-            log_q_y.shape == y.shape[:-1]
-            and not isinstance(y, torch.LongTensor)
-        ) or (log_q_y.shape == y.shape and isinstance(y, torch.LongTensor))
+            log_q_y.shape == y.shape[:-1] and torch.is_floating_point(y)
+        ) or (log_q_y.shape == y.shape and not torch.is_floating_point(y))
         # The shape is [...]
         return log_q_y
 
-    @lru_cache(maxsize=1)
+    @cached
     def approx_log_p_y_given_x(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
@@ -158,19 +152,18 @@ class JointGenerativeMIEstimator(GenerativeMIEstimator):
 
         assert (
             log_q_y_given_x.shape == y.shape[:-1]
-            and not isinstance(y, torch.LongTensor)
+            and torch.is_floating_point(y)
         ) or (
-            log_q_y_given_x.shape == y.shape
-            and isinstance(y, torch.LongTensor)
+            log_q_y_given_x.shape == y.shape and not torch.is_floating_point(y)
         ), f"log_p_Y_X.shape={log_q_y_given_x.shape}, y.shape={y.shape}"
 
         return log_q_y_given_x
 
     def batch_loss(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         loss = -self.approx_log_p_xy(x=x, y=y)
-        assert (
-            loss.shape == y.shape[:-1] and isinstance(y, torch.FloatTensor)
-        ) or (loss.shape == y.shape and isinstance(y, torch.LongTensor))
+        assert (loss.shape == y.shape[:-1] and torch.is_floating_point(y)) or (
+            loss.shape == y.shape and not torch.is_floating_point(y)
+        )
         return loss
 
     def __repr__(self):

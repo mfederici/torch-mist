@@ -9,8 +9,11 @@ from torch_mist.utils.batch import unfold_samples
 
 
 def test_inputs_train_mi_estimator():
-    x = np.zeros([100, 1]).astype(np.float32)
-    y = np.zeros([100, 1]).astype(np.float32)
+    x = torch.zeros(100, 1)
+    y = torch.zeros(100, 1)
+    x.normal_()
+    y.normal_()
+
     wrong_y = np.zeros([101, 1]).astype(np.float32)
 
     dataset = SampleDataset({"x": x, "y": y})

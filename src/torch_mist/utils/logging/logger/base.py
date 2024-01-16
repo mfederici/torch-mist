@@ -1,56 +1,118 @@
 from __future__ import annotations
 
+import inspect
 import os
 from abc import abstractmethod
+from contextlib import contextmanager
+import numpy as np
+import torch
+from torch import nn
 from typing import Any, Callable, Optional, Union, List, Tuple, Dict
 
-from torch import nn
-from wandb.wandb_torch import torch
-
-from torch_mist.utils.logging.contexts import (
-    LoggingContext,
-    IncrementalLoggingContext,
-    MethodsLoggingContext,
-)
-from torch_mist.utils.misc import args_to_kwargs
+from torch_mist.utils.logging.metrics import compute_mean
 
 
 class Logger:
-    def __init__(self, log_dir: str = "."):
-        self._logged_methods = {}
-        self._context = {}
+    def __init__(self, log_dir: str = ".", log_every: int = 10):
         self.log_dir = log_dir
+        self.log_every = log_every
+        self._buffer = {}
+        self._logged_methods = {}
+        self._split = None
+        self._iteration = 0
+        self._epoch = 0
 
-    def context(self, context_name: str, context_value: Any) -> LoggingContext:
-        return LoggingContext(self, context_name, context_value)
+    @contextmanager
+    def train(self):
+        self.on_split_start("train")
+        try:
+            yield
+        finally:
+            self.on_split_end("train")
 
-    def train(self) -> LoggingContext:
-        return self.context("split", "train")
+    @contextmanager
+    def valid(self):
+        self.on_split_start("valid")
+        try:
+            yield
+        finally:
+            self.on_split_end("valid")
 
-    def valid(self) -> LoggingContext:
-        return self.context("split", "valid")
+    @contextmanager
+    def test(self):
+        self.on_split_start("test")
+        try:
+            yield
+        finally:
+            self.on_split_end("test")
 
-    def test(self) -> LoggingContext:
-        return self.context("split", "test")
+    @contextmanager
+    def iteration(self):
+        self.on_iteration_start()
+        try:
+            yield
+        finally:
+            self.on_iteration_end()
 
-    def iteration(self) -> LoggingContext:
-        return IncrementalLoggingContext(self, "iteration")
+    @contextmanager
+    def epoch(self):
+        self.on_epoch_start()
+        try:
+            yield
+        finally:
+            self.on_epoch_end()
 
-    def epoch(self) -> LoggingContext:
-        return IncrementalLoggingContext(self, "epoch")
+    def on_split_start(self, name: str):
+        assert self._split is None
+        self._split = name
 
+    def on_split_end(self, name: str):
+        if name != "train":
+            self._log_buffer(force_logging=name)
+        self._split = None
+
+    def on_iteration_start(self):
+        pass
+
+    def on_iteration_end(self):
+        self._iteration += 1
+        self._log_buffer()
+        self._log_buffer()
+
+    def on_epoch_start(self):
+        pass
+
+    def on_epoch_end(self):
+        self._epoch += 1
+
+    @contextmanager
     def logged_methods(
         self,
         instance: Any,
         methods: List[Union[str, Tuple[str, Callable[[Any, Any], Any]]]],
-    ) -> MethodsLoggingContext:
-        return MethodsLoggingContext(self, instance, methods)
+    ):
+        for method in methods:
+            if isinstance(method, tuple):
+                method_name, metric = method
+            else:
+                method_name = method
+                metric = compute_mean
+            self.add_logging_hook(instance, method_name, metric)
+        try:
+            yield
+        finally:
+            for method in methods:
+                if isinstance(method, tuple):
+                    method_name, _ = method
+                else:
+                    method_name = method
+                self.detach_hook(method_name)
 
-    def _log_method(
+    def add_logging_hook(
         self,
         instance: Any,
         method_name: str,
-        metric: Callable[[Any, Any], Any],
+        metric: Callable[[Any, Any], Dict[str, Any]],
     ):
         for attr in method_name.split(".")[:-1]:
             instance = getattr(instance, attr)
@@ -66,26 +128,86 @@ class Logger:
 
         def method_with_hook(*args, **kwargs):
             output = original_method(*args, **kwargs)
-            input = args_to_kwargs(original_method, args, kwargs)
+            arguments = inspect.getcallargs(original_method, *args, **kwargs)
 
-            if self._context:
-                stats = metric(input=input, output=output)
+            if self._split:
+                stats = metric(input=arguments, output=output)
                 if not (stats is None):
-                    self.log(name=full_name, data=stats)
+                    if not isinstance(stats, dict):
+                        stats = {"value": stats}
+                    self.log(name=full_name, data_dict=stats)
 
             return output
 
+        method_with_hook.__signature__ = inspect.signature(original_method)
+
         setattr(instance, method_name, method_with_hook)
+
+    def detach_hook(self, method_name):
+        instance, method_original_name, original_method = self._logged_methods[
+            method_name
+        ]
+        setattr(instance, method_original_name, original_method)
+        del self._logged_methods[method_name]
 
     def is_logged(self, method_name: str) -> bool:
         return method_name in self._logged_methods
 
-    @abstractmethod
-    def _log(self, data: Any, name: str, context: Dict[str, Any]):
-        raise NotImplementedError()
+    def _log_buffer(self, force_logging: Optional[str] = None):
+        keys_to_delete = []
+        for full_name, (orig_iteration, data) in self._buffer.items():
+            split = full_name.split("/")[0]
+            name = "/".join(full_name.split("/")[1:])
+            if (
+                self._iteration - orig_iteration >= self.log_every
+                or force_logging == split
+            ):
+                agg_values = {}
+                for metric, values in data.items():
+                    first_value = values[0]
+                    if (
+                        isinstance(first_value, float)
+                        or (
+                            isinstance(first_value, torch.Tensor)
+                            and first_value.numel() == 1
+                        )
+                        or (
+                            isinstance(first_value, np.ndarray)
+                            and first_value.size == 1
+                        )
+                    ):
+                        agg_values[metric] = np.mean(values)
+                    else:
+                        agg_values[metric] = first_value
 
-    def log(self, name: str, data: Any):
-        self._log(data, name=name, context=self._context)
+                self._log(
+                    data=agg_values,
+                    name=name,
+                    iteration=self._iteration,
+                    epoch=self._epoch,
+                    split=split,
+                )
+                keys_to_delete.append(full_name)
+
+        for full_name in keys_to_delete:
+            del self._buffer[full_name]
+
+    def log(self, name: str, data_dict: Any):
+        name = f"{self._split}/{name}"
+        if not (name in self._buffer):
+            self._buffer[name] = (
+                self._iteration,
+                {metric: [value] for metric, value in data_dict.items()},
+            )
+        else:
+            for metric, value in data_dict.items():
+                self._buffer[name][1][metric].append(value)
+
+    @abstractmethod
+    def _log(
+        self, data: Any, name: str, iteration: int, epoch: int, split: str
+    ):
+        raise NotImplementedError()
 
     @abstractmethod
     def _reset_log(self):
@@ -93,23 +215,21 @@ class Logger:
 
     def reset_log(self):
         self._reset_log()
-        self._context = {}
+        self._split = None
+        self._iteration = 0
+        self._epoch = 0
 
-    def detach(self, method_name):
-        instance, method_original_name, original_method = self._logged_methods[
-            method_name
-        ]
-        setattr(instance, method_original_name, original_method)
-        del self._logged_methods[method_name]
-
-    def detach_all(self):
+    def _detach_all_hooks(self):
         logged_methods = list(self._logged_methods)
         for method_name in logged_methods:
-            self.detach(method_name)
+            self.detach_hook(method_name)
 
     def clear(self):
-        self.detach_all()
+        self._detach_all_hooks()
         self.reset_log()
+
+    def __del__(self):
+        self.clear()
 
     def get_log(self) -> Optional[Any]:
         return None
@@ -123,12 +243,9 @@ class Logger:
         filepath = os.path.join(self.log_dir, name)
         torch.save(model, filepath)
 
-    def __del__(self):
-        self.clear()
-
 
 class DummyLogger(Logger):
-    def _log(self, data: Any, name: str, context: Dict[str, Any]):
+    def _log(self, **kwargs):
         pass
 
     def _reset_log(self):

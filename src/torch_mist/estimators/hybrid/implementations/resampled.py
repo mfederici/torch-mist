@@ -9,6 +9,7 @@ from torch_mist.estimators.generative.base import (
     GenerativeMIEstimator,
 )
 from torch_mist.estimators.hybrid.base import HybridMIEstimator
+from torch_mist.utils.caching import cached
 
 
 class ResampledHybridMIEstimator(HybridMIEstimator):
@@ -22,6 +23,7 @@ class ResampledHybridMIEstimator(HybridMIEstimator):
         ) or isinstance(generative_estimator, JointGenerativeMIEstimator)
         super().__init__(generative_estimator, discriminative_estimator)
 
+    @cached
     def sample_negatives(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor]]:

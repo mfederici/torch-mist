@@ -1,4 +1,4 @@
-from typing import Type, Optional, Dict, Any, Union, Tuple
+from typing import Type, Optional, Dict, Any, Union, Tuple, List, Callable
 
 import torch
 from torch.optim import Optimizer
@@ -17,8 +17,8 @@ from torch_mist.estimators.base import MIEstimator
 from torch_mist.utils.batch import unfold_samples, move_to_device
 
 from torch_mist.utils.evaluation import evaluate_mi
+from torch_mist.utils.logging import PandasLogger
 from torch_mist.utils.logging.logger.base import Logger, DummyLogger
-from torch_mist.utils.logging.logger.utils import instantiate_logger
 from torch_mist.utils.misc import _instantiate_dataloaders
 
 
@@ -79,6 +79,12 @@ def train_epoch(
     logger: Optional[Logger] = None,
     tqdm_iteration: Optional[tqdm] = None,
     fast_train: bool = False,
+    train_logged_methods: Optional[
+        List[Union[str, Tuple[str, Callable]]]
+    ] = None,
+    eval_logged_methods: Optional[
+        List[Union[str, Tuple[str, Callable]]]
+    ] = None,
 ):
     estimator.train()
     with logger.epoch():
@@ -87,11 +93,13 @@ def train_epoch(
             variables = move_to_device(variables, device)
 
             with logger.iteration():
-                loss = estimator.loss(**variables)
+                with logger.logged_methods(estimator, train_logged_methods):
+                    loss = estimator.loss(**variables)
 
                 # Compute the ratio only if necessary
                 if not fast_train and not isinstance(logger, DummyLogger):
-                    estimator(**variables)
+                    with logger.logged_methods(estimator, eval_logged_methods):
+                        estimator(**variables)
 
                 opt.zero_grad()
                 loss.backward()
@@ -124,6 +132,12 @@ def train_mi_estimator(
     patience: int = 3,
     delta: float = 0.001,
     fast_train: bool = False,
+    train_logged_methods: Optional[
+        List[Union[str, Tuple[str, Callable]]]
+    ] = None,
+    eval_logged_methods: Optional[
+        List[Union[str, Tuple[str, Callable]]]
+    ] = None,
 ) -> Optional[Any]:
     # Create the training and validation dataloaders
     train_loader, valid_loader = _instantiate_dataloaders(
@@ -150,11 +164,21 @@ def train_mi_estimator(
 
     estimator = estimator.to(device)
 
-    # If the logger is specified, we use it adding loss and mutual_information logs if not already specified
-    # if it is None, use the default PandasLogger,
-    # if False, instantiate a DummyLogger, which does not store any quantity
-    default_logger = logger is None
-    logger = instantiate_logger(estimator, logger)
+    default_logger = False
+    # If the logger is None, use the default PandasLogger,
+    if logger is None:
+        logger = PandasLogger()
+        default_logger = True
+    # If False, instantiate a DummyLogger, which does not store any quantity
+    elif logger is False:
+        logger = DummyLogger()
+        default_logger = True
+
+    # If nothing is specified, log the loss and mutual information
+    if train_logged_methods is None:
+        train_logged_methods = ["loss"]
+    if eval_logged_methods is None:
+        eval_logged_methods = ["mutual_information"]
 
     best_mi = 0
     initial_patience = patience
@@ -181,15 +205,21 @@ def train_mi_estimator(
                 tqdm_iteration=tqdm_iteration,
                 device=device,
                 fast_train=fast_train,
+                train_logged_methods=train_logged_methods,
+                eval_logged_methods=eval_logged_methods,
             )
 
         if valid_loader is not None:
             with logger.valid():
-                valid_mi = evaluate_mi(
-                    estimator=estimator,
-                    dataloader=valid_loader,
-                    device=device,
-                )
+                with logger.logged_methods(
+                    estimator,
+                    eval_logged_methods,
+                ):
+                    valid_mi = evaluate_mi(
+                        estimator=estimator,
+                        dataloader=valid_loader,
+                        device=device,
+                    )
 
             if isinstance(valid_mi, dict):
                 valid_mi = sum(valid_mi.values())

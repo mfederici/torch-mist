@@ -1,6 +1,5 @@
 from abc import abstractmethod
 from typing import Dict, Tuple, Optional
-from functools import lru_cache
 
 import torch
 
@@ -9,6 +8,7 @@ from torch_mist.estimators.base import MIEstimator
 from torch_mist.critic import Critic
 from torch_mist.critic import SeparableCritic
 from torch_mist.distributions.empirical import EmpiricalDistribution
+from torch_mist.utils.caching import cached
 
 
 class DiscriminativeMIEstimator(MIEstimator):
@@ -25,7 +25,7 @@ class DiscriminativeMIEstimator(MIEstimator):
         self.neg_samples = neg_samples
         self.proposal = EmpiricalDistribution()
 
-    @lru_cache(maxsize=1)
+    @cached
     def unnormalized_log_ratio(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
@@ -48,6 +48,7 @@ class DiscriminativeMIEstimator(MIEstimator):
         neg_samples = max(neg_samples, 1)
         return neg_samples
 
+    @cached
     def sample_negatives(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor]]:
@@ -95,7 +96,9 @@ class DiscriminativeMIEstimator(MIEstimator):
         assert x_dim == y_dim
 
         # Compute the log-normalization term log E{r(x,y)}[e^f(x,y)] on samples from r(x,y)
-        log_partition = self.approx_log_partition(x, y, x_, y_, log_w)
+        log_partition = self.approx_log_partition(
+            x=x, y=y, x_=x_, y_=y_, log_w=log_w
+        )
 
         assert log_partition.shape == unnormalized_log_ratio.shape
         log_ratio = unnormalized_log_ratio - log_partition
@@ -112,7 +115,6 @@ class DiscriminativeMIEstimator(MIEstimator):
     ) -> torch.Tensor:
         raise NotImplementedError()
 
-    @lru_cache(maxsize=1)
     def approx_log_partition(
         self,
         x: torch.Tensor,

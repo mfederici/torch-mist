@@ -1,2 +1,3 @@
 _target_: torch_mist.utils.logging.logger.wandb.WandbLogger
 project: torch_mist
+log_every: 10

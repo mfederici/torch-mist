@@ -5,9 +5,11 @@ import torch
 
 from torch_mist.estimators.discriminative import DiscriminativeMIEstimator
 from torch_mist.estimators.hybrid.base import HybridMIEstimator
+from torch_mist.utils.caching import cached
 
 
 class ReweighedHybridMIEstimator(HybridMIEstimator):
+    @cached
     def sample_negatives(
         self,
         x: torch.Tensor,

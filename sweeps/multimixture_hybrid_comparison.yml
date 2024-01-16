@@ -1,9 +1,10 @@
-program: scripts/run_experiment.py
+program: scripts/compute_mi.py
 command:
   - ${env}
   - ${interpreter}
   - ${program}
   - experiment=eval_distribution_mi
+  - logger=wandb
   - ${args_no_hyphens}
 method: grid
 parameters:
@@ -16,7 +17,7 @@ parameters:
     values:
       - nwj
       - mine
-      - infoNCE
+      - infonce
       - js
       - alpha_tuba
       - smile

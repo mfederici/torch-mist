@@ -116,9 +116,6 @@ class InterpolatedBaseline(Baseline):
         b1 = self.baseline_1.forward(f_=f_, x=x)
         b2 = self.baseline_2.forward(f_=f_, x=x)
 
-        b1 = b1.expand_as(b2)
-        b2 = b2.expand_as(b1)
-
         assert b1.shape == b2.shape
 
         if self.alpha == 0:
@@ -126,17 +123,6 @@ class InterpolatedBaseline(Baseline):
         elif self.alpha == 1:
             return b1
         else:
-            # We use logsumexp for numerical stability
-            # log alpha * exp(b1) + (1-alpha) * exp(b2) = log(exp(b1+log alpha) + exp(b2+log(1-alpha)))
-            b = torch.logsumexp(
-                torch.cat(
-                    [
-                        b1.unsqueeze(-1) + math.log(self.alpha),
-                        b2.unsqueeze(-1) + math.log(1 - self.alpha),
-                    ],
-                    -1,
-                ),
-                -1,
-            )
+            b = (self.alpha * b1.exp() + (1 - self.alpha) * b2.exp()).log()
 
             return b

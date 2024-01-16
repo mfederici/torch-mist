@@ -210,7 +210,7 @@ if __name__ == "__main__":
 
     # We log the value of mutual information each estimator over time
     methods_to_log = [
-        f"base_estimator.estimators.{name}.mutual_information"
+        f"base_estimator.estimators.{name}.log_ratio"
         for name in mi_estimator.base_estimator.estimators
     ]
     # And the overall loss

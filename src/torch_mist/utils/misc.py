@@ -11,16 +11,6 @@ from torch_mist.utils.data import SampleDataset, SameAttributeDataLoader
 from torch_mist.utils.data.loader import sample_same_value
 
 
-def args_to_kwargs(method, args, kwargs):
-    keys = inspect.signature(method).parameters.keys()
-    unused_keys = [key for key in keys if key not in kwargs]
-    if "self" in unused_keys:
-        unused_keys.remove("self")
-    new_kwargs = {unused_keys[i]: arg for i, arg in enumerate(args)}
-    kwargs = {**kwargs, **new_kwargs}
-    return kwargs
-
-
 def _instantiate_dataloaders(
     estimator: MIEstimator,
     x: Optional[torch.Tensor] = None,
