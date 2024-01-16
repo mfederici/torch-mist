@@ -66,6 +66,11 @@ def estimate_mi(
     if evaluation_batch_size is None:
         evaluation_batch_size = batch_size
 
+    if logger is None:
+        logger = PandasLogger()
+    elif logger is False:
+        logger = DummyLogger()
+
     train_log = train_mi_estimator(
         estimator=estimator,
         x=x,
@@ -110,6 +115,8 @@ def estimate_mi(
             device=device,
             num_workers=num_workers,
         )
+
+    logger.clear()
 
     if not (train_log is None) and return_estimator:
         return mi_value, estimator, train_log
