@@ -64,7 +64,7 @@ def flo(
     x_dim: int,
     y_dim: int,
     hidden_dims: List[int],
-    neg_samples: int,
+    neg_samples: int = -1,
     n_shared_layers: int = -1,
     critic_type: str = SEPARABLE_CRITIC,
     **kwargs,
