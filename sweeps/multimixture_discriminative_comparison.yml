@@ -5,6 +5,7 @@ command:
   - ${program}
   - experiment=eval_distribution_mi
   - logger=wandb
+  - device=cuda
   - ${args_no_hyphens}
 method: grid
 parameters:

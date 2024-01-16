@@ -29,7 +29,7 @@ params:
   temperature: 0.1
 
   train:
-    batch_size: 128
+    batch_size: 64
     valid_percentage: 0.1
     early_stopping: false
     lr_annealing: false
