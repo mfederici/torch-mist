@@ -28,8 +28,9 @@ params:
   n_bins: 32
   temperature: 0.1
 
+  batch_size: 64
   train:
-    batch_size: 64
+    batch_size: ${params.batch_size}
     valid_percentage: 0.1
     early_stopping: false
     lr_annealing: false
@@ -39,5 +40,5 @@ params:
       _partial_: true
       _target_: torch.optim.AdamW
   test:
-    batch_size: 128
+    batch_size: ${params.batch_size}
     device: ${device}
