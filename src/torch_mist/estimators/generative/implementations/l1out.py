@@ -8,7 +8,7 @@ from pyro.distributions import ConditionalDistribution
 from torch_mist.estimators.generative.base import (
     ConditionalGenerativeMIEstimator,
 )
-from torch_mist.utils.indexing import select_off_diagonal
+from torch_mist.utils.indexing import select_k_others
 
 
 class L1Out(ConditionalGenerativeMIEstimator):
@@ -38,7 +38,7 @@ class L1Out(ConditionalGenerativeMIEstimator):
         if self.neg_samples == 0 or self.neg_samples == -1:
             x = x.unsqueeze(0)
         else:
-            x = select_off_diagonal(x, neg_samples)
+            x = select_k_others(x, neg_samples)
 
         # Probability of all the other y in the same batch [M, N, ...]
         p_Y_given_x = self.q_Y_given_X.condition(x)

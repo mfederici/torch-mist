@@ -8,7 +8,8 @@ from torch_mist.estimators.base import MIEstimator
 from torch_mist.critic import Critic
 from torch_mist.critic import SeparableCritic
 from torch_mist.distributions.empirical import EmpiricalDistribution
-from torch_mist.utils.caching import cached
+from torch_mist.utils.caching import cached_method
+from torch_mist.utils.indexing import matrix_off_diagonal
 
 
 class DiscriminativeMIEstimator(MIEstimator):
@@ -25,7 +26,7 @@ class DiscriminativeMIEstimator(MIEstimator):
         self.neg_samples = neg_samples
         self.proposal = EmpiricalDistribution()
 
-    @cached
+    @cached_method
     def unnormalized_log_ratio(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
@@ -48,7 +49,7 @@ class DiscriminativeMIEstimator(MIEstimator):
         neg_samples = max(neg_samples, 1)
         return neg_samples
 
-    @cached
+    @cached_method
     def sample_negatives(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor]]:
@@ -61,7 +62,7 @@ class DiscriminativeMIEstimator(MIEstimator):
         # Efficient implementation for separable critic with empirical distribution (negatives from the same batch)
         if (
             isinstance(self.critic, SeparableCritic)
-            and neg_samples == N
+            and self.neg_samples <= 0
             and isinstance(self.proposal, EmpiricalDistribution)
         ):
             y_ = self.proposal._samples[:N].unsqueeze(1)
@@ -123,15 +124,20 @@ class DiscriminativeMIEstimator(MIEstimator):
         y_: torch.Tensor,
         log_w: Optional[torch.Tensor],
     ) -> torch.Tensor:
+        N = x.shape[0]
+        M = self.n_negatives_to_use(N)
+
         # Evaluate the unnormalized_log_ratio f(x_,y_) on the samples x_, y_ ~ r(x, y). It has shape [M, ...]
         f_ = self.critic(x_, y_)
 
-        # Compute the shape of the negatives (may require broadcasting)
-        x_dim = x_.ndim + (1 if isinstance(x_, torch.LongTensor) else 0)
-        negative_shape = torch.Size(
-            [max(x_.shape[i], y_.shape[i]) for i in range(x_dim - 1)]
-        )
-        assert f_.shape == negative_shape, f"{f_.shape}!={negative_shape}"
+        # Computational shortcut for separable critic
+        # we compute the product for the whole batch and then remove the diagonal
+        if self.neg_samples < 0 and M != f_.shape[0]:
+            assert isinstance(self.critic, SeparableCritic)
+            # Remove the diagonal from the matrix
+            f_ = matrix_off_diagonal(f_, M)
+
+        assert f_.shape[0] == M and f_.shape[1] == N
 
         log_Z = self._approx_log_partition(x=x, y=y, f_=f_, log_w=log_w)
         assert log_Z.shape == x.shape[:-1]

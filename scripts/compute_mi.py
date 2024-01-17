@@ -128,6 +128,9 @@ def parse(conf: DictConfig):
     print(f"Estimated mi: {results}")
     logger.save_log()
 
+    if conf.save_trained_model:
+        logger.save_model(mi_estimator, "mi_estimator.pyt")
+
 
 if __name__ == "__main__":
     OmegaConf.register_new_resolver("eval", eval)

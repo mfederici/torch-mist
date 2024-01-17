@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.utils.batch import unfold_samples, move_to_device
 from torch_mist.utils.data.dataset import SampleDataset
-from torch_mist.utils.misc import _instantiate_dataloaders
+from torch_mist.utils.misc import make_dataloaders
 
 
 def evaluate_mi(
@@ -20,7 +20,7 @@ def evaluate_mi(
     batch_size: Optional[int] = None,
     num_workers: int = 8,
 ) -> Union[float, Dict[str, float]]:
-    dataloader, _ = _instantiate_dataloaders(
+    dataloader, _ = make_dataloaders(
         estimator=estimator,
         device=device,
         x=x,
@@ -40,7 +40,7 @@ def evaluate_mi(
         variables = unfold_samples(samples)
         variables = move_to_device(variables, device)
 
-        estimation = estimator(**variables)
+        estimation = estimator.mutual_information(**variables)
 
         if isinstance(estimation, dict):
             for (x_key, y_key), value in estimation.items():

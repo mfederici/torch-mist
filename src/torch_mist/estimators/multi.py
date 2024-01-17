@@ -69,5 +69,5 @@ class MultiMIEstimator(MIEstimator):
     def log_ratio(self, **variables) -> Dict[Tuple[str, str], torch.Tensor]:
         return self.broadcast_function("log_ratio", **variables)
 
-    def forward(self, **variables) -> Dict[Tuple[str, str], torch.Tensor]:
-        return self.mutual_information(**variables)
+    def forward(self, **variables) -> torch.Tensor:
+        return self.loss(**variables)

@@ -1,12 +1,10 @@
-from typing import Optional, List
+from typing import Optional
 
 import torch
-from pyro.nn import DenseNN
 
 from torch import nn
 
 from .base import Critic
-from torch_mist.utils.indexing import select_off_diagonal
 from torch_mist.utils.shape import expand_to_same_shape
 
 

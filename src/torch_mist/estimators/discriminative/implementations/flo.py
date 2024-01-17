@@ -6,7 +6,7 @@ from torch_mist.critic import Critic
 from torch_mist.estimators.discriminative.base import (
     DiscriminativeMIEstimator,
 )
-from torch_mist.utils.caching import cached
+from torch_mist.utils.caching import cached_method
 
 
 class FLO(DiscriminativeMIEstimator):
@@ -27,7 +27,7 @@ class FLO(DiscriminativeMIEstimator):
     ) -> torch.Tensor:
         return self.normalized_critic(x, y)
 
-    @cached
+    @cached_method
     def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         return self.normalized_critic(x, y)
 

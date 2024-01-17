@@ -7,7 +7,7 @@ from torch_mist.estimators.discriminative.base import DiscriminativeMIEstimator
 from torch_mist.estimators.hybrid.base import HybridMIEstimator
 from torch_mist.estimators.transformed.implementations.pq import PQ
 from torch_mist.quantization import QuantizationFunction
-from torch_mist.utils.caching import cached
+from torch_mist.utils.caching import cached_method
 
 
 class PQHybridMIEstimator(HybridMIEstimator):
@@ -40,14 +40,18 @@ class PQHybridMIEstimator(HybridMIEstimator):
     def quantize_y(self) -> Callable[[torch.Tensor], torch.LongTensor]:
         return self.generative_estimator.transforms["y->y"]
 
-    @cached
+    @cached_method
     def sample_negatives(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> Tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor]]:
         # We reshape the batches from [batch_size, ...] to [neg_samples+1, batch_size//neg_samples, ...]
         # This is because the batches are created so that the negatives can be sampled by shuffling the new first dim
-        neg_shape = self.neg_samples + 1
-        batch_shape = x.shape[0] // (self.neg_samples + 1)
+        if self.neg_samples <= 0:
+            neg_shape = x.shape[0]
+        else:
+            neg_shape = self.neg_samples + 1
+
+        batch_shape = x.shape[0] // (neg_shape)
 
         # If the batch validation is disabled, we skip checking the batches to speed up computation
         if self._validate_batches:

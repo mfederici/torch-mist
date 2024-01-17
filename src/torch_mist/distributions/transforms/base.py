@@ -15,6 +15,8 @@ from torch.distributions import (
     TransformedDistribution,
 )
 
+from torch_mist.distributions.caching import add_cache
+
 
 class DistributionModule(Distribution, nn.Module, ABC):
     def __init__(self, validate_args: bool = False):
@@ -45,6 +47,7 @@ class ConditionalTransformedDistributionModule(
             List[Transform],
             None,
         ],
+        cached: bool = True,
     ):
         if isinstance(transforms, ConditionalTransform) or isinstance(
             transforms, Transform
@@ -52,6 +55,9 @@ class ConditionalTransformedDistributionModule(
             transforms = [transforms]
         elif isinstance(transforms, dict):
             transforms = [transforms[k] for k in sorted(transforms.keys())]
+
+        if cached:
+            transforms = [add_cache(transform) for transform in transforms]
 
         if transforms is not None:
             transforms = nn.ModuleList(list(transforms))
@@ -101,6 +107,7 @@ class TransformedDistributionModule(DistributionModule):
         transforms: Union[
             Transform, List[Transform], Dict[str, Transform], None
         ],
+        cached: bool = True,
     ):
         super().__init__()
 
@@ -112,6 +119,9 @@ class TransformedDistributionModule(DistributionModule):
             transforms = [transforms]
         elif hasattr(transforms, "keys"):
             transforms = [transforms[k] for k in sorted(transforms.keys())]
+
+        if cached:
+            transforms = [add_cache(transform) for transform in transforms]
 
         self.transforms = nn.ModuleList(transforms)
 

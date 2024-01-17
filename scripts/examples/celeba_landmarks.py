@@ -1,6 +1,3 @@
-from copy import deepcopy
-from typing import List, Dict, Tuple
-
 from torch.optim import AdamW
 from torchvision.models import resnet18
 from torch import nn
@@ -10,14 +7,13 @@ from torch_mist.distributions import (
     transformed_normal,
     conditional_transformed_normal,
 )
-from torch_mist.distributions.cached import CachedDistribution
 from torch_mist.utils.freeze import freeze
 from torchvision.datasets import CelebA
 from torchvision.transforms import ToTensor
 from torch.utils.data import DataLoader
 from torch.utils.data import random_split
 
-from torch_mist.utils import train_mi_estimator, evaluate_mi
+from torch_mist.utils import train_mi_estimator
 from torch_mist.estimators import (
     TransformedMIEstimator,
     DoE,
@@ -101,14 +97,12 @@ def instantiate_estimator() -> MIEstimator:
 
     # Create one q(y) for each landmark as a spline_autoregressive flow applied to a normal
     marginals = {
-        landmark: CachedDistribution(
-            transformed_normal(
-                input_dim=2,
-                hidden_dims=[128, 64],
-                transform_name="spline_autoregressive",
-                normalization="batchnorm",
-                n_transforms=2,
-            )
+        landmark: transformed_normal(
+            input_dim=2,
+            hidden_dims=[128, 64],
+            transform_name="spline_autoregressive",
+            normalization="batchnorm",
+            n_transforms=2,
         )
         for landmark in LANDMARKS
     }

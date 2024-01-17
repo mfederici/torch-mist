@@ -10,15 +10,12 @@ from torch_mist.estimators.discriminative.base import (
 
 
 class InfoNCE(BaselineDiscriminativeMIEstimator):
-    def __init__(
-        self,
-        critic: Critic,
-    ):
+    def __init__(self, critic: Critic, neg_samples: int = 0):
         # Note that this can be equivalently obtained by extending TUBA with a BatchLogMeanExp(dim=1) baseline
         # This implementation saves some computation
         super().__init__(
             critic=critic,
-            neg_samples=0,  # 0 signifies the whole batch is used as negative samples
+            neg_samples=neg_samples,  # 0 signifies the whole batch is used as negative samples
             baseline=BatchLogMeanExp("first"),
         )
 

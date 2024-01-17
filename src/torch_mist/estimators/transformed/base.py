@@ -4,7 +4,7 @@ import torch
 from torch import nn
 
 from torch_mist.estimators.base import MIEstimator
-from torch_mist.utils.caching import cached
+from torch_mist.utils.caching import cached_method
 from torch_mist.utils.freeze import is_trainable
 from torch_mist.estimators.transformed.utils import DummyModule
 
@@ -69,7 +69,7 @@ class TransformedMIEstimator(MIEstimator):
                 variable_from
             ] = base_estimator.infomax_gradient[variable_to]
 
-    @cached
+    @cached_method
     def transform(self, **variables) -> Dict[str, torch.Tensor]:
         transformed_variables = {}
         for variable_fromto, transform in self.transforms.items():
@@ -120,4 +120,4 @@ class TransformedMIEstimator(MIEstimator):
         return self.log_ratio(**variables).mean()
 
     def forward(self, *args, **kwargs) -> torch.Tensor:
-        return self.mutual_information(*args, **kwargs)
+        return self.loss(*args, **kwargs)

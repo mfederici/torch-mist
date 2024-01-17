@@ -7,7 +7,7 @@ from pyro.distributions import ConditionalDistribution
 from torch_mist.estimators.generative.base import (
     ConditionalGenerativeMIEstimator,
 )
-from torch_mist.utils.caching import cached
+from torch_mist.utils.caching import cached_method
 from torch_mist.utils.freeze import is_trainable
 
 
@@ -24,7 +24,7 @@ class DoE(ConditionalGenerativeMIEstimator):
         )
         self.q_Y = q_Y
 
-    @cached
+    @cached_method
     def approx_log_p_y(
         self, y: torch.Tensor, x: Optional[torch.Tensor] = None
     ) -> torch.Tensor:

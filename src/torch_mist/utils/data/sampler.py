@@ -14,6 +14,10 @@ class SameAttributeSampler(Sampler):
     ):
         super(SameAttributeSampler, self).__init__(attributes)
 
+        # Whenever the number of negatives is specified as 0 or negative, we produce whole batches of negatives
+        if neg_samples <= 0:
+            neg_samples = batch_size - 1
+
         assert (
             batch_size % (neg_samples + 1) == 0
         ), "batch_size has to be a multiple of neg_samples+1"

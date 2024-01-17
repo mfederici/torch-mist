@@ -11,8 +11,7 @@ from torch_mist.utils.data import SampleDataset, SameAttributeDataLoader
 from torch_mist.utils.data.loader import sample_same_value
 
 
-def _instantiate_dataloaders(
-    estimator: MIEstimator,
+def make_default_dataloaders(
     x: Optional[torch.Tensor] = None,
     y: Optional[torch.Tensor] = None,
     train_loader: Optional[Any] = None,
@@ -20,8 +19,7 @@ def _instantiate_dataloaders(
     valid_percentage: float = 0.1,
     batch_size: Optional[int] = None,
     num_workers: int = 8,
-    device: Union[str, torch.device] = "cpu",
-) -> Tuple[DataLoader, Optional[DataLoader]]:
+) -> Tuple[DataLoader, DataLoader]:
     if (x is None) != (y is None):
         raise ValueError(
             "Either both x and y need to be specified or neither."
@@ -36,16 +34,16 @@ def _instantiate_dataloaders(
             raise ValueError("Please specify a value for batch_size.")
 
         # Make the dataloaders from the samples
-        dataset = SampleDataset({"x": x, "y": y})
+        train_set = SampleDataset({"x": x, "y": y})
         if valid_percentage > 0:
             if not (valid_loader is None):
                 raise ValueError(
                     "The valid_loader can't be specified when x and y are used"
                 )
 
-            n_valid = int(len(dataset) * valid_percentage)
-            dataset, val_set = random_split(
-                dataset, [len(dataset) - n_valid, n_valid]
+            n_valid = int(len(train_set) * valid_percentage)
+            train_set, val_set = random_split(
+                train_set, [len(train_set) - n_valid, n_valid]
             )
             valid_loader = DataLoader(
                 val_set,
@@ -54,11 +52,41 @@ def _instantiate_dataloaders(
             )
 
         train_loader = DataLoader(
-            dataset,
+            train_set,
             batch_size=batch_size,
             num_workers=num_workers,
             shuffle=True,
         )
+
+    return train_loader, valid_loader
+
+
+def make_dataloaders(
+    estimator: MIEstimator,
+    x: Optional[torch.Tensor] = None,
+    y: Optional[torch.Tensor] = None,
+    train_loader: Optional[Any] = None,
+    valid_loader: Optional[Any] = None,
+    valid_percentage: float = 0.1,
+    batch_size: Optional[int] = None,
+    num_workers: int = 8,
+    device: Union[str, torch.device] = "cpu",
+) -> Tuple[DataLoader, Optional[DataLoader]]:
+    train_loader, valid_loader = make_default_dataloaders(
+        x=x,
+        y=y,
+        train_loader=train_loader,
+        valid_loader=valid_loader,
+        valid_percentage=valid_percentage,
+        batch_size=batch_size,
+        num_workers=num_workers,
+    )
+
+    # Infer the batch size if needed
+    if batch_size is None:
+        batch = next(iter(train_loader))
+        variables = unfold_samples(batch)
+        batch_size = variables["y"].shape[0]
 
     # Check if we need to modify the dataloader to sample the same attributes
     _estimator = estimator

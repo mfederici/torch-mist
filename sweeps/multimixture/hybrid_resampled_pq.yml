@@ -1,0 +1,28 @@
+program: scripts/compute_mi.py
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - experiment=eval_distribution_mi
+  - logger=wandb
+  - device=cuda
+  - ${args_no_hyphens}
+method: grid
+parameters:
+  mi_estimator:
+    values:
+      - hybrid_pq
+  mi_estimator@mi_estimator.discriminative_estimator:
+    values:
+      - nwj
+      - mine
+      - infonce
+      - js
+      - alpha_tuba
+      - smile
+      - flo
+  seed:
+    values:
+      - 7
+      - 42
+      - 404

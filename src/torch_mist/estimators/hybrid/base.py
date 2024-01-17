@@ -5,7 +5,7 @@ import torch
 
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.estimators.discriminative.base import DiscriminativeMIEstimator
-from torch_mist.utils.caching import cached
+from torch_mist.utils.caching import cached_method
 from torch_mist.utils.freeze import is_trainable
 from contextlib import contextmanager
 
@@ -16,9 +16,10 @@ class HybridMIEstimator(DiscriminativeMIEstimator):
         generative_estimator: MIEstimator,
         discriminative_estimator: DiscriminativeMIEstimator,
     ):
+        neg_samples = discriminative_estimator.neg_samples
         super().__init__(
             critic=discriminative_estimator.critic,
-            neg_samples=discriminative_estimator.neg_samples,
+            neg_samples=neg_samples,
         )
 
         self.discriminative_estimator = discriminative_estimator
@@ -31,7 +32,7 @@ class HybridMIEstimator(DiscriminativeMIEstimator):
         }
         self.infomax_gradient = informax_gradient
 
-    @cached
+    @cached_method
     def unnormalized_log_ratio(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
@@ -41,7 +42,7 @@ class HybridMIEstimator(DiscriminativeMIEstimator):
         assert f.shape == partial_log_ratio.shape
         return f + partial_log_ratio
 
-    @cached
+    @cached_method
     def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         with self.resampling_strategy():
             log_rest = self.discriminative_estimator.log_ratio(x, y)

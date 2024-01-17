@@ -92,6 +92,7 @@ def infonce(
     y_dim: int,
     hidden_dims: List[int],
     critic_type: str = SEPARABLE_CRITIC,
+    neg_samples: int = 0,
     **kwargs,
 ) -> InfoNCE:
     return InfoNCE(
@@ -101,7 +102,8 @@ def infonce(
             critic_type=critic_type,
             hidden_dims=hidden_dims,
             **kwargs,
-        )
+        ),
+        neg_samples=neg_samples,
     )
 
 

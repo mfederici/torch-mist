@@ -45,12 +45,4 @@ class MIEstimator(nn.Module):
     def forward(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
-        """
-        Compute an estimation for I(x,y).
-        Args:
-           x: a tensor with shape [N, D] in which x[i] is sampled from p(x)
-           y: a tensor with shape [N, D] in which y[i] is sampled from p(y|x[i])
-        Returns:
-           estimation: the expected (weighted) log ratio
-        """
-        return self.mutual_information(x, y)
+        return self.loss(x, y)

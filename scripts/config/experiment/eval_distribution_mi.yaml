@@ -3,9 +3,6 @@ defaults:
   - /data: multimixture
   - /mi_estimator: ???
 
-seed: 42
-device: cpu
-
 metadata:
   x_dim: 5
   y_dim: 5

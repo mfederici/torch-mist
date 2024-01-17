@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from pyro.nn import DenseNN
 
-from torch_mist.utils.caching import cached
+from torch_mist.utils.caching import cached_method
 
 
 class Normalize(nn.Module):
@@ -17,7 +17,7 @@ class CachedModule(nn.Module):
         super().__init__()
         self.module = module
 
-    @cached
+    @cached_method
     def forward(self, *args, **kwargs):
         return self.module.forward(*args, **kwargs)
 

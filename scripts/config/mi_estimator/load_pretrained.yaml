@@ -1,0 +1,5 @@
+_target_: torch_mist.utils.freeze
+function:
+  _target_: torch.load
+  f: ???
+  map_location: ${device}

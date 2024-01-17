@@ -4,3 +4,5 @@ defaults:
   - experiment: ???
 
 device: cpu
+save_trained_model: false
+seed: 42

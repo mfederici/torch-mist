@@ -19,7 +19,7 @@ from torch_mist.utils.batch import unfold_samples, move_to_device
 from torch_mist.utils.evaluation import evaluate_mi
 from torch_mist.utils.logging import PandasLogger
 from torch_mist.utils.logging.logger.base import Logger, DummyLogger
-from torch_mist.utils.misc import _instantiate_dataloaders
+from torch_mist.utils.misc import make_dataloaders
 
 
 def _instantiate_optimizer(
@@ -94,12 +94,12 @@ def train_epoch(
 
             with logger.iteration():
                 with logger.logged_methods(estimator, train_logged_methods):
-                    loss = estimator.loss(**variables)
+                    loss = estimator(**variables)
 
                 # Compute the ratio only if necessary
                 if not fast_train and not isinstance(logger, DummyLogger):
                     with logger.logged_methods(estimator, eval_logged_methods):
-                        estimator(**variables)
+                        estimator.mutual_information(**variables)
 
                 opt.zero_grad()
                 loss.backward()
@@ -140,7 +140,7 @@ def train_mi_estimator(
     ] = None,
 ) -> Optional[Any]:
     # Create the training and validation dataloaders
-    train_loader, valid_loader = _instantiate_dataloaders(
+    train_loader, valid_loader = make_dataloaders(
         estimator=estimator,
         device=device,
         x=x,

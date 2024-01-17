@@ -39,18 +39,17 @@ def test_pickle():
     p_xy = JointMultivariateNormal(sigma=1, rho=0.9, n_dim=n_dim)
     samples = p_xy.sample([10000])
 
-    logger = PandasLogger()
-    with logger.logged_methods(
-        mi_estimator,
-        ["base_estimator.loss", "base_estimator.mutual_information"],
-    ):
-        train_mi_estimator(
-            estimator=mi_estimator,
-            x=samples["x"],
-            y=samples["y"],
-            batch_size=64,
-            max_epochs=1,
-        )
+    train_mi_estimator(
+        estimator=mi_estimator,
+        x=samples["x"],
+        y=samples["y"],
+        batch_size=64,
+        max_epochs=1,
+        train_logged_methods=[
+            "base_estimator.loss",
+            "base_estimator.mutual_information",
+        ],
+    )
 
     print(mi_estimator)
 

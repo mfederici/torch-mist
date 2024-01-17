@@ -4,9 +4,9 @@ import torch
 from pyro.distributions import ConditionalDistribution
 
 from torch_mist.distributions import JointDistribution
-from torch_mist.distributions.cached import CachedConditionalDistribution
 from torch_mist.estimators.base import MIEstimator
-from torch_mist.utils.caching import cached
+from torch_mist.utils.caching import cached_method
+from torch_mist.utils.shape import expand_to_same_shape
 
 
 class GenerativeMIEstimator(MIEstimator):
@@ -51,14 +51,15 @@ class ConditionalGenerativeMIEstimator(GenerativeMIEstimator):
         super().__init__()
         # Add caching to the conditioning for efficiency
         assert isinstance(q_Y_given_X, ConditionalDistribution)
-        if not isinstance(q_Y_given_X, CachedConditionalDistribution):
-            q_Y_given_X = CachedConditionalDistribution(q_Y_given_X)
         self.q_Y_given_X = q_Y_given_X
 
-    @cached
+    @cached_method
     def approx_log_p_y_given_x(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
+        # Expand to the same shape
+        x, y = expand_to_same_shape(x, y)
+
         q_Y_given_x = self.q_Y_given_X.condition(x)
 
         # Compute log q(Y=y|X=x)]
@@ -109,7 +110,7 @@ class JointGenerativeMIEstimator(GenerativeMIEstimator):
     def q_Y(self):
         return self.q_XY.marginal("y")
 
-    @cached
+    @cached_method
     def approx_log_p_xy(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
@@ -122,7 +123,7 @@ class JointGenerativeMIEstimator(GenerativeMIEstimator):
 
         return log_q_xy
 
-    @cached
+    @cached_method
     def approx_log_p_x(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         log_q_x = self.q_X.log_prob(x)
         assert (
@@ -131,7 +132,7 @@ class JointGenerativeMIEstimator(GenerativeMIEstimator):
         # The shape is [...]
         return log_q_x
 
-    @cached
+    @cached_method
     def approx_log_p_y(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         log_q_y = self.q_Y.log_prob(y)
         assert (
@@ -140,7 +141,7 @@ class JointGenerativeMIEstimator(GenerativeMIEstimator):
         # The shape is [...]
         return log_q_y
 
-    @cached
+    @cached_method
     def approx_log_p_y_given_x(
         self, x: torch.Tensor, y: torch.Tensor
     ) -> torch.Tensor:
