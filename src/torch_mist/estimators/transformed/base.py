@@ -117,7 +117,11 @@ class TransformedMIEstimator(MIEstimator):
     def mutual_information(
         self, *args, **variables
     ) -> Union[torch.Tensor, Dict[str, torch.Tensor]]:
-        return self.log_ratio(**variables).mean()
+        log_ratio = self.log_ratio(**variables)
+        if isinstance(log_ratio, dict):
+            return {k: v.mean() for k, v in log_ratio.items()}
+        else:
+            return log_ratio.mean()
 
     def forward(self, *args, **kwargs) -> torch.Tensor:
         return self.loss(*args, **kwargs)

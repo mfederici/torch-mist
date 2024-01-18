@@ -218,16 +218,16 @@ if __name__ == "__main__":
 
     # Train the estimator
     print("Training the estimators")
-    with logger.logged_methods(instance=mi_estimator, methods=methods_to_log):
-        log = train_mi_estimator(
-            estimator=mi_estimator,
-            train_loader=train_loader,
-            valid_loader=valid_loader,
-            max_epochs=max_epochs,
-            logger=logger,
-            device=device,
-            optimizer_class=optimizer_class,
-        )
+    log = train_mi_estimator(
+        estimator=mi_estimator,
+        train_loader=train_loader,
+        valid_loader=valid_loader,
+        max_epochs=max_epochs,
+        logger=logger,
+        device=device,
+        optimizer_class=optimizer_class,
+        eval_logged_methods=methods_to_log,
+    )
 
     print("Saving the trained models")
     extra_params = {}

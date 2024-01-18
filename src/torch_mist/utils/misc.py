@@ -82,12 +82,6 @@ def make_dataloaders(
         num_workers=num_workers,
     )
 
-    # Infer the batch size if needed
-    if batch_size is None:
-        batch = next(iter(train_loader))
-        variables = unfold_samples(batch)
-        batch_size = variables["y"].shape[0]
-
     # Check if we need to modify the dataloader to sample the same attributes
     _estimator = estimator
     transforms = []
