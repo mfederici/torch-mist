@@ -1,3 +1,5 @@
+from typing import Dict, Tuple
+
 from torch.optim import AdamW
 from torchvision.models import resnet18
 from torch import nn
@@ -26,7 +28,7 @@ from torch_mist.utils.logging import PandasLogger
 
 # Dimensionality of the resnet18 representation
 Z_DIM = 512
-
+HIDDEN_DIMS = [128, 64]
 # Landmark names
 LEFT_EYE = "left_eye"
 RIGHT_EYE = "right_eye"
@@ -86,20 +88,12 @@ class CelebALandmarks(CelebA):
         }
 
 
-# Utility to instantiate the mutual information estimators
-def instantiate_estimator() -> MIEstimator:
-    # Define the image encoders
-    encoders = {
-        RANDOM: freeze(ResNet18Encoder(weights=None)),
-        PRETRAINED: freeze(ResNet18Encoder(weights="DEFAULT")),
-        FINETUNED: ResNet18Encoder(weights="DEFAULT"),
-    }
-
+def instantiate_estimators() -> Dict[Tuple[str, str], MIEstimator]:
     # Create one q(y) for each landmark as a spline_autoregressive flow applied to a normal
     marginals = {
         landmark: transformed_normal(
             input_dim=2,
-            hidden_dims=[128, 64],
+            hidden_dims=HIDDEN_DIMS,
             transform_name="spline_autoregressive",
             normalization="batchnorm",
             n_transforms=2,
@@ -118,7 +112,7 @@ def instantiate_estimator() -> MIEstimator:
                 context_dim=Z_DIM,
                 transform_name="conditional_linear",
                 normalization="batchnorm",
-                hidden_dims=[128, 64],
+                hidden_dims=HIDDEN_DIMS,
                 n_transforms=1,
             )
 
@@ -137,8 +131,20 @@ def instantiate_estimator() -> MIEstimator:
                     x_dim=Z_DIM, y_dim=2, hidden_dims=[128, 64], neg_samples=16
                 ),
             )
+    return estimators
 
-    multi_estimator = MultiMIEstimator(estimators)
+
+# Utility to instantiate the mutual information estimators
+def instantiate_model() -> MIEstimator:
+    # Define the image encoders
+    encoders = {
+        RANDOM: freeze(ResNet18Encoder(weights=None)),
+        PRETRAINED: freeze(ResNet18Encoder(weights="DEFAULT")),
+        FINETUNED: ResNet18Encoder(weights="DEFAULT"),
+    }
+
+    # Wrap all the mutual information estimators (representation_i;landmark_j) into a single model
+    multi_estimator = MultiMIEstimator(instantiate_estimators())
 
     # Since we are interested in estimating the mutual information between the resnet representations,
     mi_estimator = TransformedMIEstimator(
@@ -199,7 +205,7 @@ if __name__ == "__main__":
     # They are all wrapped into one model which takes care of encoding images and computing mutual information between
     # all pairs
     print("Instantiating the estimators")
-    mi_estimator = instantiate_estimator()
+    mi_estimator = instantiate_model()
     print(mi_estimator)
 
     # We log the value of mutual information each estimator over time

@@ -25,7 +25,7 @@ def parse(conf: DictConfig):
 
     # Add the configuration to the run if the logger allows
     if hasattr(logger, "add_config"):
-        logger.add_config(OmegaConf.to_container(conf, resolve=False))
+        logger.add_config(OmegaConf.to_container(conf, resolve=True))
 
     # Set the random seed
     if "seed" in conf:

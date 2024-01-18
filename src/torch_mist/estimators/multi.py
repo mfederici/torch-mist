@@ -11,6 +11,7 @@ class MultiMIEstimator(MIEstimator):
         super().__init__()
 
         self.estimators = nn.ModuleDict()
+        self.infomax_gradient = {}
         for (x_key, y_key), estimator in estimators.items():
             key = f"{x_key};{y_key}"
             self.estimators[key] = estimator
