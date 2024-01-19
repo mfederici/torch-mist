@@ -31,6 +31,8 @@ class TransformedMIEstimator(MIEstimator):
             transforms = {}
 
         self.infomax_gradient = base_estimator.infomax_gradient
+        self.upper_bound = False
+        self.lower_bound = base_estimator.lower_bound
 
         self.base_estimator = base_estimator
         self.transforms = nn.ModuleDict()
