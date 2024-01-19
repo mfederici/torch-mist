@@ -70,7 +70,6 @@ def make_dataloaders(
     valid_percentage: float = 0.1,
     batch_size: Optional[int] = None,
     num_workers: int = 8,
-    device: Union[str, torch.device] = "cpu",
 ) -> Tuple[DataLoader, Optional[DataLoader]]:
     train_loader, valid_loader = make_default_dataloaders(
         x=x,
@@ -92,6 +91,7 @@ def make_dataloaders(
     # If required, change the data-loader to sample batches with the same attribute only
     if isinstance(_estimator, PQHybridMIEstimator):
         neg_samples = _estimator.neg_samples
+        device = next(iter(estimator.parameters())).device
 
         def compute_attributes(samples):
             variables = unfold_samples(samples)

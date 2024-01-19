@@ -3,11 +3,9 @@ from typing import Optional, Any, List, Union, Dict
 
 import torch
 import numpy as np
-from torch.utils.data import DataLoader
 
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.utils.batch import unfold_samples, move_to_device
-from torch_mist.utils.data.dataset import SampleDataset
 from torch_mist.utils.misc import make_dataloaders
 
 
@@ -22,7 +20,6 @@ def evaluate_mi(
 ) -> Union[float, Dict[str, float]]:
     dataloader, _ = make_dataloaders(
         estimator=estimator,
-        device=device,
         x=x,
         y=y,
         train_loader=dataloader,

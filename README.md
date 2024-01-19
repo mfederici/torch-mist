@@ -1,11 +1,11 @@
 # Mist - A PyTorch Mutual information Estimation toolkit
 [![arXiv](https://img.shields.io/badge/arXiv-2306.00608-b31b1b.svg)](https://arxiv.org/abs/2306.00608)
 [![PyPI version](https://badge.fury.io/py/torch-mist.svg)](https://badge.fury.io/py/torch-mist)
+![Build workflow](https://github.com/mfederici/torch-mist/actions/workflows/ci.yml/badge.svg)
 [![codecov](https://codecov.io/gh/mfederici/torch-mist/badge.svg)](https://codecov.io/gh/mfederici/torch-mist)
 [![Documentation Status](https://readthedocs.org/projects/torch-mist/badge/?version=latest)](https://torch-mist.readthedocs.io/en/latest/?badge=latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-![Build workflow](https://github.com/mfederici/torch-mist/actions/workflows/ci.yml/badge.svg)
 
 <img src="https://github.com/mfederici/torch-mist/blob/main/docs/_static/logo.png?raw=true" onerror="this.onerror=null" width="200">
 
