@@ -101,6 +101,7 @@ def _test_estimator(
         lr_annealing=False,
         batch_size=batch_size,
         verbose=False,
+        early_stopping=estimator.lower_bound or estimator.upper_bound,
     )
 
     # Compute the estimate

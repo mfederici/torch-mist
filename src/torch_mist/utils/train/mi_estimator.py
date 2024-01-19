@@ -170,7 +170,7 @@ def train_mi_estimator(
     warmup_percentage: float = 0.2,
     verbose: bool = True,
     logger: Optional[Union[Logger, bool]] = None,
-    early_stopping: bool = True,
+    early_stopping: bool = False,
     patience: int = 3,
     delta: float = 0.001,
     fast_train: bool = False,

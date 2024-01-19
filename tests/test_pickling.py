@@ -49,6 +49,7 @@ def test_pickle():
             "base_estimator.loss",
             "base_estimator.mutual_information",
         ],
+        early_stopping=True,
     )
 
     print(mi_estimator)
