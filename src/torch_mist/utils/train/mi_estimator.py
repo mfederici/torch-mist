@@ -184,7 +184,6 @@ def train_mi_estimator(
     # Create the training and validation dataloaders
     train_loader, valid_loader = make_dataloaders(
         estimator=estimator,
-        device=device,
         x=x,
         y=y,
         train_loader=train_loader,
