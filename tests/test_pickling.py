@@ -49,18 +49,15 @@ def test_pickle():
             "base_estimator.loss",
             "base_estimator.mutual_information",
         ],
-        early_stopping=True,
+        early_stopping=False,
     )
 
     print(mi_estimator)
 
-    pickle.dumps(mi_estimator)
-    filepath = os.path.join(tempfile.gettempdir(), "js.pickle")
+    filepath = os.path.join(tempfile.gettempdir(), "js.pyt")
+    torch.save(mi_estimator, filepath)
+    print("Model Saved")
 
-    with open(filepath, "wb") as f:
-        pickle.dump(mi_estimator, f)
-    print("Pickle dumps!")
-
-    with open(filepath, "rb") as f:
-        pickle.load(f)
-    print("Pickle loads!")
+    mi_estimator = torch.load(filepath)
+    print("Model Loaded")
+    print(mi_estimator)

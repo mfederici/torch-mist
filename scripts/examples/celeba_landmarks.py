@@ -19,8 +19,6 @@ from torch_mist.utils import train_mi_estimator
 from torch_mist.estimators import (
     TransformedMIEstimator,
     DoE,
-    ResampledHybridMIEstimator,
-    nwj,
     MIEstimator,
 )
 from torch_mist.estimators.multi import MultiMIEstimator
@@ -94,9 +92,9 @@ def instantiate_estimators() -> Dict[Tuple[str, str], MIEstimator]:
         landmark: transformed_normal(
             input_dim=2,
             hidden_dims=HIDDEN_DIMS,
-            transform_name="spline_autoregressive",
-            normalization="batchnorm",
-            n_transforms=2,
+            transform_name="affine_autoregressive",
+            normalization="emanorm",
+            n_transforms=1,
         )
         for landmark in LANDMARKS
     }
@@ -110,27 +108,17 @@ def instantiate_estimators() -> Dict[Tuple[str, str], MIEstimator]:
             conditional = conditional_transformed_normal(
                 input_dim=2,
                 context_dim=Z_DIM,
-                transform_name="conditional_linear",
-                normalization="batchnorm",
+                transform_name="conditional_affine_autoregressive",
+                normalization="emanorm",
                 hidden_dims=HIDDEN_DIMS,
                 n_transforms=1,
             )
 
             # Each generative DoE estimator relies on the estimation of the difference between H(y|x) and H(y).
-            generative_estimator = DoE(
+            estimators[(representation, landmark)] = DoE(
                 q_Y_given_X=conditional, q_Y=marginals[landmark]
             )
 
-            # Instead of using directly the DoE estimator, we use it in combination with NWJ to enhance the flexibility
-            # of the posterior.
-            estimators[
-                (representation, landmark)
-            ] = ResampledHybridMIEstimator(
-                generative_estimator=generative_estimator,
-                discriminative_estimator=nwj(
-                    x_dim=Z_DIM, y_dim=2, hidden_dims=[128, 64], neg_samples=16
-                ),
-            )
     return estimators
 
 

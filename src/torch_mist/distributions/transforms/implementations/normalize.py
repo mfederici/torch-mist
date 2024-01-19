@@ -19,12 +19,12 @@ class EMANormalize(Linear):
 
     def _update_params(self, t: torch.Tensor):
         self.loc = (
-            self.gamma * self.loc + (1 - self.gamma) * t.mean(0).detach_hook()
+            self.gamma * self.loc + (1 - self.gamma) * t.mean(0).detach()
         )
         self.log_scale = (
             self.gamma * self.log_scale.exp()
             + (1 - self.gamma)
-            * torch.clamp(t.std(0).detach_hook(), min=self.epsilon)
+            * torch.clamp(t.std(0).detach(), min=self.epsilon)
         ).log()
 
     def _inverse(self, y: torch.Tensor) -> torch.Tensor:
