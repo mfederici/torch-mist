@@ -39,4 +39,5 @@ Use-case Examples
    :maxdepth: 3
    :caption: Examples
 
+   notebooks/examples/infomax.ipynb
    notebooks/examples/keypoint_info.ipynb

@@ -1,5 +1,6 @@
 from typing import Type, Optional, Dict, Any, Union, Tuple, List, Callable
 
+import numpy as np
 import torch
 from torch.optim import Optimizer
 from tqdm.autonotebook import tqdm
@@ -20,6 +21,7 @@ from torch_mist.utils.evaluation import evaluate_mi
 from torch_mist.utils.logging import PandasLogger
 from torch_mist.utils.logging.logger.base import Logger, DummyLogger
 from torch_mist.utils.misc import make_dataloaders
+from torch_mist.utils.train.utils import RunTerminationManager
 
 
 def _instantiate_optimizer(
@@ -85,30 +87,69 @@ def train_epoch(
     eval_logged_methods: Optional[
         List[Union[str, Tuple[str, Callable]]]
     ] = None,
+    max_iterations: Optional[int] = None,
 ):
-    estimator.train()
-    with logger.epoch():
-        for samples in train_loader:
-            variables = unfold_samples(samples)
-            variables = move_to_device(variables, device)
+    with logger.train():
+        estimator.train()
+        with logger.epoch():
+            for samples in train_loader:
+                variables = unfold_samples(samples)
+                variables = move_to_device(variables, device)
 
-            with logger.iteration():
-                with logger.logged_methods(estimator, train_logged_methods):
-                    loss = estimator(**variables)
+                if max_iterations:
+                    if logger._iteration >= max_iterations:
+                        break
 
-                # Compute the ratio only if necessary
-                if not fast_train and not isinstance(logger, DummyLogger):
-                    with logger.logged_methods(estimator, eval_logged_methods):
-                        estimator.mutual_information(**variables)
+                with logger.iteration():
+                    with logger.logged_methods(
+                        estimator, train_logged_methods
+                    ):
+                        loss = estimator(**variables)
 
-                opt.zero_grad()
-                loss.backward()
-                opt.step()
-                lr_scheduler.step()
+                    # Compute the ratio only if necessary
+                    if not fast_train and not isinstance(logger, DummyLogger):
+                        with logger.logged_methods(
+                            estimator, eval_logged_methods
+                        ):
+                            estimator.mutual_information(**variables)
 
-            if tqdm_iteration:
-                tqdm_iteration.update(1)
-                tqdm_iteration.set_postfix_str(f"loss: {loss}")
+                    opt.zero_grad()
+                    loss.backward()
+                    opt.step()
+                    lr_scheduler.step()
+
+                if tqdm_iteration:
+                    tqdm_iteration.update(1)
+                    tqdm_iteration.set_postfix_str(f"loss: {loss}")
+
+
+def validate(
+    estimator: MIEstimator,
+    valid_loader: Optional[DataLoader],
+    device: Union[str, torch.device],
+    logger: Logger,
+    eval_logged_methods: Optional[
+        List[Union[str, Tuple[str, Callable]]]
+    ] = None,
+) -> float:
+    if valid_loader is not None:
+        with logger.valid():
+            with logger.logged_methods(
+                estimator,
+                eval_logged_methods,
+            ):
+                valid_mi = evaluate_mi(
+                    estimator=estimator,
+                    dataloader=valid_loader,
+                    device=device,
+                )
+
+            if isinstance(valid_mi, dict):
+                valid_mi = sum(valid_mi.values())
+    else:
+        valid_mi = None
+
+    return valid_mi
 
 
 def train_mi_estimator(
@@ -121,7 +162,8 @@ def train_mi_estimator(
     batch_size: Optional[int] = None,
     num_workers: int = 8,
     device: Union[torch.device, str] = torch.device("cpu"),
-    max_epochs: int = 10,
+    max_epochs: Optional[int] = None,
+    max_iterations: Optional[int] = None,
     optimizer_class: Type[Optimizer] = Adam,
     optimizer_params: Optional[Dict[str, Any]] = None,
     lr_annealing: bool = False,
@@ -152,6 +194,13 @@ def train_mi_estimator(
         num_workers=num_workers,
     )
 
+    if max_epochs is None:
+        if max_iterations is None:
+            raise ValueError(
+                "Please specify either max_epochs or max_iterations"
+            )
+        max_epochs = int(np.ceil(max_iterations / len(train_loader)))
+
     opt, lr_scheduler = _instantiate_optimizer(
         estimator=estimator,
         optimizer_class=optimizer_class,
@@ -180,8 +229,16 @@ def train_mi_estimator(
     if eval_logged_methods is None:
         eval_logged_methods = ["mutual_information"]
 
-    best_mi = 0
-    initial_patience = patience
+    run_manager = RunTerminationManager(
+        early_stopping=early_stopping,
+        delta=delta,
+        patience=patience,
+        verbose=verbose,
+        max_iterations=max_iterations,
+        maximize=estimator.lower_bound,
+        minimize=estimator.upper_bound,
+    )
+
     tqdm_epochs = (
         tqdm(total=max_epochs, desc="Epoch", position=1) if verbose else None
     )
@@ -195,60 +252,37 @@ def train_mi_estimator(
         if tqdm_epochs:
             tqdm_iteration.reset()
 
-        with logger.train():
-            train_epoch(
-                estimator=estimator,
-                train_loader=train_loader,
-                opt=opt,
-                lr_scheduler=lr_scheduler,
-                logger=logger,
-                tqdm_iteration=tqdm_iteration,
-                device=device,
-                fast_train=fast_train,
-                train_logged_methods=train_logged_methods,
-                eval_logged_methods=eval_logged_methods,
-            )
+        train_epoch(
+            estimator=estimator,
+            train_loader=train_loader,
+            opt=opt,
+            lr_scheduler=lr_scheduler,
+            logger=logger,
+            tqdm_iteration=tqdm_iteration,
+            device=device,
+            fast_train=fast_train,
+            train_logged_methods=train_logged_methods,
+            eval_logged_methods=eval_logged_methods,
+            max_iterations=max_iterations,
+        )
 
-        if valid_loader is not None:
-            with logger.valid():
-                with logger.logged_methods(
-                    estimator,
-                    eval_logged_methods,
-                ):
-                    valid_mi = evaluate_mi(
-                        estimator=estimator,
-                        dataloader=valid_loader,
-                        device=device,
-                    )
-
-            if isinstance(valid_mi, dict):
-                valid_mi = sum(valid_mi.values())
-
-            if tqdm_epochs:
-                tqdm_epochs.set_postfix_str(f"valid_mi: {valid_mi}")
-
-            if early_stopping and (
-                estimator.upper_bound or estimator.lower_bound
-            ):
-                improvement = (
-                    (valid_mi - best_mi)
-                    if estimator.lower_bound
-                    else (best_mi - valid_mi)
-                )
-                if improvement >= delta:
-                    # Improvement, update best and reset the patience
-                    best_mi = valid_mi
-                    patience = initial_patience
-                else:
-                    patience -= 1
-
-                if patience < 0:
-                    if verbose:
-                        print("No improvements on validation, stopping.")
-                    break
+        valid_mi = validate(
+            estimator=estimator,
+            valid_loader=valid_loader,
+            device=device,
+            logger=logger,
+            eval_logged_methods=eval_logged_methods,
+        )
 
         if tqdm_epochs:
+            if valid_mi:
+                tqdm_epochs.set_postfix_str(f"valid_mi: {valid_mi}")
             tqdm_epochs.update(1)
+
+        if run_manager.should_stop(
+            iteration=logger._iteration, valid_mi=valid_mi
+        ):
+            break
 
     log = logger.get_log()
 

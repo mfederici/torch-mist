@@ -6,6 +6,8 @@ command:
   - experiment=eval_distribution_mi
   - logger=wandb
   - device=cuda
+  - params.train.max_epochs=null
+  - +params.train.max_iterations=65536
   - ${args_no_hyphens}
 method: grid
 parameters:
