@@ -1,0 +1,32 @@
+program: scripts/compute_mi.py
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - experiment=eval_distribution_mi
+  - logger=wandb
+  - device=cuda
+  - params.train.max_epochs=null
+  - +params.train.max_iterations=65536
+  - params.batch_size=128
+  - ${args_no_hyphens}
+method: grid
+parameters:
+  params.neg_samples:
+    values:
+      - 1
+      - 3
+      - 7
+      - 15
+      - 31
+      - 63
+      - 127
+  mi_estimator:
+    values:
+      - mine
+      - js
+  seed:
+    values:
+      - 7
+      - 42
+      - 404

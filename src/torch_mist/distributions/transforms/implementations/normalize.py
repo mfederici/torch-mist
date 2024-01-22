@@ -11,7 +11,7 @@ class EMANormalize(Linear):
         gamma: float = 0.99,
         normalize_inverse=True,
     ):
-        super().__init__(input_dim=input_dim, loc=0, scale=1, epsilon=epsilon)
+        super().__init__(input_dim=input_dim, epsilon=epsilon)
 
         assert 0 <= gamma <= 1
         self.gamma = gamma

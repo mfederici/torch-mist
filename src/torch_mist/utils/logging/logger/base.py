@@ -13,7 +13,7 @@ from torch_mist.utils.logging.metrics import compute_mean
 
 
 class Logger:
-    def __init__(self, log_dir: str = ".", log_every: int = 10):
+    def __init__(self, log_dir: str = ".", log_every: int = 1):
         self.log_dir = log_dir
         self.log_every = log_every
         self._buffer = {}

@@ -28,7 +28,7 @@ class PandasLogger(Logger):
     ):
         if not isinstance(data, Dict):
             data = {
-                "value": data,
+                "mean": data,
             }
         data["name"] = name
         data["split"] = split
