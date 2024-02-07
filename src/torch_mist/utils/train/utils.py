@@ -1,5 +1,7 @@
 from typing import Optional
 
+from torch import nn
+
 
 class RunTerminationManager:
     def __init__(
@@ -26,8 +28,11 @@ class RunTerminationManager:
         self.current_patience = patience
         self.verbose = verbose
         self.max_iterations = max_iterations
+        self.best_state_dict = None
 
-    def should_stop(self, iteration: int, valid_mi: Optional[float]) -> bool:
+    def should_stop(
+        self, iteration: int, valid_mi: Optional[float], model: nn.Module
+    ) -> bool:
         stop = False
         if self.early_stopping:
             improvement = (
@@ -39,6 +44,7 @@ class RunTerminationManager:
                 # Improvement, update best and reset the patience
                 self.best_value = valid_mi
                 self.current_patience = self.patience
+                self.best_state_dict = model.state_dict()
             else:
                 self.patience -= 1
 

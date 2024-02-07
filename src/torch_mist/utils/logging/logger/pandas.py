@@ -2,8 +2,6 @@ import os.path
 from typing import Dict, Any, Optional
 
 import pandas as pd
-from torch import nn
-from wandb.wandb_torch import torch
 
 from torch_mist.utils.logging.logger.base import Logger
 

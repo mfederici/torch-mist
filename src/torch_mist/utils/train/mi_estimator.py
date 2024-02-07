@@ -279,7 +279,7 @@ def train_mi_estimator(
             tqdm_epochs.update(1)
 
         if run_manager.should_stop(
-            iteration=logger._iteration, valid_mi=valid_mi
+            iteration=logger._iteration, valid_mi=valid_mi, model=estimator
         ):
             break
 
@@ -287,5 +287,9 @@ def train_mi_estimator(
 
     if default_logger:
         logger.clear()
+
+    # Load the state dictionary for the best score
+    if not (run_manager.best_state_dict is None):
+        estimator.load_state_dict(run_manager.best_state_dict)
 
     return log
