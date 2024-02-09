@@ -41,8 +41,7 @@ def test_pickle():
 
     train_mi_estimator(
         estimator=mi_estimator,
-        x=samples["x"],
-        y=samples["y"],
+        data=samples,
         batch_size=64,
         max_epochs=1,
         train_logged_methods=[

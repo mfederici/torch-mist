@@ -93,8 +93,7 @@ def _test_estimator(
     # Train the estimator
     train_mi_estimator(
         estimator=estimator,
-        x=train_samples["x"],
-        y=train_samples["y"],
+        data=train_samples,
         optimizer_params=optimizer_params,
         optimizer_class=optimizer_class,
         max_epochs=max_epochs,
@@ -107,8 +106,7 @@ def _test_estimator(
     # Compute the estimate
     mi_estimate = evaluate_mi(
         estimator,
-        x=test_samples["x"],
-        y=test_samples["y"],
+        data=test_samples,
         batch_size=batch_size,
     )
 
@@ -236,8 +234,7 @@ def test_dummy_estimators():
         # Compute the estimate
         mi_estimate = evaluate_mi(
             estimator,
-            x=test_samples["x"],
-            y=test_samples["y"],
+            data=test_samples,
             batch_size=batch_size,
         )
 
@@ -492,12 +489,12 @@ def test_flow_generative():
 
     train_mi_estimator(
         estimator,
-        train_loader=train_loader,
+        data=train_loader,
         max_epochs=5,
         verbose=False,
     )
 
-    mi_estimate = evaluate_mi(estimator, dataloader=train_loader)
+    mi_estimate = evaluate_mi(estimator, data=train_loader)
 
     print("True I(x;y): ", true_mi)
     print("Estimated I(x;y): ", mi_estimate)
@@ -540,12 +537,12 @@ def test_multi_estimator():
 
     train_mi_estimator(
         estimator,
-        train_loader=train_loader,
+        data=train_loader,
         max_epochs=5,
         verbose=False,
     )
 
-    mi_estimate = evaluate_mi(estimator, dataloader=test_loader)
+    mi_estimate = evaluate_mi(estimator, data=test_loader)
 
     assert np.isclose(
         mi_estimate["I(x;y)"], true_mi, atol=atol
