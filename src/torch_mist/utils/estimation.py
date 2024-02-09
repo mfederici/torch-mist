@@ -4,50 +4,85 @@ import torch
 import numpy as np
 import pandas as pd
 from torch.optim import Optimizer, Adam
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.estimators.factories import instantiate_estimator
 from torch_mist.utils.batch import unfold_samples
 from torch_mist.utils.logging import PandasLogger
 from torch_mist.utils.logging.logger.base import Logger, DummyLogger
+from torch_mist.utils.misc import make_default_dataloaders
 from torch_mist.utils.train.mi_estimator import train_mi_estimator
 from torch_mist.utils.evaluation import evaluate_mi
 
 
 def _infer_dim(
-    x: Optional[torch.Tensor],
-    y: Optional[torch.Tensor],
-    train_loader: Optional[DataLoader],
+    data: Union[
+        Tuple[
+            Union[torch.Tensor, np.ndarray], Union[torch.Tensor, np.ndarray]
+        ],
+        Dict[str, Union[torch.Tensor, np.ndarray]],
+        Dataset,
+        DataLoader,
+    ],
 ) -> Tuple[int, int]:
-    if x is None:
-        batch = next(iter(train_loader))
-        variables = unfold_samples(batch)
-        if not ("x" in variables):
-            raise ValueError(
-                "Each batch must consist of a tuple (x,y) or a dictionary containing a key for 'x'"
-            )
-        x_dim = variables["x"].shape[-1]
-        if not ("y" in variables):
-            raise ValueError(
-                "Each batch must consist of a tuple (x,y) or a dictionary containing a key for 'y'"
-            )
-        y_dim = variables["y"].shape[-1]
-    else:
-        x_dim = x.shape[-1]
-        y_dim = y.shape[-1]
+    dataloader, _ = make_default_dataloaders(
+        data=data,
+        valid_data=None,
+        batch_size=1,
+        valid_percentage=0,
+        num_workers=0,
+    )
+
+    batch = next(iter(dataloader))
+    variables = unfold_samples(batch)
+    if not ("x" in variables):
+        raise ValueError(
+            "Each batch must consist of a tuple (x,y) or a dictionary containing a key for 'x'"
+        )
+    x_dim = variables["x"].shape[-1]
+    if not ("y" in variables):
+        raise ValueError(
+            "Each batch must consist of a tuple (x,y) or a dictionary containing a key for 'y'"
+        )
+    y_dim = variables["y"].shape[-1]
 
     return x_dim, y_dim
 
 
 def estimate_mi(
     estimator_name: str,
-    x: Optional[Union[torch.Tensor, np.array]] = None,
-    y: Optional[Union[torch.Tensor, np.array]] = None,
-    train_loader: Optional[DataLoader] = None,
-    valid_loader: Optional[DataLoader] = None,
-    test_loader: Optional[DataLoader] = None,
-    valid_percentage: float = 0.2,
+    data: Union[
+        Tuple[
+            Union[torch.Tensor, np.ndarray], Union[torch.Tensor, np.ndarray]
+        ],
+        Dict[str, Union[torch.Tensor, np.ndarray]],
+        Dataset,
+        DataLoader,
+    ],
+    valid_data: Optional[
+        Union[
+            Tuple[
+                Union[torch.Tensor, np.ndarray],
+                Union[torch.Tensor, np.ndarray],
+            ],
+            Dict[str, Union[torch.Tensor, np.ndarray]],
+            Dataset,
+            DataLoader,
+        ]
+    ] = None,
+    test_data: Optional[
+        Union[
+            Tuple[
+                Union[torch.Tensor, np.ndarray],
+                Union[torch.Tensor, np.ndarray],
+            ],
+            Dict[str, Union[torch.Tensor, np.ndarray]],
+            Dataset,
+            DataLoader,
+        ]
+    ] = None,
+    valid_percentage: float = 0.1,
     device: Union[torch.device, str] = torch.device("cpu"),
     max_epochs: Optional[int] = None,
     max_iterations: Optional[int] = None,
@@ -59,9 +94,9 @@ def estimate_mi(
     warmup_percentage: float = 0.2,
     batch_size: Optional[int] = 128,
     evaluation_batch_size: Optional[int] = None,
-    num_workers: int = 8,
-    early_stopping: bool = False,
-    patience: int = 3,
+    num_workers: int = 0,
+    early_stopping: bool = True,
+    patience: int = 10,
     delta: float = 0.001,
     return_estimator: bool = False,
     fast_train: bool = False,
@@ -73,14 +108,14 @@ def estimate_mi(
     Tuple[float, MIEstimator],
     Tuple[float, MIEstimator, pd.DataFrame],
 ]:
-    if not (x is None):
-        if len(x.shape) == 1:
-            x = x.reshape(-1, 1)
-    if not (y is None):
-        if len(y.shape) == 1:
-            y = y.reshape(-1, 1)
+    x_dim, y_dim = _infer_dim(data)
 
-    x_dim, y_dim = _infer_dim(x=x, y=y, train_loader=train_loader)
+    if max_epochs is None and max_iterations is None:
+        if verbose:
+            print(
+                "max_epochs and max_iterations are not specified, using max_epochs=10 by default."
+            )
+        max_epochs = 10
 
     if verbose:
         print(f"Instantiating the {estimator_name} estimator")
@@ -105,10 +140,8 @@ def estimate_mi(
 
     train_log = train_mi_estimator(
         estimator=estimator,
-        x=x,
-        y=y,
-        train_loader=train_loader,
-        valid_loader=valid_loader,
+        data=data,
+        valid_data=valid_data,
         valid_percentage=valid_percentage,
         device=device,
         max_epochs=max_epochs,
@@ -129,21 +162,17 @@ def estimate_mi(
 
     if verbose:
         print("Evaluating the value of Mutual Information")
-    if not (test_loader is None):
-        x = None
-        y = None
-    elif x is None:
+
+    if test_data is None:
         print(
-            "Warning: using the train_loader to estimate the value of mutual information. Please specify a test_loader"
+            "[Warning]: using the train_data to estimate the value of mutual information. Please specify test_data."
         )
-        test_loader = train_loader
+        test_data = data
 
     with logger.test():
         mi_value = evaluate_mi(
             estimator=estimator,
-            x=x,
-            y=y,
-            dataloader=test_loader,
+            data=test_data,
             batch_size=evaluation_batch_size,
             device=device,
             num_workers=num_workers,

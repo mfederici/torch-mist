@@ -80,10 +80,10 @@ class Logger:
         self._log_buffer()
 
     def on_epoch_start(self):
-        pass
+        self._epoch += 1
 
     def on_epoch_end(self):
-        self._epoch += 1
+        pass
 
     @contextmanager
     def logged_methods(
@@ -134,7 +134,7 @@ class Logger:
                 stats = metric(input=arguments, output=output)
                 if not (stats is None):
                     if not isinstance(stats, dict):
-                        stats = {"value": stats}
+                        stats = {"": stats}
                     self.log(name=full_name, data_dict=stats)
 
             return output
@@ -179,6 +179,11 @@ class Logger:
                         agg_values[metric] = np.mean(values)
                     else:
                         agg_values[metric] = first_value
+
+                # Remove the dictionary wrap if necessary
+                if len(agg_values) == 1:
+                    if "" in agg_values:
+                        agg_values = agg_values[""]
 
                 self._log(
                     data=agg_values,

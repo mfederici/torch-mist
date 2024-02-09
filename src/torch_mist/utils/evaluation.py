@@ -1,8 +1,9 @@
 import collections
-from typing import Optional, Any, List, Union, Dict
+from typing import Optional, Any, List, Union, Dict, Tuple
 
 import torch
 import numpy as np
+from torch.utils.data import Dataset, DataLoader
 
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.utils.batch import unfold_samples, move_to_device
@@ -11,18 +12,21 @@ from torch_mist.utils.misc import make_dataloaders
 
 def evaluate_mi(
     estimator: MIEstimator,
-    x: Optional[torch.Tensor] = None,
-    y: Optional[torch.Tensor] = None,
-    dataloader: Optional[Any] = None,
+    data: Union[
+        Tuple[
+            Union[torch.Tensor, np.ndarray], Union[torch.Tensor, np.ndarray]
+        ],
+        Dict[str, Union[torch.Tensor, np.ndarray]],
+        Dataset,
+        DataLoader,
+    ],
     device: torch.device = torch.device("cpu"),
     batch_size: Optional[int] = None,
-    num_workers: int = 8,
+    num_workers: int = 0,
 ) -> Union[float, Dict[str, float]]:
     dataloader, _ = make_dataloaders(
         estimator=estimator,
-        x=x,
-        y=y,
-        train_loader=dataloader,
+        data=data,
         valid_percentage=0,
         batch_size=batch_size,
         num_workers=num_workers,

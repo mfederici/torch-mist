@@ -12,7 +12,7 @@ def unfold_samples(
     if isinstance(samples, tuple) or isinstance(samples, list):
         if not len(samples) == 2:
             raise Exception(
-                "Dataloaders that iterate over tuples must have 2 elements, use dictionaries for more larger tuples"
+                "Dataloaders that iterate over tuples must have 2 elements, use dictionaries for tuples of more elements"
             )
         x, y = samples
         variables["x"] = x

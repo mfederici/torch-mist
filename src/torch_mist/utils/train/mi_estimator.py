@@ -12,7 +12,7 @@ from torch.optim.lr_scheduler import (
     ConstantLR,
     LRScheduler,
 )
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.utils.batch import unfold_samples, move_to_device
@@ -26,12 +26,11 @@ from torch_mist.utils.train.utils import RunTerminationManager
 
 def _instantiate_optimizer(
     estimator: MIEstimator,
-    max_epochs: int,
-    iterations_per_epoch: int,
+    max_iterations: int,
+    warmup_iterations: int = 0,
     optimizer_class: Type[Optimizer] = Adam,
     optimizer_params: Optional[Dict[str, Any]] = None,
     lr_annealing: bool = False,
-    warmup_percentage: float = 0.2,
 ) -> Tuple[Optimizer, LRScheduler]:
     params = [
         {"params": params}
@@ -46,12 +45,6 @@ def _instantiate_optimizer(
 
     # Cosine annealing with initial linear warmup
     if lr_annealing:
-        max_iterations = iterations_per_epoch * max_epochs
-        if not 0 <= warmup_percentage <= 1:
-            raise ValueError("Warmup percentage must be between 0 and 1")
-        warmup_iterations = int(
-            iterations_per_epoch * max_epochs * warmup_percentage
-        )
         lr_scheduler = SequentialLR(
             opt,
             [
@@ -132,6 +125,9 @@ def validate(
         List[Union[str, Tuple[str, Callable]]]
     ] = None,
 ) -> float:
+    if eval_logged_methods is None:
+        eval_logged_methods = []
+
     if valid_loader is not None:
         with logger.valid():
             with logger.logged_methods(
@@ -140,7 +136,7 @@ def validate(
             ):
                 valid_mi = evaluate_mi(
                     estimator=estimator,
-                    dataloader=valid_loader,
+                    data=valid_loader,
                     device=device,
                 )
 
@@ -154,13 +150,28 @@ def validate(
 
 def train_mi_estimator(
     estimator: MIEstimator,
-    x: Optional[torch.Tensor] = None,
-    y: Optional[torch.Tensor] = None,
-    train_loader: Optional[Any] = None,
-    valid_loader: Optional[Any] = None,
+    data: Union[
+        Tuple[
+            Union[torch.Tensor, np.ndarray], Union[torch.Tensor, np.ndarray]
+        ],
+        Dict[str, Union[torch.Tensor, np.ndarray]],
+        Dataset,
+        DataLoader,
+    ],
+    valid_data: Optional[
+        Union[
+            Tuple[
+                Union[torch.Tensor, np.ndarray],
+                Union[torch.Tensor, np.ndarray],
+            ],
+            Dict[str, Union[torch.Tensor, np.ndarray]],
+            Dataset,
+            DataLoader,
+        ]
+    ] = None,
     valid_percentage: float = 0.1,
     batch_size: Optional[int] = None,
-    num_workers: int = 8,
+    num_workers: int = 0,
     device: Union[torch.device, str] = torch.device("cpu"),
     max_epochs: Optional[int] = None,
     max_iterations: Optional[int] = None,
@@ -184,32 +195,45 @@ def train_mi_estimator(
     # Create the training and validation dataloaders
     train_loader, valid_loader = make_dataloaders(
         estimator=estimator,
-        x=x,
-        y=y,
-        train_loader=train_loader,
-        valid_loader=valid_loader,
+        data=data,
+        valid_data=valid_data,
         valid_percentage=valid_percentage,
         batch_size=batch_size,
         num_workers=num_workers,
     )
 
+    if early_stopping and (valid_loader is None):
+        print(
+            "[Warning]: Please specify a validation set or use valid_percentage>0 to for early_stopping."
+        )
+        early_stopping = False
+
+    if max_iterations is None and max_epochs is None:
+        raise ValueError("Please specify either max_epochs or max_iterations")
+
+    iterations_per_epoch = len(train_loader)
+
     if max_epochs is None:
-        if max_iterations is None:
-            raise ValueError(
-                "Please specify either max_epochs or max_iterations"
-            )
-        max_epochs = int(np.ceil(max_iterations / len(train_loader)))
+        max_epochs = int(np.ceil(max_iterations / iterations_per_epoch))
+
+    if max_iterations is None:
+        max_iterations = iterations_per_epoch * max_epochs
+
+    if not 0 <= warmup_percentage <= 1:
+        raise ValueError("Warmup percentage must be between 0 and 1")
+
+    warmup_iterations = int(
+        iterations_per_epoch * max_epochs * warmup_percentage
+    )
 
     opt, lr_scheduler = _instantiate_optimizer(
         estimator=estimator,
         optimizer_class=optimizer_class,
         optimizer_params=optimizer_params,
         lr_annealing=lr_annealing,
-        warmup_percentage=warmup_percentage,
-        max_epochs=max_epochs,
-        iterations_per_epoch=len(train_loader),
+        warmup_iterations=warmup_iterations,
+        max_iterations=max_iterations,
     )
-
     estimator = estimator.to(device)
 
     default_logger = False
@@ -233,6 +257,7 @@ def train_mi_estimator(
         delta=delta,
         patience=patience,
         verbose=verbose,
+        warmup_iterations=warmup_iterations,
         max_iterations=max_iterations,
         maximize=estimator.lower_bound,
         minimize=estimator.upper_bound,

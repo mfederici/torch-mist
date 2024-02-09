@@ -34,12 +34,19 @@ Mutual information can be estimated directly using the `estimate_mi` utility fun
 
 ```python3
 from torch_mist import estimate_mi
+from sklearn.datasets import load_iris
 
-estimated_mi = estimate_mi(
-    estimator_name='mine',  # Use MINE
-    hidden_dims=[32, 32],  # Hidden dimensions of the neural network
-    x=x,  # The values for x
-    y=y,  # The values for y
+# Load the Iris Dataset
+iris_dataset = load_iris(as_frame=True)
+
+# We consider the sepal and petal size, which are arrays of shape [150 x 2]
+x = iris_dataset['data'][['sepal length (cm)', 'sepal width (cm)']].values
+y = iris_dataset['data'][['petal length (cm)', 'petal width (cm)']].values
+
+estimated_mi, train_log = estimate_mi(
+    estimator_name='js',    # Use the Jensen-Shannon mutual information estimator
+    data=(x, y),            # The values for x and y (as torch.Tensor or np.array)
+    max_iterations=1000,    # Number of train iterations
 )
 
 print(f"Mutual information estimated value: {estimated_mi} nats")
@@ -49,31 +56,29 @@ Additional flags that can be used to customize the estimators, training and eval
 Alternatively, it is possible to manually instantiate, train and evaluate the mutual information estimators.
 
 ```python3
-from torch_mist.estimators import mine
+from torch_mist.estimators import js
 from torch_mist.utils.train import train_mi_estimator
 from torch_mist.utils import evaluate_mi
 
-# Instantiate the mutual information estimator
-estimator = mine(
+# Instantiate the JS mutual information estimator
+estimator = js(
     x_dim=x.shape[-1],
     y_dim=y.shape[-1],
-    hidden_dims=[32, 32],
+    hidden_dims=[64, 32],
 )
 
 # Train it on the given samples
 train_log = train_mi_estimator(
     estimator=estimator,
-    x=x,
-    y=y,
+    data=(x, y),
     batch_size=64,
-    verbose=True
+    max_iterations=1000
 )
 
 # Evaluate the estimator on the entirety of the data
 estimated_mi = evaluate_mi(
     estimator=estimator,
-    x=x,
-    y=y,
+    data=(x, y),
     batch_size=64
 )
 
@@ -90,23 +95,23 @@ through a simplified utility functions
 ############################
 # Simplified instantiation #
 ############################
-from torch_mist.estimators import mine
+from torch_mist.estimators import js
 
-estimator = mine(
+estimator = js(
     x_dim=x.shape[-1],
     y_dim=y.shape[-1],
     neg_samples=16,
-    hidden_dims=[32, 32],
+    hidden_dims=[64, 32],
     critic_type='joint'
 )
 ```
-or directly using the corresponfing `MutualInformationEstimator` class
+or directly using the corresponding `MutualInformationEstimator` class
 
 ```python3
 ##########################
 # Advanced instantiation #
 ##########################
-from torch_mist.estimators import MINE
+from torch_mist.estimators import JS
 from torch_mist.critic import JointCritic
 from torch import nn
 
@@ -122,7 +127,7 @@ critic = JointCritic(  # Wrapper to concatenate the inputs x and y
 )
 
 # Then we pass it to the MINE constructor
-estimator = MINE(
+estimator = JS(
     critic=critic,
     neg_samples=16,
 )
@@ -178,7 +183,7 @@ The `torch_mist` package allows to combine Generative and Discriminative estimat
 variance of generative estimators. 
 ```python
 from torch_mist.estimators.hybrid import ResampledHybridMIEstimator
-from torch_mist.estimators import nwj, doe
+from torch_mist.estimators import js, doe
 
 # Use the proposal r(y|x) to sample negatives instead of p(y)
 estimator = ResampledHybridMIEstimator(
@@ -189,7 +194,7 @@ estimator = ResampledHybridMIEstimator(
         hidden_dims=[32, 32],
     ),
     # NWJ discriminative estimator
-    discriminative_estimator=nwj(
+    discriminative_estimator=js(
         x_dim=x.shape[-1],
         y_dim=y.shape[-1],
         hidden_dims=[32, 32],
@@ -215,8 +220,7 @@ from torch_mist.utils.train import train_mi_estimator
 # By default 10% of the data is used for cross-validation and early stopping
 train_log = train_mi_estimator(
     estimator=estimator,
-    x=x,
-    y=y,
+    data=(x,y),
     batch_size=64,
     valid_percentage=0.1,
 )
@@ -260,8 +264,8 @@ valid_loader = DataLoader(
 
 train_log = train_mi_estimator(
     estimator=estimator,
-    train_loader=train_loader,
-    valid_loader=valid_loader,
+    data=train_loader,
+    valid_data=valid_loader,
 )
 ```
 The two options result in the same training procedure, but we recommend using `DataLoader` for larger datasets.

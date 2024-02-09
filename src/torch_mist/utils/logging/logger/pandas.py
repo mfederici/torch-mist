@@ -11,7 +11,7 @@ class PandasLogger(Logger):
         self,
         log_dir: str = ".",
         log_name: Optional[str] = None,
-        log_every: int = 10,
+        log_every: int = 1,
     ):
         super().__init__(log_dir=log_dir, log_every=log_every)
         self.__log = []
@@ -24,15 +24,24 @@ class PandasLogger(Logger):
     def _log(
         self, data: Any, name: str, iteration: int, epoch: int, split: str
     ):
-        if not isinstance(data, Dict):
+        if isinstance(data, Dict):
+            for sub_name, value in data.items():
+                self._log(
+                    data=value,
+                    name=f"{name}/{sub_name}",
+                    iteration=iteration,
+                    epoch=epoch,
+                    split=split,
+                )
+        else:
             data = {
-                "mean": data,
+                "value": data,
+                "name": name,
+                "split": split,
+                "iteration": iteration,
+                "epoch": epoch,
             }
-        data["name"] = name
-        data["split"] = split
-        data["iteration"] = iteration
-        data["epoch"] = epoch
-        self.__log.append(data)
+            self.__log.append(data)
 
     def get_log(self) -> pd.DataFrame:
         return pd.DataFrame(self.__log)

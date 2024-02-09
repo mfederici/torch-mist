@@ -5,3 +5,4 @@ from .loader import (
 )
 from .sampler import SameAttributeSampler
 from .dataset import SampleDataset
+from .csv import CSVDataset

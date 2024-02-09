@@ -12,7 +12,12 @@ class MultiMIEstimator(MIEstimator):
 
         self.estimators = nn.ModuleDict()
         self.infomax_gradient = {}
+        self.lower_bound = True
+        self.upper_bound = True
         for (x_key, y_key), estimator in estimators.items():
+            self.upper_bound = self.upper_bound and estimator.upper_bound
+            self.lower_bound = self.lower_bound and estimator.lower_bound
+
             key = f"{x_key};{y_key}"
             self.estimators[key] = estimator
             if x_key in self.infomax_gradient:
@@ -44,7 +49,7 @@ class MultiMIEstimator(MIEstimator):
             x = variables[x_key]
             y = variables[y_key]
 
-            value = getattr(estimator, function_name)(x=x, y=y)
+            value = getattr(estimator, function_name)(x, y)
             values[(x_key, y_key)] = value
         return values
 

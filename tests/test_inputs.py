@@ -28,49 +28,67 @@ def test_inputs_train_mi_estimator():
 
     tests = [
         {
-            "params": {"x": x, "y": wrong_y, "max_epochs": 1},
+            "params": {"data": (x, wrong_y), "max_epochs": 1},
             "should_fail": True,
             "message": "The estimator should fail when passed x and y of different length.",
         },
         {
-            "params": {"x": x, "max_epochs": 1},
+            "params": {"data": x, "max_epochs": 1},
             "should_fail": True,
             "message": "The estimator should fail when only x is passed.",
         },
         {
-            "params": {"y": y, "max_epochs": 1},
+            "params": {"data": y, "max_epochs": 1},
             "should_fail": True,
             "message": "The estimator should fail when only y is passed.",
         },
         {
-            "params": {"x": x, "y": y, "max_epochs": 1},
+            "params": {"data": {"x": x, "y": y}, "max_epochs": 1},
             "should_fail": False,
             "message": "Failed with x,y and max_epochs",
         },
         {
-            "params": {"x": x, "y": y, "max_iterations": 1},
+            "params": {"data": (x, y), "max_epochs": 1},
+            "should_fail": False,
+            "message": "Failed with x,y and max_epochs",
+        },
+        {
+            "params": {"data": {"x": x, "y": y}, "max_iterations": 1},
             "should_fail": False,
             "message": "Failed with x,y and max_iterations",
         },
         {
-            "params": {"x": x, "y": y},
-            "should_fail": True,
+            "params": {"data": {"x": x, "y": y}},
+            "should_fail": False,
             "message": "Failed with x,y",
         },
         {
-            "params": {"train_loader": train_loader, "max_epochs": 1},
+            "params": {
+                "data": train_loader,
+                "max_epochs": 1,
+                "valid_percentage": 0.1,
+            },
+            "should_fail": True,
+            "message": "Should fail since a train_set (or x,y) need to be specified for valid_percentage>0.",
+        },
+        {
+            "params": {
+                "data": train_loader,
+                "max_epochs": 1,
+                "valid_percentage": 0,
+            },
             "should_fail": False,
             "message": "Failed with train_loader only",
         },
         {
-            "params": {"train_loader": wrong_train_loader, "max_epochs": 1},
+            "params": {"data": wrong_train_loader, "max_epochs": 1},
             "should_fail": True,
             "message": "The function should fail when a non-valid train_loader is passed",
         },
         {
             "params": {
-                "train_loader": train_loader,
-                "valid_loader": valid_loader,
+                "data": train_loader,
+                "valid_data": valid_loader,
                 "max_epochs": 1,
             },
             "should_fail": False,
@@ -78,9 +96,17 @@ def test_inputs_train_mi_estimator():
         },
         {
             "params": {
-                "train_loader": train_loader,
-                "valid_loader": valid_loader,
-                "test_loader": test_loader,
+                "data": dataset,
+                "max_epochs": 1,
+            },
+            "should_fail": False,
+            "message": "Failed with train_set",
+        },
+        {
+            "params": {
+                "data": train_loader,
+                "valid_data": valid_loader,
+                "test_data": test_loader,
                 "max_epochs": 1,
             },
             "should_fail": False,
@@ -88,17 +114,28 @@ def test_inputs_train_mi_estimator():
         },
         {
             "params": {
-                "train_loader": train_loader,
-                "test_loader": test_loader,
+                "data": train_loader,
+                "test_data": test_loader,
+                "valid_percentage": 0.1,
                 "max_epochs": 1,
             },
-            "should_fail": False,
-            "message": "Failed with train and test_loader",
+            "should_fail": True,
+            "message": "Should fail with valid_percentage>0, train_loader and no valid_loader.",
         },
         {
             "params": {
-                "valid_loader": valid_loader,
-                "test_loader": test_loader,
+                "data": train_loader,
+                "test_data": test_loader,
+                "valid_percentage": 0,
+                "max_epochs": 1,
+            },
+            "should_fail": False,
+            "message": "Failed with train_loader, test_loader and no valid_loader and valid_percentage=0.",
+        },
+        {
+            "params": {
+                "valid_data": valid_loader,
+                "test_data": test_loader,
                 "max_epochs": 1,
             },
             "should_fail": True,
@@ -106,8 +143,10 @@ def test_inputs_train_mi_estimator():
         },
         {
             "params": {
-                "x": x,
-                "y": y,
+                "data": {
+                    "x": x,
+                    "y": y,
+                },
                 "batch_size": 10,
                 "test_loader": test_loader,
                 "max_epochs": 1,

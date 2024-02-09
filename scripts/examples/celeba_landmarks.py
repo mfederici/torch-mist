@@ -144,7 +144,6 @@ def instantiate_model() -> MIEstimator:
         # before using the specified estimator.
         base_estimator=multi_estimator,
     )
-
     return mi_estimator
 
 
@@ -171,14 +170,6 @@ if __name__ == "__main__":
     train_size = int(len(dataset) * 0.9)
     train_set, valid_set = random_split(
         dataset, [train_size, len(dataset) - train_size]
-    )
-
-    # Define a simple dataloader
-    train_loader = DataLoader(
-        train_set, batch_size=batch_size, num_workers=num_workers, shuffle=True
-    )
-    valid_loader = DataLoader(
-        valid_set, batch_size=batch_size, num_workers=num_workers
     )
 
     # Instantiate the logger
@@ -208,13 +199,15 @@ if __name__ == "__main__":
     print("Training the estimators")
     log = train_mi_estimator(
         estimator=mi_estimator,
-        train_loader=train_loader,
-        valid_loader=valid_loader,
+        data=train_set,
+        valid_data=valid_set,
         max_epochs=max_epochs,
         logger=logger,
         device=device,
         optimizer_class=optimizer_class,
         eval_logged_methods=methods_to_log,
+        batch_size=batch_size,
+        num_workers=num_workers,
     )
 
     print("Saving the trained models")

@@ -15,7 +15,7 @@ from torch_mist.utils.logging.metrics import compute_mean_std
     config_path="config", config_name="config.yaml", version_base="1.1"
 )
 def parse(conf: DictConfig):
-    # Instatiate the parameters and metadata if any
+    # Instantiate the parameters and metadata if any
     if "params" in conf:
         conf.params = instantiate(conf.params)
 
@@ -37,9 +37,9 @@ def parse(conf: DictConfig):
             torch.set_float32_matmul_precision(conf.device.matmul_precision)
 
     # Instantiating the distribution
-    print("Instantiating the Distributions")
-    train_samples = instantiate(conf.data.train, _convert_="all")
-    test_samples = instantiate(conf.data.test, _convert_="all")
+    print("Instantiating the Data")
+    train_data = instantiate(conf.data.train, _convert_="all")
+    test_data = instantiate(conf.data.test, _convert_="all")
     if hasattr(conf.data, "distribution"):
         dist = instantiate(conf.data.distribution, _convert_="all")
         true_mi = dist.mutual_information()
@@ -47,20 +47,23 @@ def parse(conf: DictConfig):
         true_mi = None
 
     # Add the sampled x and y as parameters of the quantization scheme
+    # TODO this does not work for multi-estimators and when datasets are passed
     extra_params = {}
     if hasattr(conf.mi_estimator, "quantize_x"):
+        assert "x" in train_data
         print("Training the quantization for x")
         extra_params["quantize_x"] = instantiate(
             conf.mi_estimator.quantize_x,
             _convert_="all",
-            data=train_samples["x"],
+            data=train_data["x"],
         )
     if hasattr(conf.mi_estimator, "quantize_y"):
+        assert "y" in train_data
         print("Training the quantization for y")
         extra_params["quantize_y"] = instantiate(
             conf.mi_estimator.quantize_y,
             _convert_="all",
-            data=train_samples["y"],
+            data=train_data["y"],
         )
 
     # Instantiate the estimator
@@ -106,8 +109,7 @@ def parse(conf: DictConfig):
 
     train_mi_estimator(
         mi_estimator,
-        x=train_samples["x"],
-        y=train_samples["y"],
+        data=train_data,
         logger=logger,
         train_logged_methods=train_logged_methods,
         eval_logged_methods=eval_logged_methods,
@@ -118,8 +120,7 @@ def parse(conf: DictConfig):
         with logger.logged_methods(mi_estimator, eval_logged_methods):
             results = evaluate_mi(
                 mi_estimator,
-                x=test_samples["x"],
-                y=test_samples["y"],
+                data=test_data,
                 **conf.params.test,
             )
 
@@ -132,6 +133,10 @@ def parse(conf: DictConfig):
         logger.save_model(mi_estimator, "mi_estimator.pyt")
 
 
-if __name__ == "__main__":
+def run():
     OmegaConf.register_new_resolver("eval", eval)
     parse()
+
+
+if __name__ == "__main__":
+    run()
