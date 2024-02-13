@@ -492,9 +492,10 @@ def test_flow_generative():
         data=dataset,
         max_epochs=5,
         verbose=False,
+        batch_size=batch_size,
     )
 
-    mi_estimate = evaluate_mi(estimator, data=dataset)
+    mi_estimate = evaluate_mi(estimator, data=dataset, batch_size=batch_size)
 
     print("True I(x;y): ", true_mi)
     print("Estimated I(x;y): ", mi_estimate)
