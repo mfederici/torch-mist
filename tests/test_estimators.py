@@ -511,12 +511,8 @@ def test_multi_estimator():
     train_samples["z"] = torch.roll(train_samples["x"], 1, 0)
     test_samples["z"] = torch.roll(test_samples["x"], 1, 0)
 
-    train_loader = DataLoader(
-        SampleDataset(train_samples), batch_size=batch_size, num_workers=4
-    )
-    test_loader = DataLoader(
-        SampleDataset(test_samples), batch_size=batch_size, num_workers=4
-    )
+    train_set = SampleDataset(train_samples)
+    test_set = SampleDataset(test_samples)
 
     estimator = MultiMIEstimator(
         estimators={
@@ -537,12 +533,13 @@ def test_multi_estimator():
 
     train_mi_estimator(
         estimator,
-        data=train_loader,
+        data=train_set,
         max_epochs=5,
         verbose=False,
+        batch_size=batch_size,
     )
 
-    mi_estimate = evaluate_mi(estimator, data=test_loader)
+    mi_estimate = evaluate_mi(estimator, data=test_set, batch_size=batch_size)
 
     assert np.isclose(
         mi_estimate["I(x;y)"], true_mi, atol=atol
