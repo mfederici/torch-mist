@@ -67,15 +67,6 @@ def _instantiate_estimator(
         **kwargs,
     )
 
-    # If using different key instead of 'x' and 'y'
-    if not (x_key is None) or not (y_dim is None):
-        if x_key is None:
-            x_key = "x"
-        if y_key is None:
-            y_key = "y"
-
-        estimator = MultiMIEstimator({(x_key, y_key): estimator})
-
     if verbose:
         print(estimator)
 
@@ -143,6 +134,15 @@ def estimate_mi(
             hidden_dims=hidden_dims,
             **kwargs,
         )
+
+    # If using different key instead of 'x' and 'y'
+    if not (x_key is None) or not (y_key is None):
+        if x_key is None:
+            x_key = "x"
+        if y_key is None:
+            y_key = "y"
+
+        estimator = MultiMIEstimator({(x_key, y_key): estimator})
 
     if verbose:
         print("Training the estimator")

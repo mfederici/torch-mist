@@ -40,4 +40,5 @@ Use-case Examples
    :caption: Examples
 
    notebooks/examples/infomax.ipynb
+   notebooks/examples/feature_selection.ipynb
    notebooks/examples/keypoint_info.ipynb
