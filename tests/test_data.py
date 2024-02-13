@@ -1,17 +1,17 @@
 import numpy as np
 import torch
+from torch.utils.data import DataLoader
 
 from torch_mist.data.multimixture import MultivariateCorrelatedNormalMixture
 from torch_mist.data.multivariate import JointMultivariateNormal
-from torch_mist.utils.data import (
-    DistributionDataLoader,
-)
+from torch_mist.utils.data.dataset import DistributionDataset
 
 
 def test_dataloaders():
     p_xy = MultivariateCorrelatedNormalMixture(n_dim=5)
-    dataloader = DistributionDataLoader(p_xy, batch_size=100, max_samples=1000)
+    dataset = DistributionDataset(p_xy, max_samples=1000)
     count = 0
+    dataloader = DataLoader(dataset, batch_size=100)
     for batch in dataloader:
         count += 1
         assert "x" in batch and "y" in batch
