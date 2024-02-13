@@ -1,6 +1,4 @@
 _target_: torch_mist.estimators.alpha_tuba
 hidden_dims: ${params.hidden_dims}
-x_dim: ${metadata.x_dim}
-y_dim: ${metadata.y_dim}
 alpha: 0.01
 k_dim: ${params.k_dim}

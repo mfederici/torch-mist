@@ -1,7 +1,5 @@
 _target_: torch_mist.estimators.smile
 hidden_dims: ${params.hidden_dims}
-x_dim: ${metadata.x_dim}
-y_dim: ${metadata.y_dim}
 neg_samples: ${params.neg_samples}
 tau: 5
 k_dim: ${params.k_dim}

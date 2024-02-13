@@ -1,6 +1,4 @@
 _target_: torch_mist.estimators.gm
 hidden_dims: ${params.hidden_dims}
-x_dim: ${metadata.x_dim}
-y_dim: ${metadata.y_dim}
 marginal_transform_name: ${params.marginal_transform_name}
 joint_transform_name: ${params.joint_transform_name}

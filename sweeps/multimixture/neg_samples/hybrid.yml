@@ -3,7 +3,7 @@ command:
   - ${env}
   - ${interpreter}
   - ${program}
-  - experiment=eval_distribution_mi
+  - +experiment=eval_distribution_mi
   - logger=wandb
   - device=cuda
   - params.train.max_epochs=null

@@ -1,5 +1,4 @@
 from .loader import (
-    DistributionDataLoader,
     SameAttributeDataLoader,
     sample_same_attributes,
 )

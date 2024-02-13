@@ -39,7 +39,8 @@ from torch_mist.quantization import (
     vqvae_quantization,
     kmeans_quantization,
 )
-from torch_mist.utils.data import DistributionDataLoader, SampleDataset
+from torch_mist.utils.data import SampleDataset
+from torch_mist.utils.data.dataset import DistributionDataset
 
 from torch_mist.utils.evaluation import evaluate_mi
 from torch_mist.utils.train.mi_estimator import train_mi_estimator
@@ -481,20 +482,19 @@ def test_flow_generative():
         entropy_y=entropy_y,
     )
 
-    train_loader = DistributionDataLoader(
+    dataset = DistributionDataset(
         joint_dist=p_xy,
-        batch_size=64,
         max_samples=100000,
     )
 
     train_mi_estimator(
         estimator,
-        data=train_loader,
+        data=dataset,
         max_epochs=5,
         verbose=False,
     )
 
-    mi_estimate = evaluate_mi(estimator, data=train_loader)
+    mi_estimate = evaluate_mi(estimator, data=dataset)
 
     print("True I(x;y): ", true_mi)
     print("Estimated I(x;y): ", mi_estimate)

@@ -1,8 +1,43 @@
 defaults:
-  - _self_
   - logger: pandas
-  - experiment: ???
+  - data: ???
+  - mi_estimator: smile
 
 device: cpu
 save_trained_model: false
 seed: 42
+x_key: x
+y_key: y
+
+# Default parameters
+params:
+  hidden_dims: [128, 64]
+
+  # Discriminative estimator parameters
+  neg_samples: 1
+  k_dim: 64
+
+  # Generative estimator parameters
+  marginal_transform_name: spline_autoregressive
+  joint_transform_name: spline_autoregressive
+  conditional_transform_name: conditional_linear
+
+  # Quantized estimator parameters
+  n_bins: 32
+  temperature: 0.1
+
+
+# Estimation parameters
+estimation:
+  batch_size: 64
+  eval_batch_size: 64
+  valid_percentage: 0.1
+  early_stopping: true
+  lr_annealing: false
+  max_epochs: 32
+  device: ${device}
+  optimizer_class:
+    _partial_: true
+    _target_: torch.optim.Adam
+
+

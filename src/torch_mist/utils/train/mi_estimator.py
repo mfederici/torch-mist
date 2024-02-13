@@ -1,6 +1,7 @@
 from typing import Type, Optional, Dict, Any, Union, Tuple, List, Callable
 
 import numpy as np
+import pandas as pd
 import torch
 from torch.optim import Optimizer
 from tqdm.autonotebook import tqdm
@@ -20,7 +21,7 @@ from torch_mist.utils.batch import unfold_samples, move_to_device
 from torch_mist.utils.evaluation import evaluate_mi
 from torch_mist.utils.logging import PandasLogger
 from torch_mist.utils.logging.logger.base import Logger, DummyLogger
-from torch_mist.utils.misc import make_dataloaders
+from torch_mist.utils.misc import make_dataloaders, TensorDictLike
 from torch_mist.utils.train.utils import RunTerminationManager
 
 
@@ -150,25 +151,8 @@ def validate(
 
 def train_mi_estimator(
     estimator: MIEstimator,
-    data: Union[
-        Tuple[
-            Union[torch.Tensor, np.ndarray], Union[torch.Tensor, np.ndarray]
-        ],
-        Dict[str, Union[torch.Tensor, np.ndarray]],
-        Dataset,
-        DataLoader,
-    ],
-    valid_data: Optional[
-        Union[
-            Tuple[
-                Union[torch.Tensor, np.ndarray],
-                Union[torch.Tensor, np.ndarray],
-            ],
-            Dict[str, Union[torch.Tensor, np.ndarray]],
-            Dataset,
-            DataLoader,
-        ]
-    ] = None,
+    data: TensorDictLike,
+    valid_data: Optional[TensorDictLike] = None,
     valid_percentage: float = 0.1,
     batch_size: Optional[int] = None,
     num_workers: int = 0,

@@ -1,6 +1,7 @@
 from typing import Optional, Union, Tuple, Dict, Callable, List
 
 import numpy as np
+import pandas as pd
 import torch
 from torch.utils.data import DataLoader, random_split, Dataset
 
@@ -8,7 +9,17 @@ from torch_mist.estimators import MIEstimator, TransformedMIEstimator
 from torch_mist.estimators.hybrid import PQHybridMIEstimator
 from torch_mist.utils.batch import unfold_samples, move_to_device
 from torch_mist.utils.data import SampleDataset, SameAttributeDataLoader
+from torch_mist.utils.data.dataset import DataFrameDataset
 from torch_mist.utils.data.loader import sample_same_value
+
+
+TensorDictLike = Union[
+    Tuple[Union[torch.Tensor, np.ndarray], Union[torch.Tensor, np.ndarray]],
+    Dict[str, Union[torch.Tensor, np.ndarray]],
+    Dataset,
+    DataLoader,
+    pd.DataFrame,
+]
 
 
 def convert_to_tensor(
@@ -20,15 +31,7 @@ def convert_to_tensor(
     return array
 
 
-def make_dataset(
-    data: Union[
-        Tuple[
-            Union[torch.Tensor, np.ndarray], Union[torch.Tensor, np.ndarray]
-        ],
-        Dict[str, Union[torch.Tensor, np.ndarray]],
-        Dataset,
-    ]
-) -> Dataset:
+def make_dataset(data: TensorDictLike) -> Dataset:
     # Validate the input combinations
     if isinstance(data, list) or isinstance(data, tuple):
         if len(data) != 2:
@@ -47,6 +50,8 @@ def make_dataset(
         dataset = SampleDataset({"x": x, "y": y})
     elif isinstance(data, dict):
         dataset = SampleDataset(data)
+    elif isinstance(data, pd.DataFrame):
+        dataset = DataFrameDataset(data)
     else:
         dataset = data
 
@@ -54,25 +59,8 @@ def make_dataset(
 
 
 def make_default_dataloaders(
-    data: Union[
-        Tuple[
-            Union[torch.Tensor, np.ndarray], Union[torch.Tensor, np.ndarray]
-        ],
-        Dict[str, Union[torch.Tensor, np.ndarray]],
-        Dataset,
-        DataLoader,
-    ],
-    valid_data: Optional[
-        Union[
-            Tuple[
-                Union[torch.Tensor, np.ndarray],
-                Union[torch.Tensor, np.ndarray],
-            ],
-            Dict[str, Union[torch.Tensor, np.ndarray]],
-            Dataset,
-            DataLoader,
-        ]
-    ] = None,
+    data: TensorDictLike,
+    valid_data: Optional[TensorDictLike] = None,
     valid_percentage: float = 0.1,
     batch_size: Optional[int] = None,
     num_workers: int = -1,
@@ -160,25 +148,8 @@ def modify_data_loader(
 
 def make_dataloaders(
     estimator: MIEstimator,
-    data: Union[
-        Tuple[
-            Union[torch.Tensor, np.ndarray], Union[torch.Tensor, np.ndarray]
-        ],
-        Dict[str, Union[torch.Tensor, np.ndarray]],
-        Dataset,
-        DataLoader,
-    ],
-    valid_data: Optional[
-        Union[
-            Tuple[
-                Union[torch.Tensor, np.ndarray],
-                Union[torch.Tensor, np.ndarray],
-            ],
-            Dict[str, Union[torch.Tensor, np.ndarray]],
-            Dataset,
-            DataLoader,
-        ]
-    ] = None,
+    data: TensorDictLike,
+    valid_data: Optional[TensorDictLike] = None,
     valid_percentage: float = 0.1,
     batch_size: Optional[int] = None,
     num_workers: int = 0,
@@ -202,7 +173,7 @@ def make_dataloaders(
     if isinstance(_estimator, PQHybridMIEstimator):
         neg_samples = _estimator.neg_samples
         device = next(iter(estimator.parameters())).device
-        transforms.append(_estimator.transforms["y->y"])
+        transforms.append({"y->y": _estimator.quantize_y})
         train_loader = modify_data_loader(
             train_loader,
             transforms=transforms,

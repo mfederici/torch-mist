@@ -5,6 +5,10 @@ description = "Mutual Information Estimation toolkit based on pytorch"
 authors = ["Marco Federici"]
 license = "MIT"
 readme = "README.md"
+packages = [
+    {include = "torch_mist", from = "src"},
+    {include = "scripts"}
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -37,7 +41,7 @@ wandb = "^0.16.1"
 
 
 [tool.poetry.scripts]
-torch_mist = "scripts.compute_mi:run"
+mist = "scripts.compute_mi:run"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

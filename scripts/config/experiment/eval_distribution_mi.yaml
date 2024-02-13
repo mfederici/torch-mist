@@ -1,13 +1,7 @@
 # @package _global_
 defaults:
-  - /data: multimixture
   - /mi_estimator: ???
-
-metadata:
-  x_dim: 5
-  y_dim: 5
-  n_train_samples: 145635
-  n_test_samples: 131072
+  - override /data: multimixture
 
 params:
   hidden_dims: [256, 128]
@@ -24,18 +18,16 @@ params:
   # Quantized estimator parameters
   n_bins: 32
   temperature: 0.1
-
   batch_size: 64
-  train:
-    batch_size: ${params.batch_size}
-    valid_percentage: 0.1
-    early_stopping: false
-    lr_annealing: false
-    max_epochs: 32
-    device: ${device}
-    optimizer_class:
-      _partial_: true
-      _target_: torch.optim.AdamW
-  test:
-    batch_size: ${params.batch_size}
-    device: ${device}
+
+estimation:
+  batch_size: ${params.batch_size}
+  eval_batch_size: ${params.batch_size}
+  valid_percentage: 0.1
+  early_stopping: false
+  lr_annealing: false
+  max_epochs: 32
+  device: ${device}
+  optimizer_class:
+    _partial_: true
+    _target_: torch.optim.AdamW

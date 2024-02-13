@@ -83,6 +83,7 @@ def multi_head_dense_nn(
             input_dim=hidden_dims[n_shared_layers],
             output_dim=output_dim,
             hidden_dims=hidden_dims[n_shared_layers + 1 :],
+            nonlinearity=nonlinearity,
         )
         if n_shared_layers == 0:
             nets.append(head)

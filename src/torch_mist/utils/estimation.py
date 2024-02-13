@@ -1,4 +1,5 @@
-from typing import Optional, Any, Union, Type, Dict, Tuple, List
+import inspect
+from typing import Optional, Any, Union, Type, Dict, Tuple, List, Callable
 
 import torch
 import numpy as np
@@ -6,17 +7,19 @@ import pandas as pd
 from torch.optim import Optimizer, Adam
 from torch.utils.data import DataLoader, Dataset
 
+from torch_mist.estimators import MultiMIEstimator
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.estimators.factories import instantiate_estimator
-from torch_mist.utils.batch import unfold_samples
+from torch_mist.utils.dims import infer_dims
 from torch_mist.utils.logging import PandasLogger
 from torch_mist.utils.logging.logger.base import Logger, DummyLogger
-from torch_mist.utils.misc import make_default_dataloaders
+from torch_mist.utils.misc import TensorDictLike
 from torch_mist.utils.train.mi_estimator import train_mi_estimator
 from torch_mist.utils.evaluation import evaluate_mi
 
 
-def _infer_dim(
+def _instantiate_estimator(
+    instantiation_func: Callable[[Any], MIEstimator],
     data: Union[
         Tuple[
             Union[torch.Tensor, np.ndarray], Union[torch.Tensor, np.ndarray]
@@ -25,63 +28,66 @@ def _infer_dim(
         Dataset,
         DataLoader,
     ],
-) -> Tuple[int, int]:
-    dataloader, _ = make_default_dataloaders(
-        data=data,
-        valid_data=None,
-        batch_size=1,
-        valid_percentage=0,
-        num_workers=0,
+    x_key: Optional[str] = None,
+    y_key: Optional[str] = None,
+    verbose: bool = True,
+    **kwargs,
+) -> MIEstimator:
+    dims = infer_dims(data)
+
+    if "x" in dims:
+        x_dim = dims["x"]
+    else:
+        if x_key in dims:
+            x_dim = dims[x_key]
+        else:
+            raise ValueError(
+                "The data does not contain a key for 'x'.\n"
+                + f"Please specify a value for x_key among {dims.keys()}"
+            )
+
+    if "y" in dims:
+        y_dim = dims["y"]
+    else:
+        if y_key in dims:
+            y_dim = dims[y_key]
+        else:
+            raise ValueError(
+                "The data does not contain a key for 'y'.\n"
+                + f"Please specify a value for y_key among {dims.keys()}"
+            )
+
+    kwargs["x_dim"] = x_dim
+    kwargs["y_dim"] = y_dim
+
+    if verbose:
+        print(f"Instantiating the estimator with {kwargs}")
+
+    estimator = instantiation_func(
+        **kwargs,
     )
 
-    batch = next(iter(dataloader))
-    variables = unfold_samples(batch)
-    if not ("x" in variables):
-        raise ValueError(
-            "Each batch must consist of a tuple (x,y) or a dictionary containing a key for 'x'"
-        )
-    x_dim = variables["x"].shape[-1]
-    if not ("y" in variables):
-        raise ValueError(
-            "Each batch must consist of a tuple (x,y) or a dictionary containing a key for 'y'"
-        )
-    y_dim = variables["y"].shape[-1]
+    # If using different key instead of 'x' and 'y'
+    if not (x_key is None) or not (y_dim is None):
+        if x_key is None:
+            x_key = "x"
+        if y_key is None:
+            y_key = "y"
 
-    return x_dim, y_dim
+        estimator = MultiMIEstimator({(x_key, y_key): estimator})
+
+    if verbose:
+        print(estimator)
+
+    return estimator
 
 
 def estimate_mi(
-    estimator_name: str,
-    data: Union[
-        Tuple[
-            Union[torch.Tensor, np.ndarray], Union[torch.Tensor, np.ndarray]
-        ],
-        Dict[str, Union[torch.Tensor, np.ndarray]],
-        Dataset,
-        DataLoader,
-    ],
-    valid_data: Optional[
-        Union[
-            Tuple[
-                Union[torch.Tensor, np.ndarray],
-                Union[torch.Tensor, np.ndarray],
-            ],
-            Dict[str, Union[torch.Tensor, np.ndarray]],
-            Dataset,
-            DataLoader,
-        ]
-    ] = None,
-    test_data: Optional[
-        Union[
-            Tuple[
-                Union[torch.Tensor, np.ndarray],
-                Union[torch.Tensor, np.ndarray],
-            ],
-            Dict[str, Union[torch.Tensor, np.ndarray]],
-            Dataset,
-            DataLoader,
-        ]
-    ] = None,
+    data: TensorDictLike,
+    estimator_name: Optional[str] = None,
+    estimator: Optional[MIEstimator] = None,
+    valid_data: Optional[TensorDictLike] = None,
+    test_data: Optional[TensorDictLike] = None,
     valid_percentage: float = 0.1,
     device: Union[torch.device, str] = torch.device("cpu"),
     max_epochs: Optional[int] = None,
@@ -101,6 +107,8 @@ def estimate_mi(
     return_estimator: bool = False,
     fast_train: bool = False,
     hidden_dims: List[int] = [128, 64],
+    x_key: Optional[str] = None,
+    y_key: Optional[str] = None,
     **kwargs,
 ) -> Union[
     float,
@@ -108,8 +116,6 @@ def estimate_mi(
     Tuple[float, MIEstimator],
     Tuple[float, MIEstimator, pd.DataFrame],
 ]:
-    x_dim, y_dim = _infer_dim(data)
-
     if max_epochs is None and max_iterations is None:
         if verbose:
             print(
@@ -117,17 +123,28 @@ def estimate_mi(
             )
         max_epochs = 10
 
+    if estimator is None and estimator_name is None:
+        raise ValueError(
+            "Please specify a value for estimator or estimator_name."
+        )
+
+    if estimator is None:
+        # Instantiate the estimator while inferring the size for x and y
+        if verbose:
+            print(f"Instantiating the {estimator_name} estimator")
+
+        estimator = _instantiate_estimator(
+            instantiation_func=instantiate_estimator,
+            data=data,
+            x_key=x_key,
+            y_key=y_key,
+            verbose=verbose,
+            estimator_name=estimator_name,
+            hidden_dims=hidden_dims,
+            **kwargs,
+        )
+
     if verbose:
-        print(f"Instantiating the {estimator_name} estimator")
-    estimator = instantiate_estimator(
-        estimator_name=estimator_name,
-        x_dim=x_dim,
-        y_dim=y_dim,
-        hidden_dims=hidden_dims,
-        **kwargs,
-    )
-    if verbose:
-        print(estimator)
         print("Training the estimator")
 
     if evaluation_batch_size is None:

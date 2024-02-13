@@ -1,5 +1,6 @@
 import os
 from collections import defaultdict
+from typing import Optional, Dict
 
 import numpy as np
 import pandas as pd
@@ -7,10 +8,17 @@ from torch.utils.data import Dataset
 
 
 class CSVDataset(Dataset):
-    def __init__(self, filepath: str, remove_nan_rows: bool = True, **kwargs):
+    def __init__(
+        self,
+        filepath: str,
+        remove_nan_rows: bool = True,
+        rename_columns: Optional[Dict[str, str]] = None,
+        **kwargs,
+    ):
         super().__init__()
+
         if not os.path.isfile(filepath):
-            raise ValueError(f"{filepath} does not exist.")
+            raise ValueError(f"{os.path.abspath(filepath)} does not exist.")
 
         df = pd.read_csv(filepath, **kwargs)
         if remove_nan_rows:
@@ -35,8 +43,11 @@ class CSVDataset(Dataset):
                     + " from <name>_1 to <name>_N"
                 )
 
+        print(f"The file '{filepath}' has columns:")
+
         for variable in self.variables:
             self.data[variable] = df[self.variable_cols[variable]].values
+            print(f"  '{variable}' with shape {self.data[variable].shape}")
 
     def __len__(self):
         return self.data[self.variables[0]].shape[0]

@@ -36,24 +36,58 @@ Mutual information can be estimated directly using the `estimate_mi` utility fun
 from torch_mist import estimate_mi
 from sklearn.datasets import load_iris
 
-# Load the Iris Dataset
-iris_dataset = load_iris(as_frame=True)
+# Load the Iris Dataset as a pandas DataFrame
+iris_dataset = load_iris(as_frame=True)['data']
 
-# We consider the sepal and petal size, which are arrays of shape [150 x 2]
-x = iris_dataset['data'][['sepal length (cm)', 'sepal width (cm)']].values
-y = iris_dataset['data'][['petal length (cm)', 'petal width (cm)']].values
-
-estimated_mi, train_log = estimate_mi(
-    estimator_name='js',    # Use the Jensen-Shannon mutual information estimator
-    data=(x, y),            # The values for x and y (as torch.Tensor or np.array)
-    max_iterations=1000,    # Number of train iterations
+# Estimate how much information the petal length and its width have in common
+estimated_mi, estimator, train_log = estimate_mi(
+    data=iris_dataset,          # The dataset (as a pandas.DataFrame, many other formats are supported)
+    x_key='petal length (cm)',  # Consider the 'petal length' column as x
+    y_key='petal width (cm)',   # And the 'petal witdh` as y
+    estimator_name='js',        # Use the Jensen-Shannon mutual information estimator
+    max_iterations=1000,        # Number of train iterations
 )
 
 print(f"Mutual information estimated value: {estimated_mi} nats")
 ```
-Additional flags that can be used to customize the estimators, training and evaluation procedure are included in the [documentation](https://torch-mist.readthedocs.io/en/latest).
+The `estimate_mi` function supports additional data formats such as tuples `(x, y)` or dictionaries `{'x':x, 'y':y}` 
+of tensors, but also datasets (see `torch.utils.data.Dataset`) and torch `DataLoaders`.
 
-Alternatively, it is possible to manually instantiate, train and evaluate the mutual information estimators.
+Additional flags can be used to customize the estimators, training and evaluation procedure, as detailed in the [documentation](https://torch-mist.readthedocs.io/en/latest).
+
+## Command line
+The `torch_mist` package provides basic functionality to estimate mutual information directly from the command line.
+Given a file `iris.csv` containing the columns `(sepal_1, sepal_2, petal_1, petal_2)`, one can estimate mutual information between
+the `sepal` and `petal` 2-dimensional features with:
+```bash
+mist data=csv data.filepath=iris.csv mi_estimator=js x_key=sepal y_key=petal
+```
+The same flags and options provided by the `estimate_mi` function are also available from command line.
+
+Additionally, internal properties of the estimator can also be easily specified:
+```bash
+mist data=csv data.filepath=iris.csv mi_estimator=js x_key=sepal y_key=petal \ 
+  # Train on GPU
+  device=cuda \
+  # Use AdamW for the optimization
+  estimation.optimizer_class._target_=torch.optim.AdamW \
+  # Use ELU as nonlinearities
+  +mi_estimator.nonlinearity=torch.nn.ELU \
+  # Change the batch size to 256
+  params.batch_size=256
+  # Log on weights and bias
+  logger=wandb
+```
+
+To visualize the full list use:
+```bash
+mist data=csv --help
+```
+The `mist` CLI is implemented using [hydra](https://hydra.cc/) and the full configuration can be accessed [here](scripts/config).
+
+
+## Advanced usage
+It is possible to manually instantiate, train and evaluate the mutual information estimators.
 
 ```python3
 from torch_mist.estimators import js
@@ -62,10 +96,14 @@ from torch_mist.utils import evaluate_mi
 
 # Instantiate the JS mutual information estimator
 estimator = js(
-    x_dim=x.shape[-1],
-    y_dim=y.shape[-1],
+    x_dim=1,
+    y_dim=1,
     hidden_dims=[64, 32],
 )
+
+# Define x and y as the vectors of petal lengths and widths, respectively
+x = iris_dataset['petal length (cm)'].values 
+y = iris_dataset['petal width (cm)'].values
 
 # Train it on the given samples
 train_log = train_mi_estimator(
@@ -98,8 +136,8 @@ through a simplified utility functions
 from torch_mist.estimators import js
 
 estimator = js(
-    x_dim=x.shape[-1],
-    y_dim=y.shape[-1],
+    x_dim=1,
+    y_dim=1,
     neg_samples=16,
     hidden_dims=[64, 32],
     critic_type='joint'

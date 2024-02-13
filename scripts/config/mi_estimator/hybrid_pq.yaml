@@ -5,7 +5,6 @@ defaults:
 
 mi_estimator:
   _target_: torch_mist.estimators.hybrid_pq
-  x_dim: ${metadata.x_dim}
   hidden_dims: ${params.hidden_dims}
   temperature: ${params.temperature}
 
