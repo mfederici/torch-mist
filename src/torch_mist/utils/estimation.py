@@ -102,7 +102,7 @@ def estimate_mi(
     evaluation_batch_size: Optional[int] = None,
     num_workers: int = 0,
     early_stopping: bool = True,
-    patience: int = 10,
+    patience: int = 5,
     delta: float = 0.001,
     return_estimator: bool = False,
     fast_train: bool = False,

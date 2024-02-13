@@ -44,8 +44,8 @@ estimated_mi, estimator, train_log = estimate_mi(
     data=iris_dataset,          # The dataset (as a pandas.DataFrame, many other formats are supported)
     x_key='petal length (cm)',  # Consider the 'petal length' column as x
     y_key='petal width (cm)',   # And the 'petal witdh` as y
-    estimator_name='js',        # Use the Jensen-Shannon mutual information estimator
-    max_iterations=1000,        # Number of train iterations
+    estimator_name='mine',      # Use the MINE mutual information estimator
+    max_iterations=1000,        # Number of maximum train iterations 
 )
 
 print(f"Mutual information estimated value: {estimated_mi} nats")
@@ -90,12 +90,12 @@ The `mist` CLI is implemented using [hydra](https://hydra.cc/) and the full conf
 It is possible to manually instantiate, train and evaluate the mutual information estimators.
 
 ```python3
-from torch_mist.estimators import js
+from torch_mist.estimators import mine
 from torch_mist.utils.train import train_mi_estimator
 from torch_mist.utils import evaluate_mi
 
 # Instantiate the JS mutual information estimator
-estimator = js(
+estimator = mine(
     x_dim=1,
     y_dim=1,
     hidden_dims=[64, 32],
@@ -133,9 +133,9 @@ through a simplified utility functions
 ############################
 # Simplified instantiation #
 ############################
-from torch_mist.estimators import js
+from torch_mist.estimators import mine
 
-estimator = js(
+estimator = mine(
     x_dim=1,
     y_dim=1,
     neg_samples=16,
@@ -149,7 +149,7 @@ or directly using the corresponding `MutualInformationEstimator` class
 ##########################
 # Advanced instantiation #
 ##########################
-from torch_mist.estimators import JS
+from torch_mist.estimators import MINE
 from torch_mist.critic import JointCritic
 from torch import nn
 
@@ -165,7 +165,7 @@ critic = JointCritic(  # Wrapper to concatenate the inputs x and y
 )
 
 # Then we pass it to the MINE constructor
-estimator = JS(
+estimator = MINE(
     critic=critic,
     neg_samples=16,
 )

@@ -166,7 +166,7 @@ def train_mi_estimator(
     verbose: bool = True,
     logger: Optional[Union[Logger, bool]] = None,
     early_stopping: bool = False,
-    patience: int = 3,
+    patience: int = 5,
     delta: float = 0.001,
     fast_train: bool = False,
     train_logged_methods: Optional[
