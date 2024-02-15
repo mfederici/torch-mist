@@ -173,6 +173,9 @@ def estimate_mi(
         )
         test_data = data
 
+    if evaluation_batch_size is None:
+        evaluation_batch_size = batch_size
+
     with logger.test():
         mi_value = evaluate_mi(
             estimator=estimator,
