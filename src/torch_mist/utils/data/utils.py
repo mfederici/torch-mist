@@ -1,4 +1,4 @@
-from typing import Optional, Union, Tuple, Dict, Callable, List
+from typing import Optional, Union, Tuple, Dict, Callable, List, Any
 
 import numpy as np
 import pandas as pd
@@ -7,7 +7,6 @@ from torch.utils.data import DataLoader, random_split, Dataset
 
 from torch_mist.estimators import MIEstimator, TransformedMIEstimator
 from torch_mist.estimators.hybrid import PQHybridMIEstimator
-from torch_mist.utils.batch import unfold_samples, move_to_device
 from torch_mist.utils.data import SampleDataset, SameAttributeDataLoader
 from torch_mist.utils.data.dataset import DataFrameDataset
 from torch_mist.utils.data.loader import sample_same_value
@@ -22,12 +21,44 @@ TensorDictLike = Union[
 ]
 
 
+def prepare_variables(
+    variables: Dict[str, torch.Tensor], device: torch.device
+) -> Tuple[List[torch.Tensor], Dict[str, torch.Tensor]]:
+    v_args, v_kwargs = [], {}
+    if torch.is_tensor(variables):
+        variables = [variables]
+    if isinstance(variables, dict):
+        v_kwargs = {k: v.to(device) for k, v in variables.items()}
+    elif isinstance(variables, tuple) or isinstance(variables, list):
+        v_args = [v.to(device) for v in variables]
+
+    return v_args, v_kwargs
+
+
+def infer_dims(
+    data: TensorDictLike,
+) -> Dict[str, int]:
+    dataloader, _ = make_default_dataloaders(
+        data=data,
+        valid_data=None,
+        batch_size=1,
+        valid_percentage=0,
+        num_workers=0,
+    )
+
+    batch = next(iter(dataloader))
+    if not isinstance(batch, dict):
+        assert len(batch) == 2
+        batch = {"x": batch[0], "y": batch[1]}
+
+    return {k: v.shape[-1] for k, v in batch.items()}
+
+
 def convert_to_tensor(
     array: Union[torch.Tensor, np.array]
 ) -> torch.FloatTensor:
     if isinstance(array, np.ndarray):
         array = torch.FloatTensor(array)
-
     return array
 
 
@@ -58,17 +89,23 @@ def make_dataset(data: TensorDictLike) -> Dataset:
     return dataset
 
 
+def is_data_loader(data: TensorDictLike):
+    return isinstance(data, DataLoader)
+
+
 def make_default_dataloaders(
     data: TensorDictLike,
     valid_data: Optional[TensorDictLike] = None,
     valid_percentage: float = 0.1,
     batch_size: Optional[int] = None,
-    num_workers: int = -1,
+    num_workers: int = 0,
 ) -> Tuple[DataLoader, Optional[DataLoader]]:
     # Make the datasets if necessary
-    if isinstance(data, DataLoader):
+    if is_data_loader(data):
         train_loader = data
-        train_set = None
+        train_set = data.dataset
+        batch_size = data.batch_size
+        num_workers = data.num_workers
     else:
         if batch_size is None:
             raise ValueError("Please specify a value for batch_size.")
@@ -78,7 +115,7 @@ def make_default_dataloaders(
     if valid_data is None:
         valid_set = None
         valid_loader = None
-    elif isinstance(valid_data, DataLoader):
+    elif is_data_loader(valid_data):
         valid_loader = data
         valid_set = None
     else:
@@ -88,17 +125,12 @@ def make_default_dataloaders(
     # Create a validation set if specified
     if valid_percentage > 0:
         if valid_set is None and valid_loader is None:
-            if train_set is None:
-                raise ValueError(
-                    "Please use a tuple (x,y), a dictionary {'x':..,'y':...} or a Dataset instead of a DataLoader"
-                    + " for valid_percentage>0. Alternatively, set valid_percentage=0 or specify valid_data."
-                )
-            else:
-                # Make a random train/valid split
-                n_valid = int(len(train_set) * valid_percentage)
-                train_set, valid_set = random_split(
-                    train_set, [len(train_set) - n_valid, n_valid]
-                )
+            # Make a random train/valid split
+            n_valid = int(len(train_set) * valid_percentage)
+            train_set, valid_set = random_split(
+                train_set, [len(train_set) - n_valid, n_valid]
+            )
+            train_loader = None
         else:
             print(
                 "[Warning]: valid_percentage is ignored since valid_set or valid_loader are already specified."
@@ -117,50 +149,17 @@ def make_default_dataloaders(
             valid_set, batch_size=batch_size, num_workers=num_workers
         )
 
-    assert isinstance(train_loader, DataLoader) and not (train_loader is None)
-    assert isinstance(valid_loader, DataLoader) or (valid_loader is None)
+    assert is_data_loader(train_loader)
+    assert is_data_loader(valid_loader) or (valid_loader is None)
 
     return train_loader, valid_loader
 
 
-def modify_data_loader(
-    data_loader: DataLoader,
-    neg_samples: int,
-    device: torch.device,
-    transforms: List[Dict[str, Callable]],
-) -> DataLoader:
-    def compute_attributes(samples) -> torch.Tensor:
-        variables = unfold_samples(samples)
-        variables = move_to_device(variables, device)
-        assert "y" in variables
-        y = variables["y"]
-        for transform in transforms:
-            y = transform["y->y"](y)
-        return y.data.cpu()
-
-    if not isinstance(data_loader, SameAttributeDataLoader):
-        data_loader = sample_same_value(
-            data_loader, compute_attributes, neg_samples=neg_samples
-        )
-
-    return data_loader
-
-
-def make_dataloaders(
+def update_dataloader(
     estimator: MIEstimator,
-    data: TensorDictLike,
-    valid_data: Optional[TensorDictLike] = None,
-    valid_percentage: float = 0.1,
-    batch_size: Optional[int] = None,
-    num_workers: int = 0,
-) -> Tuple[DataLoader, Optional[DataLoader]]:
-    train_loader, valid_loader = make_default_dataloaders(
-        data=data,
-        valid_data=valid_data,
-        valid_percentage=valid_percentage,
-        batch_size=batch_size,
-        num_workers=num_workers,
-    )
+    dataloader: DataLoader,
+) -> DataLoader:
+    # TODO: this is kinda hacky.. find a better way
 
     # Check if we need to modify the dataloader to sample the same attributes
     _estimator = estimator
@@ -174,19 +173,23 @@ def make_dataloaders(
         neg_samples = _estimator.neg_samples
         device = next(iter(estimator.parameters())).device
         transforms.append({"y->y": _estimator.quantize_y})
-        train_loader = modify_data_loader(
-            train_loader,
-            transforms=transforms,
-            device=device,
-            neg_samples=neg_samples,
-        )
 
-        if valid_loader:
-            valid_loader = modify_data_loader(
-                valid_loader,
-                transforms=transforms,
-                device=device,
-                neg_samples=neg_samples,
+        def compute_attributes(samples) -> torch.Tensor:
+            v_args, v_kwargs = prepare_variables(samples, device)
+
+            if "y" in v_kwargs:
+                y = v_kwargs["y"]
+            else:
+                assert len(v_args) == 2
+                y = v_args[1]
+
+            for transform in transforms:
+                y = transform["y->y"](y)
+            return y.data.cpu()
+
+        if not isinstance(dataloader, SameAttributeDataLoader):
+            dataloader = sample_same_value(
+                dataloader, compute_attributes, neg_samples=neg_samples
             )
 
-    return train_loader, valid_loader
+    return dataloader

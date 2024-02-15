@@ -1,152 +1,39 @@
 from typing import Type, Optional, Dict, Any, Union, Tuple, List, Callable
 
-import numpy as np
-import pandas as pd
 import torch
 from torch.optim import Optimizer
-from tqdm.autonotebook import tqdm
 from torch.optim import Adam
-from torch.optim.lr_scheduler import (
-    SequentialLR,
-    LinearLR,
-    CosineAnnealingLR,
-    ConstantLR,
-    LRScheduler,
-)
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 
 from torch_mist.estimators.base import MIEstimator
-from torch_mist.utils.batch import unfold_samples, move_to_device
+from torch_mist.utils.data.dataset import WrappedDataset
 
-from torch_mist.utils.evaluation import evaluate_mi
-from torch_mist.utils.logging import PandasLogger
-from torch_mist.utils.logging.logger.base import Logger, DummyLogger
-from torch_mist.utils.misc import make_dataloaders, TensorDictLike
-from torch_mist.utils.train.utils import RunTerminationManager
-
-
-def _instantiate_optimizer(
-    estimator: MIEstimator,
-    max_iterations: int,
-    warmup_iterations: int = 0,
-    optimizer_class: Type[Optimizer] = Adam,
-    optimizer_params: Optional[Dict[str, Any]] = None,
-    lr_annealing: bool = False,
-) -> Tuple[Optimizer, LRScheduler]:
-    params = [
-        {"params": params}
-        for params in estimator.parameters()
-        if params.requires_grad
-    ]
-
-    if optimizer_params is None:
-        optimizer_params = {"lr": 5e-4}
-
-    opt = optimizer_class(params, **optimizer_params)
-
-    # Cosine annealing with initial linear warmup
-    if lr_annealing:
-        lr_scheduler = SequentialLR(
-            opt,
-            [
-                LinearLR(
-                    opt, start_factor=1e-2, total_iters=warmup_iterations
-                ),
-                CosineAnnealingLR(
-                    opt,
-                    T_max=max_iterations - warmup_iterations,
-                    eta_min=1e-5,
-                ),
-            ],
-            milestones=[warmup_iterations],
-        )
-    else:
-        lr_scheduler = ConstantLR(opt, 1.0)
-
-    return opt, lr_scheduler
+from torch_mist.utils.logging.logger.base import Logger
+from torch_mist.utils.data.utils import (
+    TensorDictLike,
+    make_default_dataloaders,
+    update_dataloader,
+)
+from torch_mist.utils.train.model import train_model
 
 
-def train_epoch(
-    estimator: MIEstimator,
-    train_loader: DataLoader,
-    opt: Optimizer,
-    lr_scheduler: LRScheduler,
-    device: Union[str, torch.device],
-    logger: Optional[Logger] = None,
-    tqdm_iteration: Optional[tqdm] = None,
-    fast_train: bool = False,
-    train_logged_methods: Optional[
-        List[Union[str, Tuple[str, Callable]]]
-    ] = None,
-    eval_logged_methods: Optional[
-        List[Union[str, Tuple[str, Callable]]]
-    ] = None,
-    max_iterations: Optional[int] = None,
+def pretrain_components(
+    estimator: MIEstimator, train_loader: DataLoader, verbose: bool = True
 ):
-    with logger.train():
-        estimator.train()
-        with logger.epoch():
-            for samples in train_loader:
-                variables = unfold_samples(samples)
-                variables = move_to_device(variables, device)
-
-                if max_iterations:
-                    if logger._iteration >= max_iterations:
-                        break
-
-                with logger.iteration():
-                    with logger.logged_methods(
-                        estimator, train_logged_methods
-                    ):
-                        loss = estimator(**variables)
-
-                    # Compute the ratio only if necessary
-                    if not fast_train and not isinstance(logger, DummyLogger):
-                        with logger.logged_methods(
-                            estimator, eval_logged_methods
-                        ):
-                            estimator.mutual_information(**variables)
-
-                    opt.zero_grad()
-                    loss.backward()
-                    opt.step()
-                    lr_scheduler.step()
-
-                if tqdm_iteration:
-                    tqdm_iteration.update(1)
-                    tqdm_iteration.set_postfix_str(f"loss: {loss}")
-
-
-def validate(
-    estimator: MIEstimator,
-    valid_loader: Optional[DataLoader],
-    device: Union[str, torch.device],
-    logger: Logger,
-    eval_logged_methods: Optional[
-        List[Union[str, Tuple[str, Callable]]]
-    ] = None,
-) -> float:
-    if eval_logged_methods is None:
-        eval_logged_methods = []
-
-    if valid_loader is not None:
-        with logger.valid():
-            with logger.logged_methods(
-                estimator,
-                eval_logged_methods,
-            ):
-                valid_mi = evaluate_mi(
-                    estimator=estimator,
-                    data=valid_loader,
-                    device=device,
-                )
-
-            if isinstance(valid_mi, dict):
-                valid_mi = sum(valid_mi.values())
-    else:
-        valid_mi = None
-
-    return valid_mi
+    for func, component in estimator._components_to_pretrain:
+        trained = False
+        if hasattr(component, "trained"):
+            trained = component.trained
+        if not trained:
+            wrapped_loader = DataLoader(
+                WrappedDataset(train_loader.dataset, func),
+                batch_size=train_loader.batch_size,
+                shuffle=True,
+                num_workers=train_loader.num_workers,
+            )
+            if verbose:
+                print(f"Training {component.__class__.__name__}()")
+            component.fit(wrapped_loader)
 
 
 def train_mi_estimator(
@@ -167,7 +54,7 @@ def train_mi_estimator(
     logger: Optional[Union[Logger, bool]] = None,
     early_stopping: bool = False,
     patience: int = 5,
-    delta: float = 0.001,
+    tolerance: float = 0.001,
     fast_train: bool = False,
     train_logged_methods: Optional[
         List[Union[str, Tuple[str, Callable]]]
@@ -177,8 +64,7 @@ def train_mi_estimator(
     ] = None,
 ) -> Optional[Any]:
     # Create the training and validation dataloaders
-    train_loader, valid_loader = make_dataloaders(
-        estimator=estimator,
+    train_loader, valid_loader = make_default_dataloaders(
         data=data,
         valid_data=valid_data,
         valid_percentage=valid_percentage,
@@ -186,119 +72,45 @@ def train_mi_estimator(
         num_workers=num_workers,
     )
 
-    if early_stopping and (valid_loader is None):
-        print(
-            "[Warning]: Please specify a validation set or use valid_percentage>0 to for early_stopping."
-        )
-        early_stopping = False
-
-    if max_iterations is None and max_epochs is None:
-        raise ValueError("Please specify either max_epochs or max_iterations")
-
-    iterations_per_epoch = len(train_loader)
-
-    if max_epochs is None:
-        max_epochs = int(np.ceil(max_iterations / iterations_per_epoch))
-
-    if max_iterations is None:
-        max_iterations = iterations_per_epoch * max_epochs
-
-    if not 0 <= warmup_percentage <= 1:
-        raise ValueError("Warmup percentage must be between 0 and 1")
-
-    warmup_iterations = int(
-        iterations_per_epoch * max_epochs * warmup_percentage
+    # Pretrain all the components (such as quantization schemes) that need training
+    pretrain_components(
+        estimator=estimator, train_loader=train_loader, verbose=verbose
     )
 
-    opt, lr_scheduler = _instantiate_optimizer(
-        estimator=estimator,
+    # Update the dataloader if the estimator requires custom batches
+    train_loader = update_dataloader(
+        estimator,
+        train_loader,
+    )
+
+    # And the validation loader (if any)
+    if not (valid_loader is None):
+        valid_loader = update_dataloader(estimator, valid_loader)
+
+    # Train the model
+    return train_model(
+        model=estimator,
+        train_data=train_loader,
+        valid_data=valid_loader,
+        valid_percentage=0,
+        early_stopping=early_stopping,
+        patience=patience,
+        tolerance=tolerance,
+        batch_size=batch_size,
+        max_epochs=max_epochs,
+        lr_annealing=lr_annealing,
+        warmup_percentage=warmup_percentage,
+        max_iterations=max_iterations,
         optimizer_class=optimizer_class,
         optimizer_params=optimizer_params,
-        lr_annealing=lr_annealing,
-        warmup_iterations=warmup_iterations,
-        max_iterations=max_iterations,
-    )
-    estimator = estimator.to(device)
-
-    default_logger = False
-    # If the logger is None, use the default PandasLogger,
-    if logger is None:
-        logger = PandasLogger()
-        default_logger = True
-    # If False, instantiate a DummyLogger, which does not store any quantity
-    elif logger is False:
-        logger = DummyLogger()
-        default_logger = True
-
-    # If nothing is specified, log the loss and mutual information
-    if train_logged_methods is None:
-        train_logged_methods = ["loss"]
-    if eval_logged_methods is None:
-        eval_logged_methods = ["mutual_information"]
-
-    run_manager = RunTerminationManager(
-        early_stopping=early_stopping,
-        delta=delta,
-        patience=patience,
-        verbose=verbose,
-        warmup_iterations=warmup_iterations,
-        max_iterations=max_iterations,
         maximize=estimator.lower_bound,
-        minimize=estimator.upper_bound,
+        minimize=estimator.lower_bound,
+        eval_method="mutual_information",
+        fast_train=fast_train,
+        num_workers=num_workers,
+        device=device,
+        verbose=verbose,
+        logger=logger,
+        train_logged_methods=train_logged_methods,
+        eval_logged_methods=eval_logged_methods,
     )
-
-    tqdm_epochs = (
-        tqdm(total=max_epochs, desc="Epoch", position=1) if verbose else None
-    )
-    tqdm_iteration = (
-        tqdm(total=len(train_loader), desc="Iteration", position=1)
-        if verbose
-        else None
-    )
-
-    for epoch in range(max_epochs):
-        if tqdm_epochs:
-            tqdm_iteration.reset()
-
-        train_epoch(
-            estimator=estimator,
-            train_loader=train_loader,
-            opt=opt,
-            lr_scheduler=lr_scheduler,
-            logger=logger,
-            tqdm_iteration=tqdm_iteration,
-            device=device,
-            fast_train=fast_train,
-            train_logged_methods=train_logged_methods,
-            eval_logged_methods=eval_logged_methods,
-            max_iterations=max_iterations,
-        )
-
-        valid_mi = validate(
-            estimator=estimator,
-            valid_loader=valid_loader,
-            device=device,
-            logger=logger,
-            eval_logged_methods=eval_logged_methods,
-        )
-
-        if tqdm_epochs:
-            if valid_mi:
-                tqdm_epochs.set_postfix_str(f"valid_mi: {valid_mi}")
-            tqdm_epochs.update(1)
-
-        if run_manager.should_stop(
-            iteration=logger._iteration, valid_mi=valid_mi, model=estimator
-        ):
-            break
-
-    log = logger.get_log()
-
-    if default_logger:
-        logger.clear()
-
-    # Load the state dictionary for the best score
-    if not (run_manager.best_state_dict is None):
-        estimator.load_state_dict(run_manager.best_state_dict)
-
-    return log

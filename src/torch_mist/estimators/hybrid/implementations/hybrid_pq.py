@@ -6,7 +6,7 @@ from pyro.distributions import ConditionalDistribution
 from torch_mist.estimators.discriminative.base import DiscriminativeMIEstimator
 from torch_mist.estimators.hybrid.base import HybridMIEstimator
 from torch_mist.estimators.transformed.implementations.pq import PQ
-from torch_mist.quantization import QuantizationFunction
+from torch_mist.quantization import QuantizationFunction, LearnableQuantization
 from torch_mist.utils.caching import cached_method
 
 

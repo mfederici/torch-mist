@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Dict, Union
+from typing import Dict, Union, Callable, Tuple, List
 
 import torch
 import torch.nn as nn
@@ -9,6 +9,10 @@ class MIEstimator(nn.Module):
     lower_bound: bool = False
     upper_bound: bool = False
     infomax_gradient: Dict[str, bool] = {"x": False, "y": False}
+
+    def __init__(self):
+        super().__init__()
+        self._components_to_pretrain: List[Tuple[Callable, nn.Module]] = []
 
     @abstractmethod
     def log_ratio(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:

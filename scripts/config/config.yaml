@@ -2,12 +2,14 @@ defaults:
   - logger: pandas
   - data: ???
   - mi_estimator: smile
+  - _self_
 
 device: cpu
-save_trained_model: false
+save_trained_model: null
+save_train_log: false
 seed: 42
-x_key: x
-y_key: y
+x_dim: -1
+y_dim: -1
 
 # Default parameters
 params:
@@ -25,6 +27,9 @@ params:
   # Quantized estimator parameters
   n_bins: 32
   temperature: 0.1
+  vqvae_hidden_dims: [64]
+  vqvae_quantization_dim: 32
+  vqvae_max_epochs: 2
 
 
 # Estimation parameters
@@ -35,6 +40,8 @@ estimation:
   early_stopping: true
   lr_annealing: false
   max_epochs: 32
+  x_key: x
+  y_key: y
   device: ${device}
   optimizer_class:
     _partial_: true

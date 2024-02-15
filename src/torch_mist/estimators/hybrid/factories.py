@@ -7,6 +7,7 @@ from torch_mist.estimators.hybrid import (
     PQHybridMIEstimator,
 )
 from torch_mist.quantization import QuantizationFunction
+from torch_mist.distributions.factories import conditional_categorical
 
 
 def hybrid_pq(
@@ -17,8 +18,6 @@ def hybrid_pq(
     q_QY_given_X: Optional[ConditionalDistribution] = None,
     temperature: float = 0.1,
 ) -> PQHybridMIEstimator:
-    from torch_mist.distributions.factories import conditional_categorical
-
     if q_QY_given_X is None:
         if x_dim is None or hidden_dims is None:
             raise ValueError(

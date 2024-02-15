@@ -2,3 +2,5 @@ _target_: torch_mist.estimators.nwj
 hidden_dims: ${params.hidden_dims}
 neg_samples: ${params.neg_samples}
 k_dim: ${params.k_dim}
+x_dim: ${x_dim}
+y_dim: ${y_dim}

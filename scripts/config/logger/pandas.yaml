@@ -1,2 +1,3 @@
 _target_: torch_mist.utils.logging.PandasLogger
 log_every: 10
+log_dir: .

@@ -1,6 +1,6 @@
 # @package _global_
 defaults:
-  - /mi_estimator: ???
+  - override /mi_estimator: ???
   - override /data: multimixture
 
 params:
@@ -29,5 +29,5 @@ estimation:
   max_epochs: 32
   device: ${device}
   optimizer_class:
-    _partial_: true
     _target_: torch.optim.AdamW
+    _partial_: true

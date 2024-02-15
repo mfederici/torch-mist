@@ -1,9 +1,7 @@
-import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
 from torch_mist import estimate_mi
-from torch_mist.utils.batch import unfold_samples
 from torch_mist.utils.data import SampleDataset
 
 
@@ -28,6 +26,11 @@ def test_inputs_train_mi_estimator():
 
     tests = [
         {
+            "params": {"data": {"x": x, "y": y}, "max_epochs": 1},
+            "should_fail": False,
+            "message": "Failed with x,y and max_epochs",
+        },
+        {
             "params": {"data": (x, wrong_y), "max_epochs": 1},
             "should_fail": True,
             "message": "The estimator should fail when passed x and y of different length.",
@@ -41,11 +44,6 @@ def test_inputs_train_mi_estimator():
             "params": {"data": y, "max_epochs": 1},
             "should_fail": True,
             "message": "The estimator should fail when only y is passed.",
-        },
-        {
-            "params": {"data": {"x": x, "y": y}, "max_epochs": 1},
-            "should_fail": False,
-            "message": "Failed with x,y and max_epochs",
         },
         {
             "params": {"data": (x, y), "max_epochs": 1},
@@ -68,8 +66,8 @@ def test_inputs_train_mi_estimator():
                 "max_epochs": 1,
                 "valid_percentage": 0.1,
             },
-            "should_fail": True,
-            "message": "Should fail since a train_set (or x,y) need to be specified for valid_percentage>0.",
+            "should_fail": False,
+            "message": "Failed with train_loader, max_epochs and valid_percentage>0.",
         },
         {
             "params": {
@@ -119,8 +117,8 @@ def test_inputs_train_mi_estimator():
                 "valid_percentage": 0.1,
                 "max_epochs": 1,
             },
-            "should_fail": True,
-            "message": "Should fail with valid_percentage>0, train_loader and no valid_loader.",
+            "should_fail": False,
+            "message": "Failed with train_loader and test_loader.",
         },
         {
             "params": {
@@ -159,7 +157,7 @@ def test_inputs_train_mi_estimator():
     for test in tests:
         print(
             {
-                k: v.shape if isinstance(v, torch.Tensor) else v
+                k: v.shape if hasattr(v, "shape") else v
                 for k, v in test["params"].items()
             }
         )
@@ -170,36 +168,7 @@ def test_inputs_train_mi_estimator():
                 estimator_name="js", hidden_dims=[32, 32], **test["params"]
             )
         except Exception as e:
-            failed = True
+            print("##################")
             print(e)
+            failed = True
         assert failed == test["should_fail"], test["message"]
-
-
-def test_utils():
-    x = torch.zeros(10, 1)
-    failed = False
-    try:
-        unfold_samples((x,))
-    except Exception as e:
-        print(e)
-        failed = True
-
-    assert failed
-
-    failed = False
-    try:
-        unfold_samples({"x": x})
-    except Exception as e:
-        print(e)
-        failed = True
-
-    assert failed
-
-    failed = False
-    try:
-        unfold_samples(x)
-    except Exception as e:
-        print(e)
-        failed = True
-
-    assert failed

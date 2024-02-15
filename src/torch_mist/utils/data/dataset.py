@@ -1,5 +1,5 @@
 from distutils.dist import Distribution
-from typing import Dict, Sequence, Union
+from typing import Dict, Sequence, Union, Callable, Any
 
 import numpy as np
 import pandas as pd
@@ -76,3 +76,16 @@ class DistributionDataset(Dataset):
 
         samples = self.joint_dist.sample(sample_shape)
         return samples
+
+
+class WrappedDataset(Dataset):
+    def __init__(self, dataset: Dataset, func: Callable):
+        super().__init__()
+        self.dataset = dataset
+        self.func = func
+
+    def __getitem__(self, item) -> Any:
+        return self.func(self.dataset.__getitem__(item))
+
+    def __len__(self):
+        return len(self.dataset)

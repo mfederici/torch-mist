@@ -1,3 +1,5 @@
 _target_: torch_mist.estimators.infonce
 hidden_dims: ${params.hidden_dims}
 k_dim: ${params.k_dim}
+x_dim: ${x_dim}
+y_dim: ${y_dim}

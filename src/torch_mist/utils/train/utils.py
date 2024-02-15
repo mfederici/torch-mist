@@ -7,7 +7,7 @@ class RunTerminationManager:
     def __init__(
         self,
         early_stopping: bool,
-        delta: float,
+        tolerance: float,
         patience: int,
         verbose: bool,
         warmup_iterations: Optional[int],
@@ -25,7 +25,7 @@ class RunTerminationManager:
         self.maximize = maximize
         self.minimize = minimize
         self.best_value = 0
-        self.delta = delta
+        self.tolerance = tolerance
         self.patience = patience
         self.current_patience = patience
         self.verbose = verbose
@@ -47,7 +47,7 @@ class RunTerminationManager:
                 if self.maximize
                 else (self.best_value - valid_mi)
             )
-            if improvement >= self.delta:
+            if improvement >= self.tolerance:
                 # Improvement, update best and reset the patience
                 self.best_value = valid_mi
                 self.current_patience = self.patience

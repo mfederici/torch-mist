@@ -3,8 +3,10 @@ from typing import Optional
 from torch_mist.distributions.joint.categorical import JointCategorical
 from torch_mist.estimators.generative.base import JointGenerativeMIEstimator
 from torch_mist.estimators.transformed.base import TransformedMIEstimator
-from torch_mist.quantization.functions import QuantizationFunction
-from torch_mist.utils.freeze import freeze
+from torch_mist.quantization.functions import (
+    QuantizationFunction,
+    LearnableQuantization,
+)
 
 
 class BinnedMIEstimator(TransformedMIEstimator):
@@ -17,9 +19,6 @@ class BinnedMIEstimator(TransformedMIEstimator):
         quantize_y: Optional[QuantizationFunction] = None,
         temperature: float = 1.0,
     ):
-        quantize_x = freeze(quantize_x)
-        quantize_y = freeze(quantize_y)
-
         q_XY = JointCategorical(
             variables=["x", "y"],
             bins=[quantize_x.n_bins, quantize_y.n_bins],
@@ -39,3 +38,19 @@ class BinnedMIEstimator(TransformedMIEstimator):
             ),
             transforms=transforms,
         )
+
+        if (
+            isinstance(quantize_y, LearnableQuantization)
+            and not quantize_y.trained
+        ):
+            self._components_to_pretrain += [
+                (lambda batch: batch["y"], self.transforms["y->y"])
+            ]
+
+        if (
+            isinstance(quantize_y, LearnableQuantization)
+            and not quantize_y.trained
+        ):
+            self._components_to_pretrain += [
+                (lambda batch: batch["x"], self.transforms["x->x"])
+            ]

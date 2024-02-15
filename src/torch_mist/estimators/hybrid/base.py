@@ -32,6 +32,13 @@ class HybridMIEstimator(DiscriminativeMIEstimator):
         }
         self.infomax_gradient = informax_gradient
 
+        self._components_to_pretrain += (
+            self.generative_estimator._components_to_pretrain
+        )
+        self._components_to_pretrain += (
+            self.discriminative_estimator._components_to_pretrain
+        )
+
     @cached_method
     def unnormalized_log_ratio(
         self, x: torch.Tensor, y: torch.Tensor

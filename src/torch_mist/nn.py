@@ -29,8 +29,11 @@ def dense_nn(
     input_dim: int,
     output_dim: int,
     hidden_dims: Optional[List[int]] = None,
-    nonlinearity: Callable[[torch.Tensor], torch.Tensor] = nn.ReLU(True),
+    nonlinearity: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
 ) -> nn.Module:
+    if nonlinearity is None:
+        nonlinearity = nn.ReLU(True)
+
     if hidden_dims is None:
         hidden_dims = []
     if len(hidden_dims) == 0:

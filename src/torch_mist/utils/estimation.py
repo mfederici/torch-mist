@@ -10,55 +10,47 @@ from torch.utils.data import DataLoader, Dataset
 from torch_mist.estimators import MultiMIEstimator
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.estimators.factories import instantiate_estimator
-from torch_mist.utils.dims import infer_dims
+from torch_mist.utils.data.utils import infer_dims, TensorDictLike
 from torch_mist.utils.logging import PandasLogger
 from torch_mist.utils.logging.logger.base import Logger, DummyLogger
-from torch_mist.utils.misc import TensorDictLike
 from torch_mist.utils.train.mi_estimator import train_mi_estimator
 from torch_mist.utils.evaluation import evaluate_mi
 
 
 def _instantiate_estimator(
     instantiation_func: Callable[[Any], MIEstimator],
-    data: Union[
-        Tuple[
-            Union[torch.Tensor, np.ndarray], Union[torch.Tensor, np.ndarray]
-        ],
-        Dict[str, Union[torch.Tensor, np.ndarray]],
-        Dataset,
-        DataLoader,
-    ],
+    data: TensorDictLike,
     x_key: Optional[str] = None,
     y_key: Optional[str] = None,
     verbose: bool = True,
     **kwargs,
 ) -> MIEstimator:
     dims = infer_dims(data)
+    if x_key is None:
+        x_key = "x"
+    if y_key is None:
+        y_key = "y"
 
-    if "x" in dims:
-        x_dim = dims["x"]
+    if x_key in dims:
+        x_dim = dims[x_key]
     else:
-        if x_key in dims:
-            x_dim = dims[x_key]
-        else:
-            raise ValueError(
-                "The data does not contain a key for 'x'.\n"
-                + f"Please specify a value for x_key among {dims.keys()}"
-            )
+        raise ValueError(
+            "The data does not contain a key for 'x'.\n"
+            + f"Please specify a value for x_key among {dims.keys()}"
+        )
 
-    if "y" in dims:
-        y_dim = dims["y"]
+    if y_key in dims:
+        y_dim = dims[y_key]
     else:
-        if y_key in dims:
-            y_dim = dims[y_key]
-        else:
-            raise ValueError(
-                "The data does not contain a key for 'y'.\n"
-                + f"Please specify a value for y_key among {dims.keys()}"
-            )
+        raise ValueError(
+            "The data does not contain a key for 'y'.\n"
+            + f"Please specify a value for y_key among {dims.keys()}"
+        )
 
-    kwargs["x_dim"] = x_dim
-    kwargs["y_dim"] = y_dim
+    if "x_dim" in inspect.signature(instantiation_func).parameters:
+        kwargs["x_dim"] = x_dim
+    if "y_dim" in inspect.signature(instantiation_func).parameters:
+        kwargs["y_dim"] = y_dim
 
     if verbose:
         print(f"Instantiating the estimator with {kwargs}")
@@ -94,12 +86,12 @@ def estimate_mi(
     num_workers: int = 0,
     early_stopping: bool = True,
     patience: int = 5,
-    delta: float = 0.001,
+    tolerance: float = 0.001,
     return_estimator: bool = False,
     fast_train: bool = False,
     hidden_dims: List[int] = [128, 64],
-    x_key: Optional[str] = None,
-    y_key: Optional[str] = None,
+    x_key: str = "x",
+    y_key: str = "y",
     **kwargs,
 ) -> Union[
     float,
@@ -136,19 +128,14 @@ def estimate_mi(
         )
 
     # If using different key instead of 'x' and 'y'
-    if not (x_key is None) or not (y_key is None):
-        if x_key is None:
-            x_key = "x"
-        if y_key is None:
-            y_key = "y"
-
-        estimator = MultiMIEstimator({(x_key, y_key): estimator})
+    if x_key != "x" or y_key != "y":
+        if not isinstance(estimator, MultiMIEstimator):
+            estimator = MultiMIEstimator({(x_key, y_key): estimator})
+        else:
+            assert (x_key, y_key) in estimator.estimators
 
     if verbose:
         print("Training the estimator")
-
-    if evaluation_batch_size is None:
-        evaluation_batch_size = batch_size
 
     if logger is None:
         logger = PandasLogger()
@@ -172,7 +159,7 @@ def estimate_mi(
         batch_size=batch_size,
         early_stopping=early_stopping,
         patience=patience,
-        delta=delta,
+        tolerance=tolerance,
         num_workers=num_workers,
         fast_train=fast_train,
     )
@@ -194,8 +181,6 @@ def estimate_mi(
             device=device,
             num_workers=num_workers,
         )
-
-    logger.clear()
 
     if not (train_log is None) and return_estimator:
         return mi_value, estimator, train_log

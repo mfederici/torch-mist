@@ -224,13 +224,13 @@ class Logger:
         self._iteration = 0
         self._epoch = 0
 
-    def _detach_all_hooks(self):
+    def detach_all_hooks(self):
         logged_methods = list(self._logged_methods)
         for method_name in logged_methods:
             self.detach_hook(method_name)
 
     def clear(self):
-        self._detach_all_hooks()
+        self.detach_all_hooks()
         self.reset_log()
 
     def __del__(self):

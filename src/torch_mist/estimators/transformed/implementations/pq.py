@@ -4,8 +4,10 @@ from pyro.distributions import ConditionalDistribution
 from torch_mist.distributions import CategoricalModule
 from torch_mist.estimators import DoE
 from torch_mist.estimators.transformed.base import TransformedMIEstimator
-from torch_mist.quantization.functions import QuantizationFunction
-from torch_mist.utils.freeze import freeze
+from torch_mist.quantization.functions import (
+    QuantizationFunction,
+    LearnableQuantization,
+)
 
 
 class PQ(TransformedMIEstimator):
@@ -15,8 +17,6 @@ class PQ(TransformedMIEstimator):
         quantize_y: QuantizationFunction,
         temperature: float = 1.0,
     ):
-        quantize_y = freeze(quantize_y)
-
         super().__init__(
             transforms={"y": quantize_y},
             base_estimator=DoE(
@@ -27,3 +27,11 @@ class PQ(TransformedMIEstimator):
                 ),
             ),
         )
+
+        if (
+            isinstance(quantize_y, LearnableQuantization)
+            and not quantize_y.trained
+        ):
+            self._components_to_pretrain += [
+                (lambda batch: batch["y"], self.transforms["y->y"])
+            ]

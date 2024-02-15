@@ -36,7 +36,7 @@ from torch_mist.estimators.hybrid import (
 )
 from torch_mist.quantization import (
     FixedQuantization,
-    vqvae_quantization,
+    vqvae,
     kmeans_quantization,
 )
 from torch_mist.utils.data import SampleDataset
@@ -318,11 +318,10 @@ def test_quantized_mi_estimators():
     train_samples, test_samples, true_mi, _ = _make_data()
 
     quantizations = [
-        FixedQuantization(
-            input_dim=y_dim, thresholds=torch.linspace(-3, 3, n_bins - 1)
-        ),
-        vqvae_quantization(
-            data=train_samples["y"],
+        # FixedQuantization(
+        #     input_dim=y_dim, thresholds=torch.linspace(-3, 3, n_bins - 1)
+        # ),
+        vqvae(
             input_dim=y_dim,
             hidden_dims=hidden_dims,
             quantization_dim=quantization_dim,
@@ -330,17 +329,7 @@ def test_quantized_mi_estimators():
             max_epochs=n_pretrain_epochs,
             batch_size=batch_size,
         ),
-        vqvae_quantization(
-            data=train_samples["y"],
-            input_dim=y_dim,
-            hidden_dims=hidden_dims,
-            quantization_dim=quantization_dim,
-            n_bins=n_bins,
-            batch_size=batch_size,
-            beta=0.01,
-        ),
         kmeans_quantization(
-            data=train_samples["y"],
             n_bins=n_bins,
         ),
     ]
@@ -411,7 +400,7 @@ def test_hybrid_estimators():
         neg_samples=neg_samples,
     )
 
-    quantize_y = kmeans_quantization(train_samples["y"], n_bins=8)
+    quantize_y = kmeans_quantization(n_bins=8)
 
     estimators = [
         ResampledHybridMIEstimator(

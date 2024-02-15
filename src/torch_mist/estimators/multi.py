@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Callable
 
 import torch
 from torch import nn
@@ -17,6 +17,18 @@ class MultiMIEstimator(MIEstimator):
         for (x_key, y_key), estimator in estimators.items():
             self.upper_bound = self.upper_bound and estimator.upper_bound
             self.lower_bound = self.lower_bound and estimator.lower_bound
+
+            # Add the renaming for the components that need pre-training (if needed)
+            for data_process, component in estimator._components_to_pretrain:
+
+                def new_data_process(batch: Dict[str, torch.Tensor]):
+                    batch["x"] = batch[x_key]
+                    batch["y"] = batch[y_key]
+                    return data_process(batch)
+
+                self._components_to_pretrain.append(
+                    (new_data_process, component)
+                )
 
             key = f"{x_key};{y_key}"
             self.estimators[key] = estimator
