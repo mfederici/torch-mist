@@ -29,7 +29,7 @@ def delete_unused_kwargs(
             kwargs[arg_name] = value
         elif warnings:
             name = transform_factory.__name__
-            print(f"Warning: parameter {arg_name} ignored for {name}.")
+            print(f"[Warning]: parameter {arg_name} ignored for {name}.")
 
     return kwargs
 

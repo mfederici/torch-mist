@@ -55,7 +55,7 @@ class RunTerminationManager:
             else:
                 self.current_patience -= 1
                 if self.verbose:
-                    print(f"Loosing patience: {self.current_patience}")
+                    print(f"Losing patience: {self.current_patience}")
 
             if self.current_patience <= 0:
                 if self.verbose:
