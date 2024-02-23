@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Callable, TypeVar, Dict, Any
 import inspect
 
@@ -48,6 +49,22 @@ def cached_method(method: Callable[..., T]) -> Callable[..., T]:
             self.__cache_stats = {}
             self.__delete_cache = delete_cache_hook
 
+            # Delete the cache before copying
+            if hasattr(self, "__deepcopy__"):
+                original_deepcopy = self.__deepcopy__
+
+                def wrapped_deepcopy(self, *args, **kwargs):
+                    delete_cache_hook(self)
+                    return original_deepcopy(self, *args, **kwargs)
+
+            else:
+
+                def wrapped_deepcopy(self, *args, **kwargs):
+                    delete_cache_hook(self)
+                    return deepcopy(self)
+
+            setattr(self, "__deepcopy__", wrapped_deepcopy)
+
             # For nn.Modules, automatically invalidate on backwards()
             if isinstance(self, nn.Module):
                 self.register_full_backward_hook(self.__delete_cache)
@@ -73,6 +90,7 @@ def cached_method(method: Callable[..., T]) -> Callable[..., T]:
         return value
 
     wrapper.__signature__ = inspect.signature(method)
+
     return wrapper
 
 

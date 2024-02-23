@@ -264,7 +264,7 @@ def train_model(
         warmup_percentage=warmup_percentage,
     )
 
-    if patience is None:
+    if patience is None and early_stopping:
         patience = int(max_epochs * 0.02)
         if patience < 1:
             patience = 1

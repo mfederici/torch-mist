@@ -102,6 +102,7 @@ def _test_estimator(
         batch_size=batch_size,
         verbose=False,
         early_stopping=estimator.lower_bound or estimator.upper_bound,
+        num_workers=8,
     )
 
     # Compute the estimate
@@ -480,8 +481,9 @@ def test_flow_generative():
         estimator,
         train_data=dataset,
         max_epochs=5,
-        verbose=False,
+        verbose=True,
         batch_size=batch_size,
+        num_workers=8,
     )
 
     mi_estimate = evaluate_mi(estimator, data=dataset, batch_size=batch_size)
@@ -527,6 +529,7 @@ def test_multi_estimator():
         max_epochs=5,
         verbose=False,
         batch_size=batch_size,
+        num_workers=8,
     )
 
     mi_estimate = evaluate_mi(estimator, data=test_set, batch_size=batch_size)

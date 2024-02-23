@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import torch
 
 from torch_mist.estimators import js
@@ -35,6 +37,9 @@ def test_caching():
     estimator(x + 1, y).backward()
 
     assert len(estimator.__cache) == 0
+    estimator(x + 1, y)
+    e2 = deepcopy(estimator)
+    assert not (e2 is None)
 
 
 @cached_function

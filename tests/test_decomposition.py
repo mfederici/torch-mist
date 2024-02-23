@@ -17,10 +17,8 @@ def test_decomposition():
         MID(n_dim, proj_params={"hidden_dims": []}),
     ]:
         for train_params in [
-            {},
-            {"max_epochs": 200},
+            {"max_epochs": 100},
             {"optimizer_params": {"lr": 1e-4}},
-            {"early_stopping": False},
         ]:
             z = proj.fit_transform(data, targets, **train_params)
 

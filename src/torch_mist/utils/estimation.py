@@ -441,7 +441,7 @@ def k_fold_mi_estimate(
         total_epochs += epochs
 
         # log the results for the splits
-        for split, mi in results.items():
+        for split, mi in mi_values.items():
             logger._log(
                 data=mi,
                 name="mutual_information",
