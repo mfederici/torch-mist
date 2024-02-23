@@ -49,6 +49,10 @@ def test_csv_script():
     estimator = torch.load(model_path)
     data = CSVDataset(csv_path)
 
+    # Clean up
+    os.remove(csv_path)
+    os.remove(model_path)
+
     mi = evaluate_mi(
         estimator=estimator,
         data=data,
@@ -58,16 +62,14 @@ def test_csv_script():
     print(mi)
 
     assert "I(sepal;petal)" in mi
-    assert np.isclose(mi["I(sepal;petal)"], 0.36, rtol=0.05)
-
-    # Clean up
-    del dataset
-    os.remove(csv_path)
-    os.remove(model_path)
+    assert np.isclose(mi["I(sepal;petal)"], 0.8, rtol=0.05)
 
 
 def test_multimixture_script():
     model_path = "trained_model.pyt"
+    total_size = 100000
+    batch_size = 100
+    log_every = 10
 
     with initialize(version_base=None, config_path="../scripts/config"):
         # overrides
@@ -78,8 +80,12 @@ def test_multimixture_script():
                 "mi_estimator=js",
                 f"save_trained_model={model_path}",
                 f"estimation.max_epochs=1",
-                "metadata.x_dim=1",
+                f"estimation.batch_size={batch_size}",
+                "estimation.valid_percentage=0.1",
+                f"data.n_samples={total_size}",
+                f"logger.log_every={log_every}",
                 "metadata.y_dim=1",
+                "metadata.x_dim=1",
                 "save_train_log=true",
             ],
         )
@@ -87,6 +93,8 @@ def test_multimixture_script():
         parse(cfg)
 
     estimator = torch.load(model_path)
+    os.remove(model_path)
+
     p_xy = instantiate(cfg.distribution)
     true_mi = p_xy.mutual_information().item()
     test_samples = p_xy.sample(torch.Size([10000]))
@@ -99,9 +107,12 @@ def test_multimixture_script():
 
     assert os.path.isfile("log.csv")
     loaded_train_log = pd.read_csv("log.csv")
-    assert len(loaded_train_log) == 409
+    os.remove("log.csv")
+
+    assert (
+        len(loaded_train_log)
+        == (total_size * 0.9) // batch_size // log_every * 2 + 2
+    )
 
     print(mi, true_mi)
     assert np.isclose(mi, true_mi, 0.4)
-    os.remove(model_path)
-    os.remove("log.csv")

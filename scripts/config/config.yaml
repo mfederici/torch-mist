@@ -39,7 +39,8 @@ estimation:
   valid_percentage: 0.1
   early_stopping: true
   lr_annealing: false
-  max_epochs: 32
+  max_epochs: null
+  max_iterations: null
   x_key: x
   y_key: y
   device: ${device}

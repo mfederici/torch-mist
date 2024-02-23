@@ -239,9 +239,12 @@ class Logger:
     def get_log(self) -> Optional[Any]:
         return None
 
-    @abstractmethod
+    def _save_log(self, log: Any):
+        pass
+
     def save_log(self):
-        raise NotImplementedError()
+        log = self.get_log()
+        self._save_log(log)
 
     @abstractmethod
     def save_model(self, model: nn.Module, name: str):
@@ -250,7 +253,9 @@ class Logger:
 
 
 class DummyLogger(Logger):
-    def _log(self, **kwargs):
+    def _log(
+        self, data: Any, name: str, iteration: int, epoch: int, split: str
+    ):
         pass
 
     def _reset_log(self):

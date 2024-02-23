@@ -1,6 +1,5 @@
 # @package _global_
 defaults:
-  - /quantization@mi_estimator.quantize_y: kmeans
   - /mi_estimator@mi_estimator.discriminative_estimator: nwj
 
 mi_estimator:
@@ -8,4 +7,6 @@ mi_estimator:
   hidden_dims: ${params.hidden_dims}
   temperature: ${params.temperature}
   x_dim: ${x_dim}
+  quantize_y: kmeans
+  n_bins: ${params.n_bins}
 

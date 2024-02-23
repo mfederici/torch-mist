@@ -9,8 +9,7 @@ from torch_mist.utils.evaluation.model import evaluate
 from torch_mist.utils.data.utils import (
     TensorDictLike,
     update_dataloader,
-    make_dataset,
-    make_default_dataloaders,
+    make_default_dataloader,
 )
 
 
@@ -22,11 +21,10 @@ def evaluate_mi(
     num_workers: int = 0,
 ) -> Union[float, Dict[str, float]]:
     # Make a dataloader if necessary
-    dataloader, _ = make_default_dataloaders(
+    dataloader = make_default_dataloader(
         data=data,
         batch_size=batch_size,
         num_workers=num_workers,
-        valid_percentage=0,
     )
 
     dataloader = update_dataloader(estimator, dataloader)

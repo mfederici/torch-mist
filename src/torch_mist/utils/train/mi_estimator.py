@@ -38,7 +38,7 @@ def pretrain_components(
 
 def train_mi_estimator(
     estimator: MIEstimator,
-    data: TensorDictLike,
+    train_data: TensorDictLike,
     valid_data: Optional[TensorDictLike] = None,
     valid_percentage: float = 0.1,
     batch_size: Optional[int] = None,
@@ -49,11 +49,11 @@ def train_mi_estimator(
     optimizer_class: Type[Optimizer] = Adam,
     optimizer_params: Optional[Dict[str, Any]] = None,
     lr_annealing: bool = False,
-    warmup_percentage: float = 0.2,
+    warmup_percentage: float = 0,
     verbose: bool = True,
     logger: Optional[Union[Logger, bool]] = None,
     early_stopping: bool = False,
-    patience: int = 5,
+    patience: Optional[int] = None,
     tolerance: float = 0.001,
     fast_train: bool = False,
     train_logged_methods: Optional[
@@ -65,7 +65,7 @@ def train_mi_estimator(
 ) -> Optional[Any]:
     # Create the training and validation dataloaders
     train_loader, valid_loader = make_default_dataloaders(
-        data=data,
+        data=train_data,
         valid_data=valid_data,
         valid_percentage=valid_percentage,
         batch_size=batch_size,

@@ -225,11 +225,11 @@ def train_model(
     optimizer_class: Type[Optimizer] = Adam,
     optimizer_params: Optional[Dict[str, Any]] = None,
     lr_annealing: bool = False,
-    warmup_percentage: float = 0.2,
+    warmup_percentage: float = 0,
     verbose: bool = True,
     logger: Optional[Union[Logger, bool]] = None,
     early_stopping: bool = False,
-    patience: int = 5,
+    patience: Optional[int] = None,
     tolerance: float = 0.001,
     fast_train: bool = False,
     train_logged_methods: Optional[
@@ -263,6 +263,15 @@ def train_model(
         max_iterations=max_iterations,
         warmup_percentage=warmup_percentage,
     )
+
+    if patience is None:
+        patience = int(max_epochs * 0.02)
+        if patience < 1:
+            patience = 1
+
+        print(
+            f"[Info]: patience is not specified, using patience={patience} (~2% of training epochs) by default."
+        )
 
     # Instantiate the optimizer and lr_scheduler
     opt, lr_scheduler = instantiate_optimizer(
@@ -350,15 +359,21 @@ def train_model(
 
         # Determine if the training is over
         if run_manager.should_stop(
-            iteration=logger._iteration, valid_mi=valid_score, model=model
+            iteration=logger._iteration, score=valid_score, model=model
         ):
             break
+
+    if early_stopping and run_manager.current_patience > 0:
+        print(
+            "[Warning]: The train procedure ended since max_epoch or max_iteration has been reached."
+            + "Consider increasing the training time by specifying larger values of max_epochs or max_iterations."
+        )
 
     # Obtain the training log
     log = logger.get_log()
 
-    # Load the state dictionary for the best score
-    if not (run_manager.best_state_dict is None):
-        model.load_state_dict(run_manager.best_state_dict)
+    # Load the state dictionary for the best score.
+    # This works only if early_stopping is enabled
+    run_manager.load_best_weights(model)
 
     return log

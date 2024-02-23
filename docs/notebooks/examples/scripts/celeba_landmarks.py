@@ -199,7 +199,7 @@ if __name__ == "__main__":
     print("Training the estimators")
     log = train_mi_estimator(
         estimator=mi_estimator,
-        data=train_set,
+        train_data=train_set,
         valid_data=valid_set,
         max_epochs=max_epochs,
         logger=logger,

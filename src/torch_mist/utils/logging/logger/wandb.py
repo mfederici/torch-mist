@@ -61,6 +61,3 @@ class WandbLogger(Logger):
         artifact = wandb.Artifact(artifact_name, type="model")
         artifact.add_file(filepath)
         self.run.log_artifact(artifact)
-
-    def save_log(self):
-        pass

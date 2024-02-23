@@ -4,7 +4,10 @@ from sklearn.cluster import KMeans
 
 from torch_mist.distributions.factories import conditional_transformed_normal
 from torch_mist.nn import dense_nn
-from torch_mist.quantization.functions import ClusterQuantization
+from torch_mist.quantization.functions import (
+    ClusterQuantization,
+    QuantizationFunction,
+)
 from torch_mist.quantization.vqvae import VQVAE
 
 
@@ -23,7 +26,7 @@ def vqvae(
     beta: float = 0.2,
     nonlinearity: Optional[Callable] = None,
     version: str = "v2",
-    **train_params
+    **train_params,
 ) -> VQVAE:
     assert len(hidden_dims) > 0, "hidden_dims must be a non-empty list"
 
@@ -50,5 +53,18 @@ def vqvae(
         quantization_dim=quantization_dim,
         beta=beta,
         version=version,
-        **train_params
+        **train_params,
     )
+
+
+def instantiate_quantization(
+    name: str, n_bins: int, **kwargs
+) -> QuantizationFunction:
+    if name == "kmeans":
+        quantization = kmeans_quantization(n_bins=n_bins, **kwargs)
+    elif name == "vqvae":
+        quantization = vqvae(n_bins=n_bins, **kwargs)
+    else:
+        raise ValueError(f"The quantization scheme {name} is not supported.")
+
+    return quantization

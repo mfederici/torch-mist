@@ -43,9 +43,10 @@ iris_dataset = load_iris(as_frame=True)['data']
 estimated_mi, estimator, train_log = estimate_mi(
     data=iris_dataset,          # The dataset (as a pandas.DataFrame, many other formats are supported)
     x_key='petal length (cm)',  # Consider the 'petal length' column as x
-    y_key='petal width (cm)',   # And the 'petal witdh` as y
-    estimator_name='mine',      # Use the MINE mutual information estimator
+    y_key='petal width (cm)',   # And the 'petal width` as y
+    estimator='mine',           # Use the MINE mutual information estimator
     max_iterations=1000,        # Number of maximum train iterations 
+    hidden_dims=[128],          # Hidden layers for the critic architecture.
 )
 
 print(f"Mutual information estimated value: {estimated_mi} nats")
@@ -79,7 +80,7 @@ mist data=csv data.filepath=iris.csv mi_estimator=js x_key=sepal y_key=petal \
   logger=wandb
 ```
 
-To visualize the full list use:
+To visualize the full list of arguments use:
 ```bash
 mist data=csv --help
 ```
@@ -102,13 +103,13 @@ estimator = mine(
 )
 
 # Define x and y as the vectors of petal lengths and widths, respectively
-x = iris_dataset['petal length (cm)'].values 
+x = iris_dataset['petal length (cm)'].values
 y = iris_dataset['petal width (cm)'].values
 
 # Train it on the given samples
 train_log = train_mi_estimator(
     estimator=estimator,
-    data=(x, y),
+    train_data=(x, y),
     batch_size=64,
     max_iterations=1000
 )
@@ -258,7 +259,7 @@ from torch_mist.utils.train import train_mi_estimator
 # By default 10% of the data is used for cross-validation and early stopping
 train_log = train_mi_estimator(
     estimator=estimator,
-    data=(x,y),
+    train_data=(x, y),
     batch_size=64,
     valid_percentage=0.1,
 )

@@ -49,7 +49,6 @@ class PandasLogger(Logger):
     def _reset_log(self):
         self.__log = []
 
-    def save_log(self):
-        log = self.get_log()
+    def _save_log(self, log: pd.DataFrame):
         log_path = os.path.join(self.log_dir, self.log_name)
-        log.to_csv(log_path)
+        log.to_csv(log_path, index=False)

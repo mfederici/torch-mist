@@ -1,7 +1,7 @@
-from typing import Callable, List, Optional, Dict, Any, Union
+from typing import Optional, Dict, Any, Union
 
 import numpy as np
-from sklearn.base import TransformerMixin, ClassNamePrefixFeaturesOutMixin
+from sklearn.base import TransformerMixin
 import torch
 from torch import nn
 
@@ -12,6 +12,10 @@ from torch_mist.estimators import (
 )
 from torch_mist.nn import dense_nn
 from torch_mist.utils import train_mi_estimator
+
+
+DEFAULT_MAX_ITERATIONS = 5000
+DEFAULT_BATCH_SIZE = 64
 
 
 class CenterAndScale(nn.Module):
@@ -101,8 +105,6 @@ class MID(TransformerMixin):
             mi_estimator_params["estimator_name"] = "smile"
             if not ("neg_samples" in mi_estimator_params):
                 mi_estimator_params["neg_samples"] = 8
-        if not ("nonlinearity" in mi_estimator_params):
-            mi_estimator_params["nonlinearity"] = nn.ReLU(True)
 
         mi_estimator_params["x_dim"] = self.n_dim
 
@@ -112,7 +114,7 @@ class MID(TransformerMixin):
         self, proj_params: Dict[str, Any]
     ) -> Dict[str, Any]:
         if not ("hidden_dims" in proj_params):
-            proj_params["hidden_dims"] = [64]
+            proj_params["hidden_dims"] = [128]
         if not ("nonlinearity" in proj_params):
             proj_params["nonlinearity"] = nn.ReLU(True)
 
@@ -123,12 +125,26 @@ class MID(TransformerMixin):
         self, train_params: Dict[str, Any]
     ) -> Dict[str, Any]:
         if not ("batch_size" in train_params):
-            train_params["batch_size"] = 64
+            print(
+                "[Info]: batch_size is not specified,"
+                + f" using batch_size={DEFAULT_BATCH_SIZE} by default."
+            )
+            train_params["batch_size"] = DEFAULT_BATCH_SIZE
 
         if not ("max_epochs" in train_params) and not (
             "max_iterations" in train_params
         ):
-            train_params["max_epochs"] = 10
+            print(
+                "[Info]: max_epoch and max_iterations are not specified,"
+                + f" using max_iterations={DEFAULT_MAX_ITERATIONS} by default."
+            )
+            train_params["max_iterations"] = DEFAULT_MAX_ITERATIONS
+
+        if not ("early_stopping" in train_params):
+            train_params["early_stopping"] = True
+
+        if not ("verbose" in train_params):
+            train_params["verbose"] = False
 
         return train_params
 
@@ -145,7 +161,7 @@ class MID(TransformerMixin):
         self,
         X: Union[np.ndarray, torch.Tensor],
         Y: Union[np.ndarray, torch.Tensor],
-        **train_params
+        **train_params,
     ):
         if X.ndim == 1:
             X = X.reshape(-1, 1)
@@ -175,7 +191,7 @@ class MID(TransformerMixin):
         train_params = self._add_default_train_params(train_params)
 
         self.train_log = train_mi_estimator(
-            estimator=self.mi_estimator, data=(X, Y), **train_params
+            estimator=self.mi_estimator, train_data=(X, Y), **train_params
         )
 
         if self.normalize_projection:

@@ -94,7 +94,7 @@ def _test_estimator(
     # Train the estimator
     train_mi_estimator(
         estimator=estimator,
-        data=train_samples,
+        train_data=train_samples,
         optimizer_params=optimizer_params,
         optimizer_class=optimizer_class,
         max_epochs=max_epochs,
@@ -478,7 +478,7 @@ def test_flow_generative():
 
     train_mi_estimator(
         estimator,
-        data=dataset,
+        train_data=dataset,
         max_epochs=5,
         verbose=False,
         batch_size=batch_size,
@@ -523,7 +523,7 @@ def test_multi_estimator():
 
     train_mi_estimator(
         estimator,
-        data=train_set,
+        train_data=train_set,
         max_epochs=5,
         verbose=False,
         batch_size=batch_size,

@@ -3,7 +3,7 @@ from typing import Optional, Union, Tuple, Dict, Callable, List, Any
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import DataLoader, random_split, Dataset
+from torch.utils.data import DataLoader, random_split, Dataset, Subset
 
 from torch_mist.estimators import MIEstimator, TransformedMIEstimator
 from torch_mist.estimators.hybrid import PQHybridMIEstimator
@@ -62,6 +62,31 @@ def convert_to_tensor(
     return array
 
 
+def is_valid_entry(
+    entry: Union[Dict[str, Any], np.ndarray, torch.Tensor, Tuple[Any, ...]]
+) -> bool:
+    if isinstance(entry, torch.Tensor):
+        return torch.sum(entry != entry) == 0
+    elif isinstance(entry, np.ndarray):
+        return np.sum(entry != entry) == 0
+    elif hasattr(entry, "values"):
+        is_valid = True
+        for element in entry.values():
+            if not is_valid_entry(element):
+                is_valid = False
+                break
+        return is_valid
+    elif isinstance(entry, tuple):
+        is_valid = True
+        for element in entry:
+            if not is_valid_entry(element):
+                is_valid = False
+                break
+        return is_valid
+    else:
+        return True
+
+
 def make_dataset(data: TensorDictLike) -> Dataset:
     # Validate the input combinations
     if isinstance(data, list) or isinstance(data, tuple):
@@ -89,8 +114,48 @@ def make_dataset(data: TensorDictLike) -> Dataset:
     return dataset
 
 
+def filter_dataset(dataset: Dataset):
+    # Remove invalid entries
+    valid_ids = []
+    for idx, entry in enumerate(dataset):
+        if is_valid_entry(entry):
+            valid_ids.append(idx)
+    if len(valid_ids) != len(dataset):
+        print(
+            f"[Warning]: Removing {len(dataset)-len(valid_ids)} entries from the dataset"
+        )
+        dataset = Subset(dataset, valid_ids)
+
+    return dataset
+
+
 def is_data_loader(data: TensorDictLike):
     return isinstance(data, DataLoader)
+
+
+def make_default_dataloader(
+    data: TensorDictLike,
+    batch_size: Optional[int] = None,
+    num_workers: int = 0,
+    filter_invalid_data: bool = True,
+) -> DataLoader:
+    if is_data_loader(data):
+        dataloader = data
+    else:
+        if batch_size is None:
+            raise ValueError("Please specify a value for batch_size.")
+        dataset = make_dataset(data)
+
+        if filter_invalid_data:
+            dataset = filter_dataset(dataset)
+
+        dataloader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            shuffle=True,
+        )
+    return dataloader
 
 
 def make_default_dataloaders(
@@ -98,6 +163,7 @@ def make_default_dataloaders(
     valid_data: Optional[TensorDictLike] = None,
     valid_percentage: float = 0.1,
     batch_size: Optional[int] = None,
+    filter_invalid_data: bool = True,
     num_workers: int = 0,
 ) -> Tuple[DataLoader, Optional[DataLoader]]:
     # Make the datasets if necessary
@@ -112,15 +178,22 @@ def make_default_dataloaders(
         train_set = make_dataset(data)
         train_loader = None
 
+    # Filter out NaNs
+    if filter_invalid_data:
+        train_set = filter_dataset(train_set)
+
     if valid_data is None:
         valid_set = None
         valid_loader = None
     elif is_data_loader(valid_data):
-        valid_loader = data
+        valid_loader = valid_data
         valid_set = None
     else:
         valid_set = make_dataset(valid_data)
         valid_loader = None
+
+    if valid_set and filter_invalid_data:
+        valid_set = filter_dataset(valid_set)
 
     # Create a validation set if specified
     if valid_percentage > 0:
@@ -146,7 +219,10 @@ def make_default_dataloaders(
 
     if valid_loader is None and not (valid_set is None):
         valid_loader = DataLoader(
-            valid_set, batch_size=batch_size, num_workers=num_workers
+            valid_set,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            shuffle=True,
         )
 
     assert is_data_loader(train_loader)

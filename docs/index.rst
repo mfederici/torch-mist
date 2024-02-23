@@ -42,3 +42,4 @@ Use-case Examples
    notebooks/examples/infomax.ipynb
    notebooks/examples/feature_selection.ipynb
    notebooks/examples/keypoint_info.ipynb
+   notebooks/examples/k_fold_estimation.ipynb

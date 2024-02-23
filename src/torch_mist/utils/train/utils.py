@@ -1,6 +1,10 @@
+import os.path
+import tempfile
+from copy import deepcopy
 from typing import Optional
 
 from torch import nn
+import torch
 
 
 class RunTerminationManager:
@@ -32,9 +36,31 @@ class RunTerminationManager:
         self.max_iterations = max_iterations
         self.warmup_iterations = warmup_iterations
         self.best_state_dict = None
+        self.__best_model_path = None
+
+    def save_weights(self, model: nn.Module, iteration: int):
+        self.delete_best_weights()
+        self.__best_model_path = os.path.join(
+            tempfile.gettempdir(), f"model_{iteration}.pyt"
+        )
+        torch.save(model.state_dict(), self.__best_model_path)
+
+    def load_best_weights(self, model: nn.Module):
+        if not (self.__best_model_path is None):
+            if self.verbose:
+                iteration = self.__best_model_path.split("_")[-1].split(".")[0]
+                print(f"Loading the weights saved at iteration {iteration}")
+            model.load_state_dict(torch.load(self.__best_model_path))
+        else:
+            if self.verbose:
+                print(f"Using the weights from the last iteration")
+
+    def delete_best_weights(self):
+        if not (self.__best_model_path is None):
+            os.remove(self.__best_model_path)
 
     def should_stop(
-        self, iteration: int, valid_mi: Optional[float], model: nn.Module
+        self, iteration: int, score: Optional[float], model: nn.Module
     ) -> bool:
         stop = False
 
@@ -43,15 +69,23 @@ class RunTerminationManager:
 
         if self.early_stopping:
             improvement = (
-                (valid_mi - self.best_value)
+                (score - self.best_value)
                 if self.maximize
-                else (self.best_value - valid_mi)
+                else (self.best_value - score)
             )
-            if improvement >= self.tolerance:
+            if improvement > 0:
                 # Improvement, update best and reset the patience
-                self.best_value = valid_mi
+                self.best_value = score
                 self.current_patience = self.patience
-                self.best_state_dict = model.state_dict()
+
+                # Write the best state_dict to disk
+                self.save_weights(model, iteration)
+
+                self.best_state_dict = deepcopy(model.state_dict())
+                if self.verbose:
+                    print(f"Best value: {score}")
+            elif -improvement < self.tolerance:
+                pass
             else:
                 self.current_patience -= 1
                 if self.verbose:
@@ -66,3 +100,6 @@ class RunTerminationManager:
             if iteration >= self.max_iterations:
                 stop = True
         return stop
+
+    def __del__(self):
+        self.delete_best_weights()
