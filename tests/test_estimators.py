@@ -55,7 +55,7 @@ max_epochs = 1
 
 optimizer_params = {"lr": 1e-3}
 optimizer_class = Adam
-n_train_samples = 100000
+n_train_samples = 50000
 n_test_samples = 10000
 n_pretrain_epochs = 3
 hidden_dims = [64]
@@ -472,21 +472,19 @@ def test_flow_generative():
         entropy_y=entropy_y,
     )
 
-    dataset = DistributionDataset(
-        joint_dist=p_xy,
-        max_samples=100000,
-    )
+    samples = p_xy.sample([50000])
 
     train_mi_estimator(
         estimator,
-        train_data=dataset,
+        train_data=samples,
         max_epochs=5,
         verbose=True,
         batch_size=batch_size,
         num_workers=8,
+        valid_percentage=0,
     )
 
-    mi_estimate = evaluate_mi(estimator, data=dataset, batch_size=batch_size)
+    mi_estimate = evaluate_mi(estimator, data=samples, batch_size=batch_size)
 
     print("True I(x;y): ", true_mi)
     print("Estimated I(x;y): ", mi_estimate)
