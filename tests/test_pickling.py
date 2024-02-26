@@ -1,10 +1,12 @@
 import os
 import pickle
 import tempfile
+from copy import deepcopy
+
 import torch
 
 from torch_mist.data.multivariate import JointMultivariateNormal
-from torch_mist.estimators import JS, TransformedMIEstimator
+from torch_mist.estimators import JS, TransformedMIEstimator, js
 from torch_mist.critic import JointCritic
 from torch import nn
 
@@ -60,3 +62,17 @@ def test_pickle():
     mi_estimator = torch.load(filepath)
     print("Model Loaded")
     print(mi_estimator)
+
+
+def test_deepcopy():
+    estimator = js(x_dim=1, y_dim=1, hidden_dims=[32])
+
+    x = torch.zeros(10, 1)
+    y = torch.zeros(10, 1)
+
+    value_1 = estimator(x, y)
+
+    estimator2 = deepcopy(estimator)
+
+    value_2 = estimator2(x, y)
+    assert value_1 == value_2

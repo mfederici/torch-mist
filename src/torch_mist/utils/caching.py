@@ -35,7 +35,7 @@ def _is_cache_valid(arguments: Any, stored_arguments: Any):
 
 def delete_cache_hook(self, *args, **kwargs):
     if hasattr(self, "__cache"):
-        self.__cache = {}
+        del self.__cache
 
 
 def cached_method(method: Callable[..., T]) -> Callable[..., T]:
@@ -47,27 +47,33 @@ def cached_method(method: Callable[..., T]) -> Callable[..., T]:
         if not hasattr(self, "__cache"):
             self.__cache = {}
             self.__cache_stats = {}
-            self.__delete_cache = delete_cache_hook
 
-            # Delete the cache before copying
-            if hasattr(self, "__deepcopy__"):
-                original_deepcopy = self.__deepcopy__
-
-                def wrapped_deepcopy(self, *args, **kwargs):
-                    delete_cache_hook(self)
-                    return original_deepcopy(self, *args, **kwargs)
-
+            if hasattr(self, "__getstate__"):
+                original_getstate = self.__getstate__
             else:
+                original_getstate = None
 
-                def wrapped_deepcopy(self, *args, **kwargs):
-                    delete_cache_hook(self)
-                    return deepcopy(self)
+            # Wrap the get_state method to exclude the cache
+            def wrapped_getstate():
+                # delete_cache_hook(self)
+                if original_getstate is None:
+                    state = self.__dict__
+                else:
+                    state = original_getstate()
 
-            setattr(self, "__deepcopy__", wrapped_deepcopy)
+                if "__getstate__" in state:
+                    state["__getstate__"] = original_getstate
+                if "__cache" in state:
+                    del state["__cache"]
+                if "__cache_stats" in state:
+                    del state["__cache_stats"]
+                return state
 
-            # For nn.Modules, automatically invalidate on backwards()
+            self.__getstate__ = wrapped_getstate
+
+            # For nn.Modules, automatically invalidate cache on backwards()
             if isinstance(self, nn.Module):
-                self.register_full_backward_hook(self.__delete_cache)
+                self.register_full_backward_hook(delete_cache_hook)
 
         # Initialize the stats and empty cache
         if not (method.__name__ in self.__cache):

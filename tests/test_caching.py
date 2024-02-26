@@ -36,10 +36,16 @@ def test_caching():
 
     estimator(x + 1, y).backward()
 
-    assert len(estimator.__cache) == 0
-    estimator(x + 1, y)
+    assert not hasattr(estimator, "__cache")
+    value_4 = estimator(x + 1, y)
     e2 = deepcopy(estimator)
     assert not (e2 is None)
+
+    assert e2(x + 1, y) == value_4
+    e3 = deepcopy(e2)
+    assert not (e3 is None)
+
+    assert e3(x + 1, y) == value_4
 
 
 @cached_function
