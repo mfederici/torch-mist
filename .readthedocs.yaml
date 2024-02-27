@@ -18,7 +18,7 @@ build:
       - pip install --upgrade nbsphinx
       - pip install --upgrade sphinx-autoapi
       - pip install --upgrade sphinx-rtd-theme
-      - pip install IPython --user
+      - pip install --upgrade IPython
       - pip list
 
 sphinx:
