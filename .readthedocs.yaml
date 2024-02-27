@@ -16,7 +16,9 @@ build:
       # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
       - poetry install --with docs
       - pip install --upgrade nbsphinx
-      - pip list | grep nbsphinx
+      - pip install --upgrade sphinx-autoapi
+      - pip install --upgrade sphinx-rtd-theme
+      - pip list
 
 sphinx:
   configuration: docs/conf.py
