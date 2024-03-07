@@ -103,8 +103,6 @@ def train_mi_estimator(
         max_iterations=max_iterations,
         optimizer_class=optimizer_class,
         optimizer_params=optimizer_params,
-        maximize=estimator.lower_bound,
-        minimize=estimator.lower_bound,
         eval_method="mutual_information",
         fast_train=fast_train,
         num_workers=num_workers,

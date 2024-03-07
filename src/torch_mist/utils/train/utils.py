@@ -2,6 +2,7 @@ import os.path
 import tempfile
 from copy import deepcopy
 from typing import Optional
+import time
 
 from torch import nn
 import torch
@@ -41,14 +42,14 @@ class RunTerminationManager:
     def save_weights(self, model: nn.Module, iteration: int):
         self.delete_best_weights()
         self.__best_model_path = os.path.join(
-            tempfile.gettempdir(), f"model_{iteration}.pyt"
+            tempfile.gettempdir(), f"model_{iteration}_{time.time}.pyt"
         )
         torch.save(model.state_dict(), self.__best_model_path)
 
     def load_best_weights(self, model: nn.Module):
         if not (self.__best_model_path is None):
             if self.verbose:
-                iteration = self.__best_model_path.split("_")[-1].split(".")[0]
+                iteration = self.__best_model_path.split("_")[1].split(".")[0]
                 print(f"Loading the weights saved at iteration {iteration}")
             model.load_state_dict(torch.load(self.__best_model_path))
         else:

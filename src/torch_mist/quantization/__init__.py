@@ -5,5 +5,4 @@ from .functions import (
     VectorQuantization,
     LearnableVectorQuantization,
 )
-from .vqvae import VQVAE
 from .factories import *

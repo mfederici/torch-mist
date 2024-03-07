@@ -13,6 +13,7 @@ from torch_mist.distributions.normal import (
     TransformedNormalModule,
     JointTransformedNormalModule,
 )
+from torch_mist.distributions.transforms import ConditionalDistributionModule
 
 from torch_mist.distributions.transforms.utils import fetch_transform
 
@@ -100,7 +101,7 @@ def conditional_transformed_normal(
     n_transforms: int = 1,
     normalization: Optional[str] = None,
     **kwargs,
-) -> ConditionalDistribution:
+) -> ConditionalDistributionModule:
     assert n_transforms > 0, "n_transforms must be greater than 0"
 
     transforms = make_transforms(

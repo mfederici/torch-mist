@@ -8,7 +8,7 @@ from torch_mist.quantization.functions import (
     ClusterQuantization,
     QuantizationFunction,
 )
-from torch_mist.quantization.vqvae import VQVAE
+from torch_mist.models.vqvae import VQVAE
 
 
 def kmeans_quantization(

@@ -4,10 +4,10 @@ from typing import Dict, Union, Callable, Tuple, List
 import torch
 import torch.nn as nn
 
+from torch_mist.nn import Model
 
-class MIEstimator(nn.Module):
-    lower_bound: bool = False
-    upper_bound: bool = False
+
+class MIEstimator(Model):
     infomax_gradient: Dict[str, bool] = {"x": False, "y": False}
 
     def __init__(self):

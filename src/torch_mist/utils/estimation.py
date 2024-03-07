@@ -257,6 +257,7 @@ def _train_on_fold(
         "train": filter_dataset(Subset(full_dataset, train_ids)),
         "valid": filter_dataset(Subset(full_dataset, valid_ids)),
         "test": filter_dataset(Subset(full_dataset, test_ids)),
+        "all": filter_dataset(full_dataset),
     }
 
     # Train a copy of the estimator

@@ -1,10 +1,25 @@
-from typing import List, Callable, Optional, Tuple
+from abc import abstractmethod
+from typing import List, Callable, Optional, Tuple, Any
 
 import torch
 import torch.nn as nn
 from pyro.nn import DenseNN
 
 from torch_mist.utils.caching import cached_method
+
+
+class Model(nn.Module):
+    lower_bound: bool = False
+    upper_bound: bool = False
+
+    @abstractmethod
+    def loss(self, *args, **kwargs):
+        raise NotImplementedError()
+
+
+class Identity(nn.Module):
+    def forward(self, x: Any):
+        return x
 
 
 class Normalize(nn.Module):

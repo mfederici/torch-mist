@@ -14,6 +14,7 @@ from torch.optim.lr_scheduler import (
 from torch import nn
 from torch.utils.data import DataLoader
 
+from torch_mist.nn import Model
 from torch_mist.utils.data.utils import (
     prepare_variables,
     TensorDictLike,
@@ -209,12 +210,10 @@ def compute_training_time(
 
 
 def train_model(
-    model: nn.Module,
+    model: Model,
     train_data: TensorDictLike,
     train_method: str = "loss",
     eval_method: Optional[str] = None,
-    maximize: bool = False,
-    minimize: bool = False,
     valid_data: Optional[TensorDictLike] = None,
     valid_percentage: float = 0.1,
     batch_size: Optional[int] = None,
@@ -253,7 +252,7 @@ def train_model(
         early_stopping = is_early_stopping_possible(
             valid_loader_missing=valid_loader is None,
             eval_method_missing=eval_method is None,
-            bound=minimize or maximize,
+            bound=model.lower_bound or model.upper_bound,
         )
 
     # Determine the training duration
@@ -306,8 +305,8 @@ def train_model(
         verbose=verbose,
         warmup_iterations=warmup_iterations,
         max_iterations=max_iterations,
-        maximize=maximize,
-        minimize=minimize,
+        maximize=model.lower_bound,
+        minimize=model.upper_bound,
     )
 
     # Bars for training

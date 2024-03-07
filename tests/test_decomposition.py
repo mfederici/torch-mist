@@ -1,5 +1,5 @@
 from sklearn.datasets import load_iris
-from torch_mist.decomposition import MID
+from torch_mist.decomposition import MID, VIB, MIB, CEB
 
 
 def test_decomposition():
@@ -13,13 +13,17 @@ def test_decomposition():
     for proj in [
         MID(n_dim),
         MID(n_dim, normalize_inputs=False),
-        MID(n_dim, whiten=True, mi_estimator_params={"estimator_name": "nwj"}),
+        MID(n_dim, whiten=True, model_params={"estimator_name": "nwj"}),
         MID(n_dim, proj_params={"hidden_dims": []}),
+        VIB(n_dim, beta=0.1),
+        MIB(n_dim, stochastic_transform=True),
+        CEB(n_dim, whiten=True),
     ]:
         for train_params in [
             {"max_epochs": 100},
             {"optimizer_params": {"lr": 1e-4}},
         ]:
+            print(proj)
             z = proj.fit_transform(data, targets, **train_params)
 
             assert z.shape[0] == len(data)

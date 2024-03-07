@@ -4,6 +4,7 @@ import torch
 from pyro.distributions import ConditionalDistribution
 from torch import nn
 
+from torch_mist.nn import Model
 from torch_mist.quantization import QuantizationFunction
 from torch_mist.quantization.functions import (
     LearnableVectorQuantization,
@@ -12,7 +13,7 @@ from torch_mist.quantization.functions import (
 VERSIONS = ["v1", "v2"]
 
 
-class VQVAE(LearnableVectorQuantization):
+class VQVAE(LearnableVectorQuantization, Model):
     def __init__(
         self,
         encoder: nn.Module,
@@ -30,7 +31,8 @@ class VQVAE(LearnableVectorQuantization):
 
         if not (version in VERSIONS):
             raise ValueError(f"Please choose version among {VERSIONS}.")
-        super().__init__(
+        LearnableVectorQuantization.__init__(
+            self,
             vectors=initial_vectors,
             n_bins=n_bins,
             quantization_dim=quantization_dim,
