@@ -319,9 +319,9 @@ def test_quantized_mi_estimators():
     train_samples, test_samples, true_mi, _ = _make_data()
 
     quantizations = [
-        # FixedQuantization(
-        #     input_dim=y_dim, thresholds=torch.linspace(-3, 3, n_bins - 1)
-        # ),
+        FixedQuantization(
+            input_dim=y_dim, thresholds=torch.linspace(-3, 3, n_bins - 1)
+        ),
         vqvae(
             input_dim=y_dim,
             hidden_dims=hidden_dims,

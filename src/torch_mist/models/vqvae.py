@@ -14,6 +14,8 @@ VERSIONS = ["v1", "v2"]
 
 
 class VQVAE(LearnableVectorQuantization, Model):
+    upper_bound: bool = True
+
     def __init__(
         self,
         encoder: nn.Module,
@@ -26,9 +28,6 @@ class VQVAE(LearnableVectorQuantization, Model):
         version: str = "v2",
         **train_params,
     ):
-        if "minimize" not in train_params:
-            train_params["minimize"] = True
-
         if not (version in VERSIONS):
             raise ValueError(f"Please choose version among {VERSIONS}.")
         LearnableVectorQuantization.__init__(
