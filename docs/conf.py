@@ -27,7 +27,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # a list of builtin themes.
 #
 html_theme = "sphinx_rtd_theme"
-html_logo = "_static/logo.png"
+html_logo = "_static/logo.svg"
 # Change the color of search and top bar
 html_theme_options = {
     "style_nav_header_background": "#1a1a1a",
