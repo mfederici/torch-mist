@@ -314,7 +314,7 @@ def train_model(
         tqdm(total=max_epochs, desc="Epoch", position=1) if verbose else None
     )
     tqdm_iteration = (
-        tqdm(total=len(train_loader), desc="Iteration", position=1)
+        tqdm(total=len(train_loader), desc="Iteration", position=2)
         if verbose
         else None
     )
