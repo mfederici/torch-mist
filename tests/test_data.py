@@ -62,9 +62,11 @@ def test_joint_dist():
     h_x = p_XY.entropy("x")
     p_Y_X = p_XY.conditional("x")
     samples = p_XY.sample([100000])
-    log_p_xy = p_XY.log_prob(**samples).mean()
-    log_p_x = p_X.log_prob(samples["x"]).mean()
-    log_p_y_x = p_Y_X.condition(samples["x"]).log_prob(samples["y"]).mean()
+    log_p_xy = p_XY.log_prob(**samples).mean().item()
+    log_p_x = p_X.log_prob(samples["x"]).mean().item()
+    log_p_y_x = (
+        p_Y_X.condition(samples["x"]).log_prob(samples["y"]).mean().item()
+    )
 
     assert np.isclose(log_p_xy, log_p_x + log_p_y_x, atol=1e-3)
 
