@@ -23,9 +23,10 @@ DEFAULT_BATCH_SIZE = 64
 
 
 class CenterAndScale:
-    def __init__(self, loc: torch.Tensor, scale: torch.Tensor):
+    def __init__(self, loc: torch.Tensor, scale: torch.Tensor, min_scale=1e-6):
         super().__init__()
         self.loc = loc
+        scale[scale.abs() < min_scale] = 1.0
         self.scale = scale
 
     def __call__(self, data):
