@@ -326,6 +326,9 @@ def _prepare_k_fold_data(
     # Drop the last to make each split has the same size
     if len(full_dataset) % folds != 0:
         ids_permutation = ids_permutation[: -(len(full_dataset) % folds)]
+        print(
+            f"[Warning]: Dropping {len(full_dataset) % folds} entries to create even splits."
+        )
 
     # Create 10 folds
     ids_folds = np.split(ids_permutation, folds)
@@ -341,7 +344,7 @@ def _prepare_k_fold_data(
     total_valid_size = sum([len(chunk) for chunk in chunks])
     if total_valid_size < len(full_dataset):
         print(
-            f"[Warning]: Removed {total_valid_size-len(full_dataset)} invalid entries."
+            f"[Warning]: Removed {len(full_dataset)-total_valid_size} invalid entries."
         )
 
     return chunks
