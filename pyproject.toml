@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "torch_mist"
-version = "0.2.13"
+version = "0.2.14"
 description = "Mutual Information Estimation toolkit based on pytorch"
 authors = ["Marco Federici"]
 license = "MIT"

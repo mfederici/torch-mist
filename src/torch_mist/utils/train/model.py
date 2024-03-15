@@ -302,11 +302,11 @@ def train_model(
         early_stopping=early_stopping,
         tolerance=tolerance,
         patience=patience,
-        verbose=verbose,
         warmup_iterations=warmup_iterations,
         max_iterations=max_iterations,
         maximize=model.lower_bound,
         minimize=model.upper_bound,
+        verbose=verbose,
     )
 
     # Bars for training
@@ -351,9 +351,13 @@ def train_model(
         # Update the bars
         if tqdm_epochs:
             if valid_score:
-                tqdm_epochs.set_postfix_str(
-                    f"valid_{eval_method if eval_method else train_method}: {valid_score}"
-                )
+                s = [
+                    f"valid_{eval_method if eval_method else train_method}: {np.round(valid_score,3)}"
+                ]
+                if early_stopping:
+                    s += [f"patience: {run_manager.current_patience}"]
+                    s += [f"best_value: {np.round(run_manager.best_value,3)}"]
+                tqdm_epochs.set_postfix_str(", ".join(s))
             tqdm_epochs.update(1)
 
         # Determine if the training is over

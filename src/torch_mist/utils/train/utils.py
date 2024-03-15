@@ -14,9 +14,9 @@ class RunTerminationManager:
         early_stopping: bool,
         tolerance: float,
         patience: int,
-        verbose: bool,
         warmup_iterations: Optional[int],
         max_iterations: Optional[int],
+        verbose: bool = False,
         maximize: bool = False,
         minimize: bool = False,
     ):
@@ -33,9 +33,9 @@ class RunTerminationManager:
         self.tolerance = tolerance
         self.patience = patience
         self.current_patience = patience
-        self.verbose = verbose
         self.max_iterations = max_iterations
         self.warmup_iterations = warmup_iterations
+        self.verbose = verbose
         self.best_state_dict = None
         self.__best_model_path = None
 
@@ -83,18 +83,12 @@ class RunTerminationManager:
                 self.save_weights(model, iteration)
 
                 self.best_state_dict = deepcopy(model.state_dict())
-                if self.verbose:
-                    print(f"Best value: {score}")
             elif -improvement < self.tolerance:
                 pass
             else:
                 self.current_patience -= 1
-                if self.verbose:
-                    print(f"Losing patience: {self.current_patience}")
 
             if self.current_patience <= 0:
-                if self.verbose:
-                    print("No improvements on validation, stopping.")
                 stop = True
 
         if self.max_iterations:
