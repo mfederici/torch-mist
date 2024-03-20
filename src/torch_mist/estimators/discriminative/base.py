@@ -71,7 +71,6 @@ class DiscriminativeMIEstimator(MIEstimator):
             y_ = self.proposal.sample(torch.Size([neg_samples]))
             # The shape of the samples from the proposal distribution is [M, ..., Y_DIM]
             assert y_.ndim == x.ndim + 1 and y_.shape[0] == neg_samples
-            assert y_.shape[0] == neg_samples and y_.ndim == x.ndim + 1
 
         if isinstance(self.proposal, EmpiricalDistribution):
             self.proposal.update()
