@@ -151,3 +151,20 @@ class CEB(InformationBottleneck):
         KL = (p_ZX_given_x.log_prob(zx) - q_ZX_given_zy.log_prob(zx)).mean()
 
         return KL
+
+
+class TIB(CEB):
+    def __init__(
+        self,
+        mi_estimator: MIEstimator,
+        q_Zt2_given_Zt1: ConditionalDistribution,
+        p_Zt_given_Xt: ConditionalDistribution,
+        beta: float,
+    ):
+        super().__init__(
+            mi_estimator=mi_estimator,
+            beta=beta,
+            p_ZX_given_X=p_Zt_given_Xt,
+            p_ZY_given_Y=p_Zt_given_Xt,
+            q_ZX_given_ZY=q_Zt2_given_Zt1,
+        )

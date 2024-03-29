@@ -13,6 +13,8 @@ from tqdm.auto import tqdm
 from torch_mist.estimators import MultiMIEstimator
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.estimators.factories import instantiate_estimator
+from torch_mist.estimators.temporal import TemporalMIEstimator
+from torch_mist.utils.data.temporal import temporal_offset_data
 from torch_mist.utils.data.utils import (
     infer_dims,
     TensorDictLike,
@@ -151,7 +153,12 @@ def estimate_mi(
     )
 
     estimator = _instantiate_estimator(
-        estimator=estimator, data=data, verbose=verbose, **estimator_params
+        estimator=estimator,
+        data=data,
+        verbose=verbose,
+        x_key=x_key,
+        y_key=y_key,
+        **estimator_params,
     )
 
     # If using different key instead of 'x' and 'y'
@@ -300,6 +307,82 @@ def _train_on_fold(
 
         mi_values[split] = mi
     return mi_values, iterations, epochs
+
+
+def estimate_temporal_mi(
+    data: Union[np.ndarray, torch.Tensor],
+    lagtimes: Union[List[int], np.ndarray, torch.Tensor],
+    estimator: Union[MIEstimator, str] = DEFAULT_ESTIMATOR,
+    valid_data: Optional[TensorDictLike] = None,
+    test_data: Optional[Union[TensorDictLike, bool]] = None,
+    valid_percentage: float = 0.1,
+    device: Union[torch.device, str] = torch.device("cpu"),
+    max_epochs: Optional[int] = None,
+    max_iterations: Optional[int] = None,
+    optimizer_class: Type[Optimizer] = Adam,
+    optimizer_params: Optional[Dict[str, Any]] = None,
+    verbose: bool = True,
+    logger: Optional[Union[Logger, bool]] = None,
+    lr_annealing: bool = False,
+    warmup_percentage: float = 0,
+    batch_size: Optional[int] = DEFAULT_BATCH_SIZE,
+    evaluation_batch_size: Optional[int] = None,
+    num_workers: int = 0,
+    early_stopping: bool = True,
+    patience: Optional[int] = None,
+    tolerance: float = 0.001,
+    return_estimator: bool = False,
+    fast_train: bool = False,
+    x_key: str = "x",
+    **estimator_params,
+) -> Union[
+    Dict[str, float],
+    MIEstimator,
+    Tuple[Dict[str, float], pd.DataFrame],
+    Tuple[Dict[str, float], MIEstimator],
+    Tuple[Dict[str, float], MIEstimator, pd.DataFrame],
+]:
+    base_estimator = _instantiate_estimator(
+        estimator=estimator,
+        data={"x": data[:2], "y": data[:2]},
+        verbose=verbose,
+        **estimator_params,
+    )
+
+    estimator = TemporalMIEstimator(
+        base_estimator=base_estimator, lagtimes=lagtimes
+    )
+
+    data = temporal_offset_data(data, lagtimes)
+    if not (valid_data is None):
+        valid_data = temporal_offset_data(valid_data, lagtimes)
+    if not (test_data is None):
+        test_data = temporal_offset_data(test_data, lagtimes)
+
+    return estimate_mi(
+        data=data,
+        valid_data=valid_data,
+        test_data=test_data,
+        estimator=estimator,
+        valid_percentage=valid_percentage,
+        device=device,
+        max_epochs=max_epochs,
+        max_iterations=max_iterations,
+        optimizer_class=optimizer_class,
+        optimizer_params=optimizer_params,
+        verbose=verbose,
+        logger=logger,
+        lr_annealing=lr_annealing,
+        warmup_percentage=warmup_percentage,
+        batch_size=batch_size,
+        evaluation_batch_size=evaluation_batch_size,
+        num_workers=num_workers,
+        early_stopping=early_stopping,
+        patience=patience,
+        tolerance=tolerance,
+        return_estimator=return_estimator,
+        fast_train=fast_train,
+    )
 
 
 def _prepare_k_fold_data(

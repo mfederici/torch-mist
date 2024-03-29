@@ -44,3 +44,4 @@ Use-case Examples
    notebooks/examples/keypoint_info.ipynb
    notebooks/examples/k_fold_estimation.ipynb
    notebooks/examples/dimensionality_reduction.ipynb
+   notebooks/examples/temporal_information.ipynb

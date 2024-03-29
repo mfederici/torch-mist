@@ -2,11 +2,14 @@ from typing import Dict, Any, Union, Optional, List
 
 import numpy as np
 import torch
+from pyro.distributions import ConditionalDistribution
 from torch import nn
 
+from torch_mist.decomposition import CEB
 from torch_mist.decomposition.base import (
     DimensionalityReduction,
     StochasticDimensionalityReduction,
+    CenterAndScale,
 )
 from torch_mist.distributions import (
     NormalModule,
@@ -22,19 +25,30 @@ DEFAULT_MAX_ITERATIONS = 5000
 DEFAULT_BATCH_SIZE = 64
 
 
-class CEB(StochasticDimensionalityReduction):
+class TIB(CEB):
     def __init__(
         self,
+        n_dim: int,
+        lagtime: int,
+        transition_params: Optional[Dict[str, Any]] = None,
         *args,
-        beta: float = 0.01,
-        conditional_dist_params: Optional[Dict[str, Any]] = None,
-        **kwargs
+        **kwargs,
     ):
-        super().__init__(*args, **kwargs)
-        self.conditional_dist_params = (
-            self._add_default_conditional_dist_params(conditional_dist_params)
+        super().__init__(
+            *args,
+            **kwargs,
+            n_dim=n_dim,
+            conditional_dist_params=transition_params,
         )
-        self.beta = beta
+
+        if not isinstance(lagtime, int) or lagtime <= 0:
+            raise ValueError(f"Invalid lagtime {lagtime}.")
+
+        self.lagtime = lagtime
+
+    @property
+    def transition(self):
+        return self.model.q_Y_given_X
 
     def _add_default_conditional_dist_params(
         self, cond_params: Optional[Dict[str, Any]]
@@ -46,22 +60,12 @@ class CEB(StochasticDimensionalityReduction):
             cond_params["hidden_dims"] = [128]
 
         if not ("transform_name" in cond_params):
-            cond_params["transform_name"] = "conditional_linear"
+            cond_params["transform_name"] = "conditional_spline_autoregressive"
+
+        if not ("n_transforms" in cond_params):
+            cond_params["n_transforms"] = 2
 
         return cond_params
-
-    def _add_default_mi_estimator_params(
-        self, model_params: Optional[Dict[str, Any]]
-    ) -> Dict[str, Any]:
-        if not ("hidden_dims" in model_params):
-            model_params["hidden_dims"] = [128, 64]
-
-        if not ("estimator_name" in model_params):
-            model_params["estimator_name"] = "infonce"
-            if not ("k_dim" in model_params):
-                model_params["k_dim"] = 64
-
-        return model_params
 
     def _add_default_model_params(
         self, model_params: Optional[Dict[str, Any]]
@@ -88,45 +92,36 @@ class CEB(StochasticDimensionalityReduction):
         if not ("nonlinearity" in proj_params):
             proj_params["nonlinearity"] = nn.ReLU(True)
 
-        if not ("initial_scale" in proj_params):
-            proj_params["initial_scale"] = 1e-3
-
         return proj_params
 
-    def _train_model(self, data: TensorDictLike, **train_params):
-        return train_model(
-            self.model,
-            data,
-            eval_method="loss",
-            train_logged_methods=["regularization", "loss"],
-            eval_logged_methods=["regularization", "mutual_information"],
-            **train_params
-        )
-
-    def _instantiate_y_proj(self, y_dim: int) -> Optional[nn.Module]:
-        if not (self.y_proj_params is None):
-            self.y_proj_params["input_dim"] = y_dim
-            return dense_nn(**self.y_proj_params)
-        else:
-            return None
-
-    def _instantiate_model(self, x_dim: int, y_dim: int):
+    def _instantiate_model(self, *args, **kwargs) -> tmm.bottleneck.TIB:
         self.model_params["mi_estimator"]["x_dim"] = self.n_dim
-        self.model_params["mi_estimator"]["y_dim"] = y_dim
+        self.model_params["mi_estimator"]["y_dim"] = self.n_dim
         self.model_params["mi_estimator"] = instantiate_estimator(
             **self.model_params["mi_estimator"]
         )
 
-        q_ZX_given_ZY = conditional_transformed_normal(
+        q_Zt2_given_Zt1 = conditional_transformed_normal(
             input_dim=self.n_dim,
-            context_dim=y_dim,
-            **self.conditional_dist_params
+            context_dim=self.n_dim,
+            **self.conditional_dist_params,
         )
 
-        return tmm.bottleneck.CEB(
-            q_ZX_given_ZY=q_ZX_given_ZY,
-            p_ZX_given_X=self.proj,
-            p_ZY_given_Y=self.y_proj,
+        assert isinstance(self.proj, ConditionalDistribution)
+
+        return tmm.bottleneck.TIB(
+            q_Zt2_given_Zt1=q_Zt2_given_Zt1,
+            p_Zt_given_Xt=self.proj,
             beta=self.beta,
-            **self.model_params
+            **self.model_params,
         )
+
+    def fit(
+        self,
+        X: Union[np.ndarray, torch.Tensor],
+        **train_params,
+    ):
+        XT1 = X[self.lagtime :]
+        XT2 = X[: -self.lagtime]
+
+        return super().fit(XT1, XT2, **train_params)

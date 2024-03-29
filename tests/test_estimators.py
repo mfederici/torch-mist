@@ -41,6 +41,7 @@ from torch_mist.quantization import (
 )
 from torch_mist.utils.data import SampleDataset
 from torch_mist.utils.data.dataset import DistributionDataset
+from torch_mist.utils.estimation import estimate_temporal_mi
 
 from torch_mist.utils.evaluation import evaluate_mi
 from torch_mist.utils.train.mi_estimator import train_mi_estimator
@@ -539,3 +540,23 @@ def test_multi_estimator():
     assert np.isclose(
         mi_estimate["I(x;z)"], 0, atol=atol
     ), f"Estimate {mi_estimate} is not close to true value {0}."
+
+
+def test_temporal_estimator():
+    samples = torch.zeros(10000)
+    samples.normal_()
+    samples *= 0.1
+
+    # Brownian trajectory
+    traj = torch.cumsum(samples, 0).unsqueeze(-1)
+    lagtimes = [1, 10, 20]
+
+    mi_values, train_log = estimate_temporal_mi(
+        data=traj, max_epochs=100, lagtimes=lagtimes
+    )
+
+    assert (
+        mi_values["I(t_0;t_1)"]
+        >= mi_values["I(t_0;t_10)"]
+        >= mi_values["I(t_0;t_20)"]
+    )
