@@ -5,6 +5,7 @@ from copy import deepcopy
 
 import torch
 
+from torch_mist import estimate_mi
 from torch_mist.data.multivariate import JointMultivariateNormal
 from torch_mist.estimators import JS, TransformedMIEstimator, js
 from torch_mist.critic import JointCritic
@@ -12,7 +13,7 @@ from torch import nn
 
 from torch_mist.utils import train_mi_estimator
 from torch_mist.utils.logging import PandasLogger
-
+from torch_mist.utils.logging.metrics import compute_mean_std
 
 n_dim = 5
 
@@ -62,6 +63,40 @@ def test_pickle():
     mi_estimator = torch.load(filepath)
     print("Model Loaded")
     print(mi_estimator)
+
+
+def test_pickle_estimate():
+    p_xy = JointMultivariateNormal(sigma=1, rho=0.9, n_dim=n_dim)
+    samples = p_xy.sample([10000])
+    filepath = os.path.join(tempfile.gettempdir(), "trained.pyt")
+
+    eval_logged_methods = [
+        ("log_ratio", compute_mean_std),
+        ("batch_loss", compute_mean_std),
+    ]
+
+    # TODO: fix serialization issues
+    eval_logged_methods += [
+        # ("unnormalized_log_ratio", compute_mean_std),
+        "mutual_information"
+    ]
+
+    train_logged_methods = [("batch_loss", compute_mean_std)]
+
+    estimate_mi(
+        estimator="smile",
+        data=samples,
+        batch_size=64,
+        max_epochs=1,
+        trained_model_save_path=filepath,
+        train_logged_methods=train_logged_methods,
+        eval_logged_methods=eval_logged_methods,
+    )
+
+    mi_estimator = torch.load(filepath)
+    print("Model Loaded")
+    print(mi_estimator)
+    os.remove(filepath)
 
 
 def test_deepcopy():

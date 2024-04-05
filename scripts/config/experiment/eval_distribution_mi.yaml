@@ -21,13 +21,10 @@ params:
   batch_size: 64
 
 estimation:
-  batch_size: ${params.batch_size}
-  eval_batch_size: ${params.batch_size}
   valid_percentage: 0.1
   early_stopping: false
   lr_annealing: false
   max_epochs: 32
-  device: ${device}
   optimizer_class:
     _target_: torch.optim.AdamW
     _partial_: true

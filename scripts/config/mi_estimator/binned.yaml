@@ -1,4 +1,5 @@
 _target_: torch_mist.estimators.binned
+_partial_: true
 temperature: ${params.temperature}
 quantize_x: 'kmeans'
 quantize_y: 'kmeans'

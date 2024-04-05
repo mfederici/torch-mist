@@ -38,7 +38,7 @@ def test_csv_script():
                 "data=csv",
                 "mi_estimator=js",
                 f"data.filepath={csv_path}",
-                f"save_trained_model={model_path}",
+                f"estimation.trained_model_save_path={model_path}",
                 "estimation.x_key=sepal",
                 "estimation.y_key=petal",
             ],
@@ -76,17 +76,17 @@ def test_multimixture_script():
         cfg = compose(
             config_name="config",
             overrides=[
-                "data=multimixture",
                 "mi_estimator=js",
-                f"save_trained_model={model_path}",
+                "data=multimixture",
                 f"estimation.max_epochs=1",
                 f"estimation.batch_size={batch_size}",
+                "estimation.save_train_log=true",
+                f"estimation.trained_model_save_path={model_path}",
                 "estimation.valid_percentage=0.1",
+                "estimation.early_stopping=false",
                 f"data.n_samples={total_size}",
+                "data.distribution.n_dim=1",
                 f"logger.log_every={log_every}",
-                "metadata.y_dim=1",
-                "metadata.x_dim=1",
-                "save_train_log=true",
             ],
         )
 
@@ -95,7 +95,7 @@ def test_multimixture_script():
     estimator = torch.load(model_path)
     os.remove(model_path)
 
-    p_xy = instantiate(cfg.distribution)
+    p_xy = instantiate(cfg.data.distribution)
     true_mi = p_xy.mutual_information().item()
     test_samples = p_xy.sample(torch.Size([10000]))
 

@@ -1,6 +1,5 @@
 _target_: torch_mist.estimators.doe
+_partial_: true
 hidden_dims: ${params.hidden_dims}
 marginal_transform_name: ${params.marginal_transform_name}
 conditional_transform_name: ${params.conditional_transform_name}
-x_dim: ${x_dim}
-y_dim: ${y_dim}

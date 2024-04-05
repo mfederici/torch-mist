@@ -1,7 +1,9 @@
-# @package _global_
-defaults:
-  - /mi_estimator@mi_estimator.discriminative_estimator: nwj
-  - /mi_estimator@mi_estimator.generative_estimator: doe
-
-mi_estimator:
-  _target_: torch_mist.estimators.hybrid.ReweighedHybridMIEstimator
+_target_: torch_mist.estimators.hybrid.reweighed_hybrid
+_partial_: true
+discriminative_estimator: nwj
+generative_estimator: doe
+discriminative_params:
+  neg_samples: ${neg_samples}
+generative_params:
+  marginal_transform_name: ${params.marginal_transform_name}
+  conditional_transform_name: ${params.conditional_transform_name}

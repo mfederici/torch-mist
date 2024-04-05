@@ -1,1 +1,2 @@
 _target_: torch_mist.estimators.dummy_generative
+_partial_: true

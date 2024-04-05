@@ -61,21 +61,21 @@ The `torch_mist` package provides basic functionality to estimate mutual informa
 Given a file `iris.csv` containing the columns `(sepal_1, sepal_2, petal_1, petal_2)`, one can estimate mutual information between
 the `sepal` and `petal` 2-dimensional features with:
 ```bash
-mist data=csv data.filepath=iris.csv mi_estimator=js x_key=sepal y_key=petal
+mist data=csv data.filepath=iris.csv mi_estimator=js estimation.x_key=sepal estimation.y_key=petal
 ```
 The same flags and options provided by the `estimate_mi` function are also available from command line.
 
 Additionally, internal properties of the estimator can also be easily specified:
 ```bash
-mist data=csv data.filepath=iris.csv mi_estimator=js x_key=sepal y_key=petal \ 
+mist data=csv data.filepath=iris.csv mi_estimator=js estimation.x_key=sepal estimation.y_key=petal \ 
   # Train on GPU
-  device=cuda \
+  hardware.device=cuda \
   # Use AdamW for the optimization
   estimation.optimizer_class._target_=torch.optim.AdamW \
   # Use ELU as nonlinearities
   +mi_estimator.nonlinearity=torch.nn.ELU \
   # Change the batch size to 256
-  params.batch_size=256
+  estimation.batch_size=256
   # Log on weights and bias
   logger=wandb
 ```

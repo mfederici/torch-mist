@@ -1,7 +1,6 @@
 _target_: torch_mist.estimators.smile
+_partial_: true
 hidden_dims: ${params.hidden_dims}
 neg_samples: ${params.neg_samples}
 tau: 5
 k_dim: ${params.k_dim}
-x_dim: ${x_dim}
-y_dim: ${y_dim}

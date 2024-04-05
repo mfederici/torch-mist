@@ -1,5 +1,4 @@
-import copy
-import inspect
+import functools
 import random
 from typing import Optional, Any, Union, Type, Dict, Tuple, List, Callable
 
@@ -21,39 +20,52 @@ from torch_mist.utils.data.utils import (
     make_dataset,
     is_data_loader,
     is_valid_entry,
+    make_default_dataloaders,
 )
 from torch_mist.utils.logging import PandasLogger
 from torch_mist.utils.logging.logger.base import Logger, DummyLogger
 from torch_mist.utils.train.mi_estimator import train_mi_estimator
 from torch_mist.utils.evaluation import evaluate_mi
 
-DEFAULT_MAX_ITERATIONS = 5000
-DEFAULT_MAX_EPOCHS = 10
-DEFAULT_BATCH_SIZE = 128
-DEFAULT_ESTIMATOR = "smile"
+DEFAULTS = {
+    "max_iterations": 10000,
+    "max_epochs": 20,
+    "batch_size": 128,
+    "estimator_name": "smile",
+}
 
 
 def _instantiate_estimator(
-    estimator: Union[str, MIEstimator],
+    estimator: Union[str, MIEstimator, Callable[[Any], MIEstimator]],
     data: TensorDictLike,
-    instantiation_func: Optional[Callable[[Any], MIEstimator]] = None,
     x_key: Optional[str] = None,
     y_key: Optional[str] = None,
     verbose: bool = True,
     **estimator_params,
 ) -> MIEstimator:
-    if isinstance(estimator, str):
-        if instantiation_func is None:
+    if isinstance(estimator, MIEstimator):
+        return estimator
+    elif isinstance(estimator, str) or hasattr(estimator, "__call__"):
+        if isinstance(estimator, str):
             instantiation_func = instantiate_estimator
-        # Instantiate the estimator while inferring the size for x and y
-        if verbose:
-            print(f"Instantiating the {estimator} estimator")
+            estimator_params["estimator_name"] = estimator
+        else:
+            assert isinstance(estimator, functools.partial)
+            assert len(estimator.args) == 0
+            instantiation_func = estimator.func
+            estimator_params.update(estimator.keywords)
 
+        # Instantiate the estimator while inferring the size for x and y
         dims = infer_dims(data)
+
         if x_key is None:
             x_key = "x"
         if y_key is None:
             y_key = "y"
+
+        if verbose:
+            print(f"The data has the following components: {dims}")
+            print(f"Estimating mutual information between {x_key} and {y_key}")
 
         if x_key in dims:
             x_dim = dims[x_key]
@@ -71,15 +83,15 @@ def _instantiate_estimator(
                 + f"Please specify a value for y_key among {dims.keys()}"
             )
 
-        if "x_dim" in inspect.signature(instantiation_func).parameters:
-            estimator_params["x_dim"] = x_dim
-        if "y_dim" in inspect.signature(instantiation_func).parameters:
-            estimator_params["y_dim"] = y_dim
+        estimator_params["x_dim"] = x_dim
+        estimator_params["y_dim"] = y_dim
 
         if verbose:
-            print(f"Instantiating the estimator with {estimator_params}")
+            newline = "\n  "
+            print(
+                f"Instantiating the {instantiation_func.__name__} estimator with \n  {newline.join([f'{k}={v}' for k,v in estimator_params.items()])}"
+            )
 
-        estimator_params["estimator_name"] = estimator
         estimator = instantiation_func(
             **estimator_params,
         )
@@ -92,6 +104,18 @@ def _instantiate_estimator(
 
     if verbose:
         print(estimator)
+        # Count and visualize the number of parameters
+        n_parameters = 0
+        for param in estimator.parameters():
+            n_parameters += param.numel()
+        print(f"{n_parameters} Parameters")
+
+    # If using different key instead of 'x' and 'y'
+    if x_key != "x" or y_key != "y":
+        if not isinstance(estimator, MultiMIEstimator):
+            estimator = MultiMIEstimator({(x_key, y_key): estimator})
+        else:
+            assert (x_key, y_key) in estimator.estimators
 
     return estimator
 
@@ -103,12 +127,12 @@ def _determine_train_duration(
 ) -> Tuple[Optional[int], Optional[int]]:
     if max_epochs is None and max_iterations is None:
         if is_data_loader(data):
-            max_epochs = DEFAULT_MAX_EPOCHS
+            max_epochs = DEFAULTS["max_epochs"]
             print(
                 f"[Info]: max_epochs and max_iterations are not specified, using max_epochs={max_epochs} by default."
             )
         else:
-            max_iterations = DEFAULT_MAX_ITERATIONS
+            max_iterations = DEFAULTS["max_iterations"]
             print(
                 f"[Info]: max_epochs and max_iterations are not specified, using max_iterations={max_iterations} by default."
             )
@@ -117,10 +141,11 @@ def _determine_train_duration(
 
 def estimate_mi(
     data: TensorDictLike,
-    estimator: Union[MIEstimator, str] = DEFAULT_ESTIMATOR,
+    estimator: Union[MIEstimator, str] = DEFAULTS["estimator_name"],
     valid_data: Optional[TensorDictLike] = None,
     test_data: Optional[Union[TensorDictLike, bool]] = None,
     valid_percentage: float = 0.1,
+    test_percentage: float = 0.0,
     device: Union[torch.device, str] = torch.device("cpu"),
     max_epochs: Optional[int] = None,
     max_iterations: Optional[int] = None,
@@ -130,8 +155,8 @@ def estimate_mi(
     logger: Optional[Union[Logger, bool]] = None,
     lr_annealing: bool = False,
     warmup_percentage: float = 0,
-    batch_size: Optional[int] = DEFAULT_BATCH_SIZE,
-    evaluation_batch_size: Optional[int] = None,
+    batch_size: Optional[int] = DEFAULTS["batch_size"],
+    eval_batch_size: Optional[int] = None,
     num_workers: int = 0,
     early_stopping: bool = True,
     patience: Optional[int] = None,
@@ -140,13 +165,20 @@ def estimate_mi(
     fast_train: bool = False,
     x_key: str = "x",
     y_key: str = "y",
+    train_logged_methods: Optional[
+        List[Union[str, Tuple[str, Callable]]]
+    ] = None,
+    eval_logged_methods: Optional[
+        List[Union[str, Tuple[str, Callable]]]
+    ] = None,
+    trained_model_save_path: Optional[str] = None,
+    save_train_log: bool = True,
     **estimator_params,
 ) -> Union[
-    float,
-    MIEstimator,
-    Tuple[float, pd.DataFrame],
-    Tuple[float, MIEstimator],
-    Tuple[float, MIEstimator, pd.DataFrame],
+    Union[Dict[str, float], float],
+    Tuple[Union[Dict[str, float], float], pd.DataFrame],
+    Tuple[Union[Dict[str, float], float], MIEstimator],
+    Tuple[Union[Dict[str, float], float], MIEstimator, pd.DataFrame],
 ]:
     max_iterations, max_epochs = _determine_train_duration(
         max_iterations=max_iterations, max_epochs=max_epochs, data=data
@@ -161,13 +193,6 @@ def estimate_mi(
         **estimator_params,
     )
 
-    # If using different key instead of 'x' and 'y'
-    if x_key != "x" or y_key != "y":
-        if not isinstance(estimator, MultiMIEstimator):
-            estimator = MultiMIEstimator({(x_key, y_key): estimator})
-        else:
-            assert (x_key, y_key) in estimator.estimators
-
     if verbose:
         print("Training the estimator")
 
@@ -176,11 +201,33 @@ def estimate_mi(
     elif logger is False:
         logger = DummyLogger()
 
+    if eval_batch_size is None:
+        eval_batch_size = batch_size
+
+    # Prepare the data
+    train_loader, valid_loader, test_loader = make_default_dataloaders(
+        data=data,
+        valid_data=valid_data,
+        test_data=None if test_data is False else test_data,
+        valid_percentage=valid_percentage,
+        test_percentage=test_percentage,
+        batch_size=batch_size,
+        eval_batch_size=eval_batch_size,
+        num_workers=num_workers,
+    )
+
+    if verbose:
+        print(f"Train size: {len(train_loader.dataset)}")
+        if not (valid_loader is None):
+            print(f"Valid size: {len(valid_loader.dataset)}")
+        if not (test_loader is None):
+            print(f"Test size: {len(test_loader.dataset)}")
+
     train_log = train_mi_estimator(
         estimator=estimator,
-        train_data=data,
-        valid_data=valid_data,
-        valid_percentage=valid_percentage,
+        train_data=train_loader,
+        valid_data=valid_loader,
+        valid_percentage=0,
         device=device,
         max_epochs=max_epochs,
         max_iterations=max_iterations,
@@ -196,22 +243,22 @@ def estimate_mi(
         tolerance=tolerance,
         num_workers=num_workers,
         fast_train=fast_train,
+        train_logged_methods=train_logged_methods,
+        eval_logged_methods=eval_logged_methods,
     )
 
     if verbose:
         print("Evaluating the value of Mutual Information")
 
-    if test_data is None:
-        print(
-            "[Warning]: using data to estimate the value of mutual information. Please specify test_data."
-        )
-        test_data = data
-
-    if evaluation_batch_size is None:
-        evaluation_batch_size = batch_size
-
-    out = []
     if not (test_data is False):
+        if test_loader is None:
+            print(
+                "[Warning]: using data to estimate the value of mutual information. Please specify test_data or test_percentage>0."
+            )
+            test_data = data
+        else:
+            test_data = test_loader
+
         with logger.test():
             with logger.logged_methods(
                 estimator,
@@ -220,11 +267,21 @@ def estimate_mi(
                 mi_value = evaluate_mi(
                     estimator=estimator,
                     data=test_data,
-                    batch_size=evaluation_batch_size,
+                    batch_size=eval_batch_size,
                     device=device,
                     num_workers=num_workers,
                 )
-        out.append(mi_value)
+    else:
+        mi_value = -1
+
+    out = [mi_value]
+
+    if save_train_log:
+        logger.save_log()
+
+    if not (trained_model_save_path is None):
+        print(f"Saving the estimator in {trained_model_save_path}")
+        logger.save_model(estimator, trained_model_save_path)
 
     if return_estimator:
         out.append(estimator)
@@ -237,82 +294,10 @@ def estimate_mi(
         return tuple(out)
 
 
-def _train_on_fold(
-    chunks: List[Dataset],
-    fold: int,
-    device: Union[str, torch.device],
-    verbose: bool,
-    batch_size: int,
-    evaluation_batch_size: Optional[int] = None,
-    num_workers: int = 0,
-    **train_params,
-) -> Tuple[Dict[str, float], int, int]:
-    if evaluation_batch_size is None:
-        evaluation_batch_size = batch_size
-
-    test_fold = fold
-    valid_fold = (test_fold + 1) % len(chunks)
-    train_folds = [
-        f for f in range(len(chunks)) if f != test_fold and f != valid_fold
-    ]
-
-    assert (
-        test_fold != valid_fold
-        and not (test_fold in train_folds)
-        and not (valid_fold in train_folds)
-    )
-
-    datasets = {
-        "train": ConcatDataset(
-            [chunks[train_fold] for train_fold in train_folds]
-        ),
-        "valid": chunks[valid_fold],
-        "test": chunks[test_fold],
-        "all": ConcatDataset(chunks),
-    }
-
-    train_logger = DummyLogger()
-    estimator = estimate_mi(
-        data=datasets["train"],
-        valid_data=datasets["valid"],
-        test_data=False,
-        valid_percentage=0,
-        logger=train_logger,
-        device=device,
-        verbose=verbose,
-        batch_size=batch_size,
-        return_estimator=True,
-        **train_params,
-    )
-
-    iterations = train_logger._iteration
-    epochs = train_logger._epoch
-    mi_values = {}
-
-    # Evaluate on the splits
-    for split, dataset in datasets.items():
-        mi = evaluate_mi(
-            estimator,
-            data=dataset,
-            batch_size=evaluation_batch_size,
-            device=device,
-            num_workers=num_workers,
-        )
-        if isinstance(mi, dict):
-            if len(mi) > 1:
-                raise ValueError(
-                    "k_fold_mi_estimation is not supported when estimating multiple values of mutual information"
-                )
-            mi = next(iter(mi.values()))
-
-        mi_values[split] = mi
-    return mi_values, iterations, epochs
-
-
 def estimate_temporal_mi(
     data: Union[np.ndarray, torch.Tensor],
     lagtimes: Union[List[int], np.ndarray, torch.Tensor],
-    estimator: Union[MIEstimator, str] = DEFAULT_ESTIMATOR,
+    estimator: Union[MIEstimator, str] = DEFAULTS["estimator_name"],
     valid_data: Optional[TensorDictLike] = None,
     test_data: Optional[Union[TensorDictLike, bool]] = None,
     valid_percentage: float = 0.1,
@@ -325,7 +310,7 @@ def estimate_temporal_mi(
     logger: Optional[Union[Logger, bool]] = None,
     lr_annealing: bool = False,
     warmup_percentage: float = 0,
-    batch_size: Optional[int] = DEFAULT_BATCH_SIZE,
+    batch_size: Optional[int] = DEFAULTS["batch_size"],
     evaluation_batch_size: Optional[int] = None,
     num_workers: int = 0,
     early_stopping: bool = True,
@@ -333,11 +318,15 @@ def estimate_temporal_mi(
     tolerance: float = 0.001,
     return_estimator: bool = False,
     fast_train: bool = False,
-    x_key: str = "x",
+    train_logged_methods: Optional[
+        List[Union[str, Tuple[str, Callable]]]
+    ] = None,
+    eval_logged_methods: Optional[
+        List[Union[str, Tuple[str, Callable]]]
+    ] = None,
     **estimator_params,
 ) -> Union[
     Dict[str, float],
-    MIEstimator,
     Tuple[Dict[str, float], pd.DataFrame],
     Tuple[Dict[str, float], MIEstimator],
     Tuple[Dict[str, float], MIEstimator, pd.DataFrame],
@@ -375,14 +364,88 @@ def estimate_temporal_mi(
         lr_annealing=lr_annealing,
         warmup_percentage=warmup_percentage,
         batch_size=batch_size,
-        evaluation_batch_size=evaluation_batch_size,
+        eval_batch_size=evaluation_batch_size,
         num_workers=num_workers,
         early_stopping=early_stopping,
         patience=patience,
         tolerance=tolerance,
         return_estimator=return_estimator,
         fast_train=fast_train,
+        train_logged_methods=train_logged_methods,
+        eval_logged_methods=eval_logged_methods,
     )
+
+
+def _train_on_fold(
+    chunks: List[Dataset],
+    fold: int,
+    device: Union[str, torch.device],
+    verbose: bool,
+    batch_size: int,
+    evaluation_batch_size: Optional[int] = None,
+    num_workers: int = 0,
+    **train_params,
+) -> Tuple[Dict[str, float], int, int]:
+    if evaluation_batch_size is None:
+        evaluation_batch_size = batch_size
+
+    test_fold = fold
+    valid_fold = (test_fold + 1) % len(chunks)
+    train_folds = [
+        f for f in range(len(chunks)) if f != test_fold and f != valid_fold
+    ]
+
+    assert (
+        test_fold != valid_fold
+        and not (test_fold in train_folds)
+        and not (valid_fold in train_folds)
+    )
+
+    datasets = {
+        "train": ConcatDataset(
+            [chunks[train_fold] for train_fold in train_folds]
+        ),
+        "valid": chunks[valid_fold],
+        "test": chunks[test_fold],
+        "all": ConcatDataset(chunks),
+    }
+
+    train_logger = DummyLogger()
+    _, estimator = estimate_mi(
+        data=datasets["train"],
+        valid_data=datasets["valid"],
+        test_data=False,
+        valid_percentage=0,
+        logger=train_logger,
+        device=device,
+        verbose=verbose,
+        batch_size=batch_size,
+        return_estimator=True,
+        **train_params,
+    )
+
+    iterations = train_logger._iteration
+    epochs = train_logger._epoch
+    mi_values = {}
+
+    # Evaluate on the splits
+    for split, dataset in datasets.items():
+        mi = evaluate_mi(
+            estimator,
+            data=dataset,
+            batch_size=evaluation_batch_size,
+            device=device,
+            num_workers=num_workers,
+        )
+        if isinstance(mi, dict):
+            if len(mi) > 1:
+                raise ValueError(
+                    "k_fold_mi_estimation is not supported when estimating multiple values of mutual information"
+                )
+            mi = next(iter(mi.values()))
+
+        mi_values[split] = mi
+    return mi_values, iterations, epochs
 
 
 def _prepare_k_fold_data(
@@ -435,15 +498,16 @@ def _prepare_k_fold_data(
 
 def k_fold_mi_estimate(
     data: TensorDictLike,
-    estimator: Union[MIEstimator, str] = DEFAULT_ESTIMATOR,
+    estimator: Union[MIEstimator, str] = DEFAULTS["estimator_name"],
     verbose: bool = True,
     verbose_train: bool = False,
     logger: Optional[Union[Logger, bool]] = None,
     seed: Optional[int] = None,
     folds: int = 10,
-    batch_size: int = DEFAULT_BATCH_SIZE,
+    batch_size: int = DEFAULTS["batch_size"],
     device: Union[str, torch.device] = torch.device("cpu"),
     n_estimations: Optional[int] = None,
+    save_log: bool = True,
     **kwargs,
 ) -> Tuple[float, Any]:
     if isinstance(data, DataLoader):
@@ -510,5 +574,12 @@ def k_fold_mi_estimate(
             tqdm_fold.update(1)
 
     log = logger.get_log()
+    mi = np.mean(results)
+    if verbose:
+        print(
+            f"Mutual Information on test: {np.round(mi, 3)} +- {np.round(np.std(results),3)}"
+        )
+    if save_log:
+        logger.save_log()
 
-    return np.mean(results), log
+    return mi, log

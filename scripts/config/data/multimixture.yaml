@@ -1,26 +1,12 @@
-# @package _global_
-
-metadata:
-  x_dim: 5
-  y_dim: 5
-
-
+_target_: torch_mist.data.utils.prepare_samples
 distribution:
   _target_: torch_mist.data.multimixture.MultivariateCorrelatedNormalMixture
   rho: 0.95
   sigma: 0.1
   epsilon: 0.15
   delta: 1.5
-  n_dim: ${metadata.x_dim}
+  n_dim: 5
+n_samples: 100000
 
-data:
-  _target_: torch_mist.data.utils.prepare_samples
-  distribution: ${..distribution}
-  n_samples: 145635
-
-test_data:
-  _target_: torch_mist.data.utils.prepare_samples
-  distribution: ${..distribution}
-  n_samples: 131072
 
 

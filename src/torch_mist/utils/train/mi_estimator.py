@@ -5,6 +5,8 @@ from torch.optim import Optimizer
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 
+from torch_mist.estimators.discriminative.base import DiscriminativeMIEstimator
+from torch_mist.estimators.hybrid.base import HybridMIEstimator
 from torch_mist.estimators.base import MIEstimator
 from torch_mist.utils.data.dataset import WrappedDataset
 
@@ -14,6 +16,7 @@ from torch_mist.utils.data.utils import (
     make_default_dataloaders,
     update_dataloader,
 )
+from torch_mist.utils.logging.metrics import compute_mean_std
 from torch_mist.utils.train.model import train_model
 
 
@@ -64,7 +67,7 @@ def train_mi_estimator(
     ] = None,
 ) -> Optional[Any]:
     # Create the training and validation dataloaders
-    train_loader, valid_loader = make_default_dataloaders(
+    train_loader, valid_loader, _ = make_default_dataloaders(
         data=train_data,
         valid_data=valid_data,
         valid_percentage=valid_percentage,

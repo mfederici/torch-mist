@@ -1,0 +1,25 @@
+_target_: torch_mist.k_fold_mi_estimate
+estimator: ${mi_estimator}
+
+folds: 10             # Total number of folds (splits train+valid+test)
+n_estimations: null   # number of runs (Default: null -> same as folds).
+x_key: x
+y_key: y
+
+device: ${hardware.device}
+num_workers: ${hardware.num_workers}
+batch_size: ${params.batch_size}
+
+max_epochs: null
+max_iterations: null
+optimizer_class:
+  _partial_: true
+  _target_: torch.optim.Adam
+
+verbose: true
+verbose_train: false
+lr_annealing: false
+save_log: true
+trained_model_save_path: null
+
+

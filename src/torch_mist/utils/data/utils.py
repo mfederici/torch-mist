@@ -38,11 +38,12 @@ def prepare_variables(
 def infer_dims(
     data: TensorDictLike,
 ) -> Dict[str, int]:
-    dataloader, _ = make_default_dataloaders(
+    dataloader, _, _ = make_default_dataloaders(
         data=data,
         valid_data=None,
         batch_size=1,
         valid_percentage=0,
+        test_percentage=0,
         num_workers=0,
     )
 
@@ -158,14 +159,85 @@ def make_default_dataloader(
     return dataloader
 
 
+def make_dataloader(
+    dataset: Dataset,
+    dataloader: DataLoader,
+    batch_size: int,
+    num_workers: int,
+) -> Optional[DataLoader]:
+    if dataloader is None:
+        if dataset is None:
+            dataloader = None
+        else:
+            dataloader = DataLoader(
+                dataset,
+                batch_size=batch_size,
+                shuffle=True,
+                num_workers=num_workers,
+            )
+    return dataloader
+
+
+def make_splits(
+    dataset: Dataset, valid_percentage: float, test_percentage: float
+) -> Tuple[Dataset, Optional[Dataset], Optional[Dataset]]:
+    # Make a random train/valid/test split
+    n_valid = int(len(dataset) * valid_percentage)
+    n_test = int(len(dataset) * test_percentage)
+
+    train_set, valid_set, test_set = random_split(
+        dataset, [len(dataset) - n_valid - n_test, n_valid, n_test]
+    )
+    if n_valid == 0:
+        valid_set = None
+    if n_test == 0:
+        test_set = None
+
+    return train_set, valid_set, test_set
+
+
+def parse_data(
+    data: Optional[Union[Dataset, DataLoader]], filter: bool
+) -> Tuple[Optional[Dataset], Optional[DataLoader]]:
+    if data is None:
+        dataset = None
+        dataloader = None
+    elif is_data_loader(data):
+        dataloader = data
+        dataset = None
+    else:
+        dataset = make_dataset(data)
+        dataloader = None
+
+    if dataset and filter:
+        dataset = filter_dataset(dataset)
+
+    return dataset, dataloader
+
+
 def make_default_dataloaders(
     data: TensorDictLike,
     valid_data: Optional[TensorDictLike] = None,
+    test_data: Optional[TensorDictLike] = None,
     valid_percentage: float = 0.1,
+    test_percentage: float = 0.0,
     batch_size: Optional[int] = None,
+    eval_batch_size: Optional[int] = None,
     filter_invalid_data: bool = True,
     num_workers: int = 0,
-) -> Tuple[DataLoader, Optional[DataLoader]]:
+) -> Tuple[DataLoader, Optional[DataLoader], Optional[DataLoader]]:
+    if valid_percentage > 0 and not (valid_data is None):
+        print(
+            "[Warning]: valid_percentage will be ignored since valid_data is provided"
+        )
+        valid_percentage = 0
+
+    if test_percentage > 0 and not (test_data is None):
+        print(
+            "[Warning]: test_percentage will be ignored since valid_data is provided"
+        )
+        test_percentage = 0
+
     # Make the datasets if necessary
     if is_data_loader(data):
         train_loader = data
@@ -178,57 +250,51 @@ def make_default_dataloaders(
         train_set = make_dataset(data)
         train_loader = None
 
+    # Use the same batch size as train if not specified
+    if eval_batch_size is None:
+        eval_batch_size = batch_size
+
     # Filter out NaNs
     if filter_invalid_data:
         train_set = filter_dataset(train_set)
 
-    if valid_data is None:
-        valid_set = None
-        valid_loader = None
-    elif is_data_loader(valid_data):
-        valid_loader = valid_data
-        valid_set = None
-    else:
-        valid_set = make_dataset(valid_data)
-        valid_loader = None
+    # Parse the data to distinguish dataset and dataloader
+    valid_set, valid_loader = parse_data(valid_data, filter_invalid_data)
+    test_set, test_loader = parse_data(test_data, filter_invalid_data)
 
-    if valid_set and filter_invalid_data:
-        valid_set = filter_dataset(valid_set)
-
-    # Create a validation set if specified
-    if valid_percentage > 0:
-        if valid_set is None and valid_loader is None:
-            # Make a random train/valid split
-            n_valid = int(len(train_set) * valid_percentage)
-            train_set, valid_set = random_split(
-                train_set, [len(train_set) - n_valid, n_valid]
-            )
-            train_loader = None
-        else:
-            print(
-                "[Warning]: valid_percentage is ignored since valid_set or valid_loader are already specified."
-            )
-
-    if train_loader is None:
-        train_loader = DataLoader(
-            train_set,
-            batch_size=batch_size,
-            shuffle=True,
-            num_workers=num_workers,
+    # Create splits
+    if test_percentage + valid_percentage > 0:
+        train_set, valid_set, test_set = make_splits(
+            train_set, valid_percentage, test_percentage
         )
+        train_loader = None
 
-    if valid_loader is None and not (valid_set is None):
-        valid_loader = DataLoader(
-            valid_set,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            shuffle=True,
-        )
+    train_loader = make_dataloader(
+        dataset=train_set,
+        dataloader=train_loader,
+        batch_size=batch_size,
+        num_workers=num_workers,
+    )
+
+    valid_loader = make_dataloader(
+        dataset=valid_set,
+        dataloader=valid_loader,
+        batch_size=batch_size,
+        num_workers=num_workers,
+    )
+
+    test_loader = make_dataloader(
+        dataset=test_set,
+        dataloader=test_loader,
+        batch_size=eval_batch_size,
+        num_workers=num_workers,
+    )
 
     assert is_data_loader(train_loader)
     assert is_data_loader(valid_loader) or (valid_loader is None)
+    assert is_data_loader(test_loader) or (test_loader is None)
 
-    return train_loader, valid_loader
+    return train_loader, valid_loader, test_loader
 
 
 def update_dataloader(

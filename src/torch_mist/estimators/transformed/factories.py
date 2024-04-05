@@ -17,6 +17,8 @@ def binned(
     quantize_y: Optional[Union[QuantizationFunction, str]] = "kmeans",
     temperature: float = 0.1,
     n_bins: Optional[int] = 32,
+    x_dim: Optional[int] = None,
+    y_dim: Optional[int] = None,
     **kwargs
 ) -> BinnedMIEstimator:
     if isinstance(quantize_x, str):
@@ -44,6 +46,7 @@ def pq(
     q_QY_given_X: Optional[ConditionalDistribution] = None,
     temperature: float = 0.1,
     n_bins: Optional[int] = 32,
+    y_dim: Optional[int] = None,
     **kwargs
 ) -> PQ:
     from torch_mist.distributions.factories import conditional_categorical

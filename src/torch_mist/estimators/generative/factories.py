@@ -132,7 +132,7 @@ def doe(
     )
 
 
-def dummy_generative() -> DummyGenerativeMIEstimator:
+def dummy_generative(**kwargs) -> DummyGenerativeMIEstimator:
     return DummyGenerativeMIEstimator()
 
 

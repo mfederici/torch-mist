@@ -1,3 +1,4 @@
 _target_: torch_mist.estimators.dummy_discriminative
+_partial_: true
 neg_samples: ${params.neg_samples}
 

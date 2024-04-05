@@ -1,0 +1,25 @@
+_target_: torch_mist.estimate_mi
+estimator: ${mi_estimator}
+
+device: ${hardware.device}
+num_workers: ${hardware.num_workers}
+x_key: x
+y_key: y
+
+batch_size: ${params.batch_size}
+max_epochs: null
+max_iterations: null
+valid_percentage: 0.1
+early_stopping: true
+patience: null
+
+optimizer_class:
+  _partial_: true
+  _target_: torch.optim.Adam
+
+verbose: true
+lr_annealing: false
+save_train_log: false
+trained_model_save_path: null
+
+

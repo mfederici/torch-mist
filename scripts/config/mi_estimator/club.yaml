@@ -1,5 +1,4 @@
 _target_: torch_mist.estimators.club
+_partial_: true
 hidden_dims: ${params.hidden_dims}
 transform_name: ${params.conditional_transform_name}
-x_dim: ${x_dim}
-y_dim: ${y_dim}

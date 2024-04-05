@@ -239,7 +239,7 @@ def train_model(
     ] = None,
 ) -> Optional[Any]:
     # Create the training and validation dataloaders
-    train_loader, valid_loader = make_default_dataloaders(
+    train_loader, valid_loader, _ = make_default_dataloaders(
         data=train_data,
         valid_data=valid_data,
         valid_percentage=valid_percentage,

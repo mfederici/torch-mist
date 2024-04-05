@@ -1,12 +1,10 @@
-# @package _global_
-defaults:
-  - /mi_estimator@mi_estimator.discriminative_estimator: nwj
-
-mi_estimator:
-  _target_: torch_mist.estimators.hybrid_pq
-  hidden_dims: ${params.hidden_dims}
-  temperature: ${params.temperature}
-  x_dim: ${x_dim}
-  quantize_y: kmeans
-  n_bins: ${params.n_bins}
+_target_: torch_mist.estimators.hybrid_pq
+_partial_: true
+discriminative_estimator: nwj
+neg_samples: ${params.neg_samples}
+hidden_dims: ${params.hidden_dims}
+temperature: ${params.temperature}
+x_dim: ${x_dim}
+quantize_y: kmeans
+n_bins: ${params.n_bins}
 
